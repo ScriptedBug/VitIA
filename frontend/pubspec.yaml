@@ -1,0 +1,40 @@
+name: vinas_mobile
+description: Aplicación móvil Viñas AI para clasificar variedades de uva mediante IA
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Gestión de estado
+  flutter_riverpod: ^2.5.1
+
+  # Cliente HTTP
+  dio: ^5.5.0
+
+  # Navegación moderna
+  go_router: ^14.2.0
+
+  # Cámara y galería
+  image_picker: ^1.1.1
+
+  # Para mostrar imágenes locales o remotas
+  cached_network_image: ^3.3.1
+
+  # Iconos y Material 3
+  flutter_svg: ^2.0.9
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
