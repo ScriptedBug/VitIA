@@ -37,4 +37,4 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/icons/
+    - assets/icons/  # crea la carpeta assets/icons/ o ajusta la ruta si es distintaassets/icons/
