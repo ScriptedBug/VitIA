@@ -49,6 +49,14 @@ class VariedadCreate(VariedadBase):
     # Para crear una variedad (quizás un admin)
     pass
 
+class VariedadUpdate(BaseModel):
+    # Hacemos todos los campos opcionales
+    nombre: str | None = None
+    descripcion: str | None = None
+    region_origen: str | None = None
+    color_uva: str | None = None
+    imagen_referencia: str | None = None
+
 class Variedad(VariedadBase):
     # Modelo de lectura (salida API)
     id: int

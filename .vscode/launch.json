@@ -10,13 +10,13 @@
         "app.main:app",
         "--reload",
         "--host",
-        "0.0.0.0",
+        "127.0.0.1",
         "--port",
         "8000"
       ],
       "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env.example",
-      "python": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
       "console": "integratedTerminal"
     },
     {
