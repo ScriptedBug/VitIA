@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ..infrastructure.supabase_client import get_supabase_client
+from ..supabase_client import get_supabase_client
 
 
 router = APIRouter()

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .api.routes_health import router as health_router
+from .routes.routes_health import router as health_router
 
 
 app = FastAPI(title="Viñas Backend")
