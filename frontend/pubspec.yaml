@@ -6,35 +6,24 @@ environment:
   sdk: ">=3.4.0 <4.0.0"
 
 dependencies:
+  cached_network_image: ^3.3.1
+  dio: ^5.5.0
   flutter:
     sdk: flutter
-
-  # Gestión de estado
   flutter_riverpod: ^2.5.1
-
-  # Cliente HTTP
-  dio: ^5.5.0
-
-  # Navegación moderna
+  flutter_svg: ^2.0.9
   go_router: ^14.2.0
-
-  # Cámara y galería
+  google_nav_bar: ^5.0.7
   image_picker: ^1.1.1
 
-  # Para mostrar imágenes locales o remotas
-  cached_network_image: ^3.3.1
-
-  # Iconos y Material 3
-  flutter_svg: ^2.0.9
-
 dev_dependencies:
+  flutter_lints: ^3.0.1
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
-    - assets/icons/  # crea la carpeta assets/icons/ o ajusta la ruta si es distintaassets/icons/
+    - assets/icons/
