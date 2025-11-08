@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
+
 
 class VistaColeccion extends StatefulWidget {
   const VistaColeccion({super.key});
@@ -44,17 +47,45 @@ class _VistaColeccionState extends State<VistaColeccion> {
   }
 
   Future<void> _abrirCamara() async {
+    var statusCamara = await Permission.camera.request();
+    var statusUbicacion = await Permission.locationWhenInUse.request();
+
+    if(statusCamara.isDenied || statusUbicacion.isDenied){
+      if(!mounted){return;}
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Permisos de cámara y ubicación son necesarios.")),
+      );
+      return;
+    }
+
     final ImagePicker picker = ImagePicker();
     final XFile? foto = await picker.pickImage(source: ImageSource.camera);
-    if (foto != null) {
-      _mostrarDialogoNuevaVariedad(File(foto.path));
+    
+    if (foto == null) {return;}
+
+    //Obtener ubicación actual
+    Position? posicion;
+    try{
+      posicion = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+    } catch(e){
+      print("Error obteniendo ubicación: $e");
     }
+
+    String ubicacionTexto = "Ubicación no disponible";
+    if(posicion != null){
+      ubicacionTexto = "Lat: ${posicion.latitude}, Lon: ${posicion.longitude}";
+    }
+    _mostrarDialogoNuevaVariedad(File(foto.path), ubicacionTexto);
   }
 
-  void _mostrarDialogoNuevaVariedad(File imagen) {
+  void _mostrarDialogoNuevaVariedad(File imagen, String ubicacionInicial) {
     final nombreCtrl = TextEditingController();
     final descCtrl = TextEditingController();
-    final ubicCtrl = TextEditingController();
+    final ubicCtrl = TextEditingController(text: ubicacionInicial);
 
     showDialog(
       context: context,
