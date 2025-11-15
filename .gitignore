@@ -1,0 +1,47 @@
+# ===== BACKEND =====
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# ===== POETRY =====
+# poetry.lock   # descomentar si NO queréis fijar las dependencias
+
+# ===== FLUTTER =====
+build/
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# ===== FLUTTER LOCK FILE =====
+# pubspec.lock  # descomentar si NO queréis forzar mismas dependencias
+
+# ===== ANDROID =====
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/
+
+# ===== iOS =====
+ios/Pods/
+ios/Flutter/
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcworkspace/
+
+# ===== WEB =====
+web/.dart_tool/
+
+# ===== EDITOR =====
+.vscode/
+.idea/
+*.iml
+
+# ===== SECRETS =====
+.env
+*.env
+
