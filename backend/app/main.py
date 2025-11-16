@@ -8,4 +8,4 @@ app = FastAPI(title="Viñas Backend")
 
 # Registrar rutas
 app.include_router(health_router, prefix="/health", tags=["health"])
-app.include_router(variedad_router, prefix="/variedades", tags=["variedades"])
+app.include_router(variedad_router)

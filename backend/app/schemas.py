@@ -1,173 +1,154 @@
-"""
-Este archivo contiene todos los schemas de Pydantic para la validación
-de datos de entrada y salida de la API.
+# --- En tu archivo /app/schemas.py ---
 
-- 'Base':    Campos comunes, compartidos por Create y Read.
-- 'Create':  Campos requeridos al crear un nuevo objeto (entrada API).
-- 'Update':  Campos que se pueden actualizar (entrada API).
-- (Clase principal, ej: 'Perfil'): Modelo de lectura (salida API), 
-           normalmente incluye 'id' y campos generados por la BD.
-"""
-
-from pydantic import BaseModel
-from uuid import UUID
+from pydantic import BaseModel, ConfigDict, EmailStr
+from typing import Optional, List, Dict, Any
 from datetime import datetime
-from typing import Optional # Usado en versiones antiguas de Python
 
-# --- Schemas para 'perfiles' ---
+# -----------------------------------------------------
+# Configuración Base de Pydantic
+# -----------------------------------------------------
 
-class PerfilBase(BaseModel):
-    # El nombre puede ser opcional al principio
-    nombre: str | None = None 
+class BaseConfig(BaseModel):
+    """Configuración base para todos los esquemas.
     
-    # es_premium y fecha_registro son gestionados por la BD o lógica interna.
-    # No los pedimos en 'Create' o 'Update' por defecto.
+    from_attributes=True (antes orm_mode) le dice a Pydantic
+    que lea los datos incluso si son de un modelo de SQLAlchemy
+    (ej. usuario.id) y no solo un diccionario (ej. usuario['id']).
+    """
+    model_config = ConfigDict(from_attributes=True)
 
-class PerfilUpdate(BaseModel):
-    # El único campo que el usuario puede actualizar
-    nombre: str | None = None
-
-class Perfil(PerfilBase):
-    # Modelo de lectura (salida API)
-    id: UUID
-    es_premium: bool
-    fecha_registro: datetime
-
-    class Config:
-        orm_mode = True
-
-# --- Schemas para 'variedades' ---
+# -----------------------------------------------------
+# Esquemas: Variedad (Biblioteca)
+# -----------------------------------------------------
 
 class VariedadBase(BaseModel):
+    """Campos base que comparte una Variedad."""
     nombre: str
-    descripcion: str | None = None
-    region_origen: str | None = None
-    color_uva: str | None = None
-    imagen_referencia: str | None = None
+    descripcion: str
+    # Usamos 'Any' para el JSONB, o puedes ser más específico
+    # con List[str] para links_imagenes y Dict[str, Any] para info_extra
+    links_imagenes: Optional[List[str]] = None 
+    info_extra: Optional[Dict[str, Any]] = None
 
 class VariedadCreate(VariedadBase):
-    # Para crear una variedad (quizás un admin)
+    """Esquema para crear una nueva Variedad (usado por un admin)."""
+    # No necesita campos extra, hereda todo de Base
     pass
+
+# --- En tu archivo /app/schemas.py ---
+# ... (junto a tus otras clases de Variedad) ...
 
 class VariedadUpdate(BaseModel):
-    # Hacemos todos los campos opcionales
-    nombre: str | None = None
-    descripcion: str | None = None
-    region_origen: str | None = None
-    color_uva: str | None = None
-    imagen_referencia: str | None = None
+    """
+    Esquema para actualizar una Variedad.
+    Todos los campos son opcionales para permitir 
+    actualizaciones parciales (método PATCH).
+    """
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    links_imagenes: Optional[List[str]] = None
+    info_extra: Optional[Dict[str, Any]] = None
 
-class Variedad(VariedadBase):
-    # Modelo de lectura (salida API)
-    id: int
+class Variedad(VariedadBase, BaseConfig):
+    """Esquema para LEER una Variedad (lo que se devuelve al usuario)."""
+    id_variedad: int
 
-    class Config:
-        orm_mode = True
+# -----------------------------------------------------
+# Esquemas: Coleccion (Personal del Usuario)
+# -----------------------------------------------------
 
-# --- Schemas para 'parcelas' ---
+class ColeccionBase(BaseModel):
+    """Campo base para un item de la colección."""
+    path_foto_usuario: str
 
-class ParcelaBase(BaseModel):
-    nombre: str
-    descripcion: str | None = None
-    ubicacion: str | None = None
-    # Usamos float para lat/lon en la API, es más fácil que Decimal
-    latitud: float | None = None
-    longitud: float | None = None
-
-class ParcelaCreate(ParcelaBase):
-    # Modelo de entrada (POST)
-    # 'usuario_id' se obtendrá del token, no del body.
-    # 'fecha_creacion' e 'id' los pone la BD.
-    pass
-
-class ParcelaUpdate(BaseModel):
-    # Modelo de entrada (PUT/PATCH)
-    # Hacemos todos los campos opcionales
-    nombre: str | None = None
-    descripcion: str | None = None
-    ubicacion: str | None = None
-    latitud: float | None = None
-    longitud: float | None = None
-
-class Parcela(ParcelaBase):
-    # Modelo de lectura (salida API)
-    id: int
-    usuario_id: UUID
-    fecha_creacion: datetime
-
-    class Config:
-        orm_mode = True
-
-# --- Schemas para 'fotos' ---
-
-class FotoBase(BaseModel):
-    ruta_imagen: str # URL del storage
-    parcela_id: int | None = None
-    latitud: float | None = None
-    longitud: float | None = None
+class ColeccionCreate(ColeccionBase):
+    """Esquema para crear un item en la colección.
     
-    # La fecha de captura podría venir del móvil
-    fecha_captura: datetime | None = None 
+    En tu endpoint, probablemente recibirás el id_variedad 
+    por separado, no en este body.
+    """
+    id_variedad: int
+    # El id_usuario se obtendrá del token de autenticación,
+    # no se le pide al usuario.
 
-class FotoCreate(FotoBase):
-    # Modelo de entrada (POST)
-    # 'usuario_id' vendrá del token
-    # Los campos de IA (prediccion, prob, procesada) se rellenan después
+class Coleccion(ColeccionBase, BaseConfig):
+    """Esquema para LEER un item de la colección."""
+    id_coleccion: int
+    fecha_captura: datetime
+    
+    # --- Relación Anidada ---
+    # Al leer un item de la colección, queremos ver
+    # la información completa de la variedad, no solo su ID.
+    variedad: Variedad 
+
+# -----------------------------------------------------
+# Esquemas: Publicacion (Foro)
+# -----------------------------------------------------
+
+class PublicacionBase(BaseModel):
+    """Campos base para una publicación del foro."""
+    titulo: str
+    texto: str
+    links_fotos: Optional[List[str]] = None
+
+class PublicacionCreate(PublicacionBase):
+    """Esquema para CREAR una publicación."""
+    # El id_usuario se obtendrá del token, no del body
     pass
 
-class FotoUpdate(BaseModel):
-    # Schema para cuando la IA procesa la foto
-    variedad_predicha_id: int | None = None
-    probabilidad: float | None = None # Usamos float, no Decimal
-    procesada: bool | None = None
-    # También permitimos cambiar la parcela
-    parcela_id: int | None = None
+# --- Esquema intermedio para el autor ---
+class AutorPublicacion(BaseConfig):
+    """Un esquema reducido para mostrar solo info pública del autor."""
+    id_usuario: int
+    nombre: str
+    apellidos: str
 
-class Foto(FotoBase):
-    # Modelo de lectura (salida API)
-    id: int
-    usuario_id: UUID
-    variedad_predicha_id: int | None = None
-    probabilidad: float | None = None
-    procesada: bool
-    # La fecha_captura tendrá un valor de la BD si no se proveyó
-    fecha_captura: datetime
+class Publicacion(PublicacionBase, BaseConfig):
+    """Esquema para LEER una publicación."""
+    id_publicacion: int
+    fecha_publicacion: datetime
+    
+    # --- Relación Anidada ---
+    # Mostramos la información del autor usando el esquema reducido
+    autor: AutorPublicacion
 
-    class Config:
-        orm_mode = True
+# -----------------------------------------------------
+# Esquemas: Usuario
+# -----------------------------------------------------
 
-# --- Schemas para 'clasificaciones' ---
+class UsuarioBase(BaseModel):
+    """Campos base del usuario."""
+    email: EmailStr  # Pydantic valida que sea un email válido
+    nombre: str
+    apellidos: str
 
-class ClasificacionBase(BaseModel):
-    foto_id: int
-    modelo: str | None = "vitia_model_v1"
-    variedad_predicha_id: int | None = None
-    probabilidad: float | None = None # Usamos float
+class UsuarioCreate(UsuarioBase):
+    """Esquema para CREAR un usuario (registro)."""
+    # El usuario envía 'password', NO 'password_hash'
+    password: str
 
-class ClasificacionCreate(ClasificacionBase):
-    # Modelo de entrada (POST)
-    pass
+class Usuario(UsuarioBase, BaseConfig):
+    """Esquema para LEER la info de un usuario (perfil)."""
+    id_usuario: int
+    es_premium: bool
+    fecha_registro: datetime
+    
+    # --- Relaciones Anidadas ---
+    # Al ver el perfil de un usuario, mostramos sus publicaciones
+    # y los items de su colección.
+    publicaciones: List[Publicacion] = []
+    coleccion: List[Coleccion] = []
 
-class Clasificacion(ClasificacionBase):
-    # Modelo de lectura (salida API)
-    id: int
-    fecha_clasificacion: datetime
+# -----------------------------------------------------
+# Esquemas: Autenticación (Login)
+# -----------------------------------------------------
 
-    class Config:
-        orm_mode = True
+class Token(BaseModel):
+    """Esquema para devolver un Token JWT al usuario."""
+    access_token: str
+    token_type: str
 
-# --- Schemas para VISTAS ('vista_fotos_detalle') ---
-
-class VistaFotosDetalle(BaseModel):
-    # Este es un modelo de SOLO LECTURA
-    foto_id: int
-    parcela: str | None = None
-    variedad_predicha: str | None = None
-    probabilidad: float | None = None
-    ruta_imagen: str
-    latitud: float | None = None
-    longitud: float | None = None
-    fecha_captura: datetime
-
-    class Config:
-        orm_mode = True
+class TokenData(BaseModel):
+    """Esquema para los datos contenidos dentro del Token JWT."""
+    email: Optional[str] = None
+    id_usuario: Optional[int] = None

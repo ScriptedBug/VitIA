@@ -2,12 +2,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from app.config import SUPABASE_DB_URL 
+from .config import DATABASE_URL
 
 # 1. Tu URL de conexión COMPLETA de Supabase (tipo PostgreSQL)
 #    Ej: "postgresql://postgres:TU_CLAVE@db.xyz.supabase.co:5432/postgres"
 #    ¡Sácala de tus settings de Supabase, NO de las variables de entorno de la API!
-SQLALCHEMY_DATABASE_URL = SUPABASE_DB_URL
+SQLALCHEMY_DATABASE_URL = DATABASE_URL
 
 # 2. El "motor" de SQLAlchemy
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
