@@ -81,6 +81,14 @@ class Coleccion(ColeccionBase, BaseConfig):
     # la información completa de la variedad, no solo su ID.
     variedad: Variedad 
 
+class ColeccionUpdate(BaseModel):
+    """
+    Esquema para actualizar un item de la colección (Parcial).
+    Todos los campos son opcionales.
+    """
+    path_foto_usuario: Optional[str] = None
+    id_variedad: Optional[int] = None
+
 # -----------------------------------------------------
 # Esquemas: Publicacion (Foro)
 # -----------------------------------------------------
@@ -126,6 +134,15 @@ class UsuarioCreate(UsuarioBase):
     """Esquema para CREAR un usuario (registro)."""
     # El usuario envía 'password', NO 'password_hash'
     password: str
+
+class UsuarioUpdate(BaseModel):
+    """
+    Esquema para actualizar el perfil de un usuario.
+    Todos los campos son opcionales.
+    """
+    nombre: Optional[str] = None
+    apellidos: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 class Usuario(UsuarioBase, BaseConfig):
     """Esquema para LEER la info de un usuario (perfil)."""

@@ -52,5 +52,117 @@ def delete_variedad(db: Session, id_variedad: int):
     return db_variedad
 
 # -----------------------------------------------------
-# ... Aquí irían las funciones CRUD para Usuario, Coleccion, etc. ...
+# Funciones CRUD para Coleccion (Personal)
 # -----------------------------------------------------
+
+def create_coleccion_item(db: Session, item: schemas.ColeccionCreate, id_usuario: int):
+    """Crea un nuevo item en la colección de un usuario."""
+    # **item.model_dump() coge 'path_foto_usuario' y 'id_variedad' del schema
+    db_item = models.Coleccion(
+        **item.model_dump(),
+        id_usuario=id_usuario  # Añadimos el ID del usuario autenticado
+    )
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+def get_user_coleccion(db: Session, id_usuario: int, skip: int = 0, limit: int = 100):
+    """Obtiene una lista paginada de la colección de un usuario."""
+    return db.query(models.Coleccion)\
+             .filter(models.Coleccion.id_usuario == id_usuario)\
+             .offset(skip)\
+             .limit(limit)\
+             .all()
+
+def get_coleccion_item(db: Session, id_coleccion: int, id_usuario: int):
+    """
+    Obtiene un item específico de la colección,
+    asegurándose de que pertenece al usuario.
+    """
+    return db.query(models.Coleccion).filter(
+        models.Coleccion.id_coleccion == id_coleccion,
+        models.Coleccion.id_usuario == id_usuario
+    ).first()
+
+def delete_coleccion_item(db: Session, id_coleccion: int, id_usuario: int):
+    """
+    Elimina un item de la colección,
+    asegurándose de que pertenece al usuario.
+    """
+    db_item = get_coleccion_item(db, id_coleccion, id_usuario)
+    
+    if db_item:
+        db.delete(db_item)
+        db.commit()
+    return db_item
+
+def update_coleccion_item(
+    db: Session, 
+    db_item: models.Coleccion, 
+    item_update: schemas.ColeccionUpdate
+):
+    """
+    Actualiza un item de la colección.
+    Usa model_dump(exclude_unset=True) para actualizar solo los campos enviados.
+    """
+    update_data = item_update.model_dump(exclude_unset=True)
+    
+    for key, value in update_data.items():
+        setattr(db_item, key, value)
+    
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+# -----------------------------------------------------
+# Funciones CRUD para Usuario (NUEVAS)
+# -----------------------------------------------------
+
+def get_user(db: Session, id_usuario: int):
+    """Obtiene un usuario por su ID."""
+    return db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
+
+def get_user_by_email(db: Session, email: str):
+    """Obtiene un usuario por su email."""
+    return db.query(models.Usuario).filter(models.Usuario.email == email).first()
+
+def create_user(db: Session, user: schemas.UsuarioCreate, hashed_password: str):
+    """Crea un nuevo usuario con la contraseña ya hasheada."""
+    db_user = models.Usuario(
+        email=user.email,
+        nombre=user.nombre,
+        apellidos=user.apellidos,
+        password_hash=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def update_user(db: Session, db_user: models.Usuario, user_update: schemas.UsuarioUpdate):
+    """
+    Actualiza un usuario.
+    Usa model_dump(exclude_unset=True) para actualizar solo los campos enviados.
+    """
+    update_data = user_update.model_dump(exclude_unset=True)
+    
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+def delete_user(db: Session, id_usuario: int):
+    """
+    Elimina un usuario de la base de datos.
+    """
+    db_user = get_user(db, id_usuario=id_usuario)
+    if db_user:
+        db.delete(db_user)
+        db.commit()
+    return db_user
