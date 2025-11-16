@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from .. import crud, schemas, auth, security
+from .. import crud, schemas, auth, security, models
 from ..database import get_db
 
 router = APIRouter(
@@ -62,3 +62,16 @@ def login_for_access_token(
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Cerrar sesión (invalidar token en cliente)"
+)
+def logout_user(current_user: models.Usuario = Depends(auth.get_current_user)):
+    """
+    Endpoint para que el cliente notifique un cierre de sesión.
+    
+    El servidor no hace nada (al ser JWT stateless).
+    El cliente DEBE eliminar el token localmente después de llamar a esto.
+    """
+    return {"msg": "Cierre de sesión exitoso. El token debe ser eliminado por el cliente."}

@@ -166,3 +166,45 @@ def delete_user(db: Session, id_usuario: int):
         db.delete(db_user)
         db.commit()
     return db_user
+
+# -----------------------------------------------------
+# Funciones CRUD para Publicaciones (Foro)
+# -----------------------------------------------------
+
+def create_publicacion(db: Session, publicacion: schemas.PublicacionCreate, id_usuario: int):
+    """Crea una nueva publicación en el foro."""
+    db_publicacion = models.Publicacion(
+        **publicacion.model_dump(),
+        id_usuario=id_usuario
+    )
+    db.add(db_publicacion)
+    db.commit()
+    db.refresh(db_publicacion)
+    return db_publicacion
+
+def get_publicacion(db: Session, id_publicacion: int):
+    """Obtiene una publicación por su ID."""
+    return db.query(models.Publicacion).filter(models.Publicacion.id_publicacion == id_publicacion).first()
+
+def delete_publicacion(db: Session, db_publicacion: models.Publicacion):
+    """Elimina una publicación de la base de datos."""
+    db.delete(db_publicacion)
+    db.commit()
+    return db_publicacion
+
+def get_publicaciones(db: Session, skip: int = 0, limit: int = 100):
+    """Obtiene una lista paginada de todas las publicaciones del foro."""
+    return db.query(models.Publicacion)\
+             .order_by(models.Publicacion.fecha_publicacion.desc())\
+             .offset(skip)\
+             .limit(limit)\
+             .all()
+
+def get_user_publicaciones(db: Session, id_usuario: int, skip: int = 0, limit: int = 100):
+    """Obtiene una lista paginada de las publicaciones de un usuario específico."""
+    return db.query(models.Publicacion)\
+             .filter(models.Publicacion.id_usuario == id_usuario)\
+             .order_by(models.Publicacion.fecha_publicacion.desc())\
+             .offset(skip)\
+             .limit(limit)\
+             .all()
