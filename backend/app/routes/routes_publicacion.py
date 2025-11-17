@@ -112,6 +112,3 @@ def delete_publicacion_endpoint(
     
     # 4. Eliminar la publicación
     return crud.delete_publicacion(db=db, db_publicacion=db_publicacion)
-
-# Nota: De momento no incluimos GET (obtener todas las publicaciones)
-# pero sería el siguiente paso lógico para construir el foro.
