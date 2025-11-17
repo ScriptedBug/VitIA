@@ -44,5 +44,5 @@ web/.dart_tool/
 # ===== SECRETS =====
 .env
 *.env
-.ini
+alembic.ini
 
