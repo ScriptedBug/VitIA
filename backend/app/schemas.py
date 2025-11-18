@@ -60,6 +60,9 @@ class Variedad(VariedadBase, BaseConfig):
 class ColeccionBase(BaseModel):
     """Campo base para un item de la colección."""
     path_foto_usuario: str
+    notas: Optional[str] = None
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
 
 class ColeccionCreate(ColeccionBase):
     """Esquema para crear un item en la colección.
@@ -88,6 +91,9 @@ class ColeccionUpdate(BaseModel):
     """
     path_foto_usuario: Optional[str] = None
     id_variedad: Optional[int] = None
+    notas: Optional[str] = None
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
 
 # -----------------------------------------------------
 # Esquemas: Publicacion (Foro)
@@ -169,3 +175,35 @@ class TokenData(BaseModel):
     """Esquema para los datos contenidos dentro del Token JWT."""
     email: Optional[str] = None
     id_usuario: Optional[int] = None
+
+# 2. NUEVOS SCHEMAS PARA COMENTARIOS
+
+class ComentarioBase(BaseModel):
+    texto: str
+
+class ComentarioCreate(ComentarioBase):
+    id_publicacion: int
+    # Opcional: Si envías esto, es una respuesta. Si no, es comentario principal.
+    id_padre: Optional[int] = None
+
+# Schema para mostrar el autor del comentario (reducido)
+class AutorComentario(BaseConfig):
+    id_usuario: int
+    nombre: str
+    apellidos: str
+
+class Comentario(ComentarioBase, BaseConfig):
+    id_comentario: int
+    fecha_comentario: datetime
+    id_usuario: int
+    id_publicacion: int
+    id_padre: Optional[int] = None
+    
+    autor: AutorComentario
+    
+    # RECURSIVIDAD: Un comentario puede tener una lista de comentarios (hijos)
+    # Usamos List['Comentario'] entre comillas porque la clase se está definiendo ahora mismo
+    hijos: List['Comentario'] = [] 
+
+# Esto es necesario para que Pydantic resuelva la referencia circular (hijos -> Comentario)
+Comentario.model_rebuild()
