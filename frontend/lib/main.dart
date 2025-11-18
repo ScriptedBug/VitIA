@@ -288,12 +288,47 @@ class _HomepageState extends State<HomePage> {
         padding: EdgeInsets.symmetric(horizontal: 12.0),
         child: Icon(Icons.settings, size: 26),
       ),
-      actions: const [
+      actions: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12.0),
-          child: Icon(Icons.account_circle, size: 28),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: GestureDetector(
+              onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PerfilPage()),
+                );
+              },
+            child: const Icon(Icons.account_circle, size: 28),
+          ),
         ),
       ],
+
+    );
+  }
+}
+
+class PerfilPage extends StatelessWidget {
+  const PerfilPage({super.key});
+
+  void logout(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false, // Elimina el stack de navegación
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Perfil")),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () => logout(context),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+          child: const Text("Cerrar sesión"),
+        ),
+      ),
     );
   }
 }
@@ -311,3 +346,5 @@ class Inicio extends StatelessWidget {
     );
   }
 }
+
+
