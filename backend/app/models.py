@@ -1,7 +1,7 @@
 # --- En tu archivo /app/models.py ---
 
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, Float
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB  # Específico para PostgreSQL
 
@@ -65,6 +65,9 @@ class Coleccion(Base):
     id_coleccion = Column(Integer, primary_key=True, index=True)
     path_foto_usuario = Column(String(512), nullable=False) # Ruta a S3, Firebase, etc.
     fecha_captura = Column(DateTime(timezone=True), server_default=func.now())
+    notas = Column(Text, nullable=True)
+    latitud = Column(Float, nullable = True)
+    longitud = Column(Float, nullable = True)
 
     # --- Claves Foráneas ---
     # Aquí definimos las columnas que 'conectan' las tablas
@@ -94,3 +97,28 @@ class Publicacion(Base):
     
     # --- Relaciones ---
     autor = relationship("Usuario", back_populates="publicaciones")
+    comentarios = relationship("Comentario", back_populates="publicacion", cascade="all, delete-orphan")
+
+class Comentario(Base):
+    __tablename__ = "Comentarios"
+
+    id_comentario = Column(Integer, primary_key=True, index=True)
+    texto = Column(Text, nullable=False)
+    fecha_comentario = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Claves foráneas
+    id_usuario = Column(Integer, ForeignKey("Usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
+    id_publicacion = Column(Integer, ForeignKey("Publicaciones.id_publicacion", ondelete="CASCADE"), nullable=False)
+    
+    # RELACIÓN RECURSIVA (Self-Referential): Un comentario puede tener un "padre"
+    id_padre = Column(Integer, ForeignKey("Comentarios.id_comentario", ondelete="CASCADE"), nullable=True)
+
+    # Relaciones
+    autor = relationship("Usuario")
+    publicacion = relationship("Publicacion", back_populates="comentarios")
+    
+    # Esto permite acceder a los hijos: comentario.hijos (lista de respuestas)
+    # y al padre: comentario.padre (el comentario al que respondes)
+    hijos = relationship("Comentario", 
+                        backref=backref('padre', remote_side=[id_comentario]),
+                        cascade="all, delete-orphan")

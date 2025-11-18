@@ -208,3 +208,43 @@ def get_user_publicaciones(db: Session, id_usuario: int, skip: int = 0, limit: i
              .offset(skip)\
              .limit(limit)\
              .all()
+
+# --- CRUD PARA COMENTARIOS ---
+
+def create_comentario(db: Session, comentario: schemas.ComentarioCreate, id_usuario: int):
+    db_comentario = models.Comentario(
+        texto=comentario.texto,
+        id_publicacion=comentario.id_publicacion,
+        id_padre=comentario.id_padre, # Puede ser None o un ID
+        id_usuario=id_usuario
+    )
+    db.add(db_comentario)
+    db.commit()
+    db.refresh(db_comentario)
+    return db_comentario
+
+def get_comentarios_publicacion(db: Session, id_publicacion: int, skip: int = 0, limit: int = 100):
+    """
+    Obtiene solo los comentarios PRINCIPALES (donde id_padre es NULL).
+    Gracias a la relación 'hijos' en el modelo y schema, SQLAlchemy y Pydantic
+    cargarán las respuestas anidadas automáticamente.
+    """
+    return db.query(models.Comentario)\
+             .filter(models.Comentario.id_publicacion == id_publicacion)\
+             .filter(models.Comentario.id_padre == None)\
+             .order_by(models.Comentario.fecha_comentario.asc())\
+             .offset(skip)\
+             .limit(limit)\
+             .all()
+
+def delete_comentario(db: Session, id_comentario: int, id_usuario: int):
+    """Elimina un comentario si pertenece al usuario."""
+    db_comentario = db.query(models.Comentario).filter(
+        models.Comentario.id_comentario == id_comentario,
+        models.Comentario.id_usuario == id_usuario
+    ).first()
+    
+    if db_comentario:
+        db.delete(db_comentario)
+        db.commit()
+    return db_comentario
