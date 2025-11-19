@@ -6,7 +6,7 @@ from .routes.routes_auth import router as auth_router
 from .routes.routes_users import router as users_router
 from .routes.routes_publicacion import router as publicacion_router
 from .routes.routes_comentarios import router as comentario_router
-from app.routes import ml_routes
+from .routes import ml_routes
 
 
 app = FastAPI(title="VitIA Backend")

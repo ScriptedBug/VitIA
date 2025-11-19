@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from app.ia.model_loader import model
+from ..ia.model_loader import model
 import io
 from PIL import Image
 from typing import List
