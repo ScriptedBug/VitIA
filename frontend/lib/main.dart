@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // NECESARIO para kIsWeb y defaultTargetPlatform
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// Asegúrate de que estos imports apunten a los archivos correctos
 import 'biblioteca.dart';
 import 'vista_coleccion.dart';
 import 'foto.dart';
+
+// --- CONFIGURACIÓN DE URL BASE DINÁMICA ---
+
+// La dirección de desarrollo de tu servidor FastAPI/Uvicorn (localhost para Web/Desktop)
+const String _localHostUrl = 'http://127.0.0.1:8000'; 
+
+String getBaseUrl() {
+  if (kIsWeb) {
+    // Si corre en un navegador (Web), usa localhost
+    return _localHostUrl;
+  }
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    // Si corre en el emulador de Android, usa el alias especial
+    return 'http://10.0.2.2:8000';
+  }
+  // Para cualquier otro entorno (iOS, Android físico si el host es accesible)
+  return _localHostUrl; 
+}
+// ---------------------------------------------
 
 void main() {
   runApp(const MyApp());
@@ -24,8 +45,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
+//---
+
 ////////////////////////////////////////////////////////////////////////////////
-//                            LOGIN PAGE
+// 🚀 LOGIN PAGE (CORREGIDA Y ROBUSTA)
 ////////////////////////////////////////////////////////////////////////////////
 
 class LoginPage extends StatefulWidget {
@@ -40,35 +63,50 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordCtrl = TextEditingController();
 
   Future<void> login() async {
-    final url = Uri.parse("http://10.0.2.2:8000/auth/token");
+    // 1. Obtener la URL dinámica
+    final baseUrl = getBaseUrl();
+    final url = Uri.parse("$baseUrl/auth/token");
 
-
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/x-www-form-urlencoded"},
-      body: {
-        "username": emailCtrl.text.trim(),
-        "password": passwordCtrl.text.trim(),
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print("TOKEN: ${data["access_token"]}");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Inicio de sesión exitoso")),
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: {
+          "username": emailCtrl.text.trim(),
+          "password": passwordCtrl.text.trim(),
+        },
       );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    } else {
-      final data = jsonDecode(response.body);
+      // Si el widget se desmontó, sal.
+      if (!mounted) return;
 
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("TOKEN: ${data["access_token"]}");
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Inicio de sesión exitoso")),
+        );
+
+        // Navegación
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        // Manejo de errores de autenticación
+        final data = jsonDecode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["detail"] ?? "Error al iniciar sesión")),
+        );
+      }
+    } catch (e) {
+      // Manejo de errores de conexión (ClientException) o JSON
+      if (!mounted) return;
+      print("ERROR DE CONEXIÓN O PETICIÓN: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data["detail"] ?? "Error al iniciar sesión")),
+        SnackBar(content: Text("Error de conexión al servidor: ${e.runtimeType}")),
       );
     }
   }
@@ -87,14 +125,12 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
-
               TextField(
                 controller: emailCtrl,
                 decoration: const InputDecoration(
                     labelText: "Email", border: OutlineInputBorder()),
               ),
               const SizedBox(height: 15),
-
               TextField(
                 controller: passwordCtrl,
                 obscureText: true,
@@ -102,12 +138,10 @@ class _LoginPageState extends State<LoginPage> {
                     labelText: "Contraseña", border: OutlineInputBorder()),
               ),
               const SizedBox(height: 20),
-
               ElevatedButton(
                 onPressed: login,
                 child: const Text("Iniciar sesión"),
               ),
-
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -125,8 +159,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
+//---
+
 ////////////////////////////////////////////////////////////////////////////////
-//                            REGISTER PAGE
+// 📝 REGISTER PAGE (CORREGIDA Y ROBUSTA)
 ////////////////////////////////////////////////////////////////////////////////
 
 class RegisterPage extends StatefulWidget {
@@ -143,36 +179,51 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController apellidosCtrl = TextEditingController();
 
   Future<void> register() async {
-    final url = Uri.parse("http://10.0.2.2:8000/auth/register");
+    // 1. Obtener la URL dinámica
+    final baseUrl = getBaseUrl();
+    final url = Uri.parse("$baseUrl/auth/register");
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "email": emailCtrl.text.trim(),
-        "nombre": nombreCtrl.text.trim(),
-        "apellidos": apellidosCtrl.text.trim(),
-        "password": passCtrl.text.trim(),
-      }),
-    );
-
-    print("STATUS: ${response.statusCode}");
-    print("BODY: ${response.body}");
-
-    if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Usuario creado correctamente")),
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": emailCtrl.text.trim(),
+          "nombre": nombreCtrl.text.trim(),
+          "apellidos": apellidosCtrl.text.trim(),
+          "password": passCtrl.text.trim(),
+        }),
       );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    } else {
-      final data = jsonDecode(response.body);
+      // Si el widget se desmontó, sal.
+      if (!mounted) return;
 
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Usuario creado correctamente")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        // Manejo de errores de registro
+        final data = jsonDecode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["detail"] ?? "Error al crear usuario")),
+        );
+      }
+    } catch (e) {
+      // Manejo de errores de conexión o JSON
+      if (!mounted) return;
+      print("ERROR DE CONEXIÓN O PETICIÓN: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data["detail"] ?? "Error al crear usuario")),
+        SnackBar(content: Text("Error de conexión al servidor: ${e.runtimeType}")),
       );
     }
   }
@@ -191,21 +242,18 @@ class _RegisterPageState extends State<RegisterPage> {
                   labelText: "Nombre", border: OutlineInputBorder()),
             ),
             const SizedBox(height: 10),
-
             TextField(
               controller: apellidosCtrl,
               decoration: const InputDecoration(
                   labelText: "Apellidos", border: OutlineInputBorder()),
             ),
             const SizedBox(height: 10),
-
             TextField(
               controller: emailCtrl,
               decoration: const InputDecoration(
                   labelText: "Email", border: OutlineInputBorder()),
             ),
             const SizedBox(height: 10),
-
             TextField(
               controller: passCtrl,
               decoration: const InputDecoration(
@@ -213,7 +261,6 @@ class _RegisterPageState extends State<RegisterPage> {
               obscureText: true,
             ),
             const SizedBox(height: 20),
-
             ElevatedButton(
               onPressed: register,
               child: const Text("Crear cuenta"),
@@ -226,7 +273,7 @@ class _RegisterPageState extends State<RegisterPage> {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//                              HOME PAGE
+// 🏠 HOME PAGE (SIN CAMBIOS)
 ////////////////////////////////////////////////////////////////////////////////
 
 class HomePage extends StatefulWidget {
@@ -291,18 +338,17 @@ class _HomepageState extends State<HomePage> {
       actions: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: GestureDetector(
-              onTap: () {
+          child: GestureDetector(
+            onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const PerfilPage()),
-                );
-              },
+              );
+            },
             child: const Icon(Icons.account_circle, size: 28),
           ),
         ),
       ],
-
     );
   }
 }
@@ -346,5 +392,3 @@ class Inicio extends StatelessWidget {
     );
   }
 }
-
-
