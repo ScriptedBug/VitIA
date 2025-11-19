@@ -31,10 +31,11 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,     # Permite cookies de sesión y credenciales
-    allow_methods=["*"],        # Permite todos los métodos (POST, GET, etc.)
-    allow_headers=["*"],        # Permite todos los encabezados
+    allow_origins=["*"], # Permitir todos los orígenes en desarrollo
+    allow_credentials=True,
+    allow_methods=["*"],
+    # ⬅️ ASEGURA QUE ESTOS ENCABEZADOS ESTÉN EXPLÍCITAMENTE PERMITIDOS
+    allow_headers=["*", "Authorization", "Content-Type", "access-control-allow-origin"],
 )
 # ----------------------------------------------------
 # FIN DE CONFIGURACIÓN DE CORS
