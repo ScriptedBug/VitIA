@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class Foto extends StatelessWidget {
-  const Foto({super.key});
+class FotoPage extends StatelessWidget {
+  const FotoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ientificar planta'),
+        title: const Text('Identificar planta'),
         centerTitle: true,
       ),
       body: const Center(
