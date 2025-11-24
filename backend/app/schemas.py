@@ -21,14 +21,21 @@ class BaseConfig(BaseModel):
 # Esquemas: Variedad (Biblioteca)
 # -----------------------------------------------------
 
+class MorfologiaData(BaseModel):
+    hoja: Optional[str] = None
+    racimo: Optional[str] = None
+    uva: Optional[str] = None
+
 class VariedadBase(BaseModel):
     """Campos base que comparte una Variedad."""
     nombre: str
     descripcion: str
+    color: Optional[str] = None
     # Usamos 'Any' para el JSONB, o puedes ser más específico
     # con List[str] para links_imagenes y Dict[str, Any] para info_extra
     links_imagenes: Optional[List[str]] = None 
     info_extra: Optional[Dict[str, Any]] = None
+    morfologia: Optional[MorfologiaData] = None
 
 class VariedadCreate(VariedadBase):
     """Esquema para crear una nueva Variedad (usado por un admin)."""
@@ -48,6 +55,8 @@ class VariedadUpdate(BaseModel):
     descripcion: Optional[str] = None
     links_imagenes: Optional[List[str]] = None
     info_extra: Optional[Dict[str, Any]] = None
+    color: Optional[str] = None
+    morfologia: Optional[MorfologiaData] = None
 
 class Variedad(VariedadBase, BaseConfig):
     """Esquema para LEER una Variedad (lo que se devuelve al usuario)."""
@@ -135,6 +144,7 @@ class UsuarioBase(BaseModel):
     email: EmailStr  # Pydantic valida que sea un email válido
     nombre: str
     apellidos: str
+    ubicacion: Optional[str] = None
 
 class UsuarioCreate(UsuarioBase):
     """Esquema para CREAR un usuario (registro)."""
@@ -149,6 +159,7 @@ class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None
     apellidos: Optional[str] = None
     email: Optional[EmailStr] = None
+    ubicacion: Optional[str] = None
 
 class Usuario(UsuarioBase, BaseConfig):
     """Esquema para LEER la info de un usuario (perfil)."""

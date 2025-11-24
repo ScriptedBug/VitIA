@@ -248,3 +248,13 @@ def delete_comentario(db: Session, id_comentario: int, id_usuario: int):
         db.delete(db_comentario)
         db.commit()
     return db_comentario
+
+# --- CRUD PARA COMPROBAR SI UN USUARIO TIENE REGISTRADA UNA VARIEDAD ---
+
+def check_variedad_in_coleccion(db: Session, id_usuario: int, id_variedad: int) -> bool:
+    """Devuelve True si el usuario tiene esta variedad en su colección."""
+    item = db.query(models.Coleccion).filter(
+        models.Coleccion.id_usuario == id_usuario,
+        models.Coleccion.id_variedad == id_variedad
+    ).first()
+    return item is not None

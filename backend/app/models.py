@@ -21,6 +21,7 @@ class Usuario(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     es_premium = Column(Boolean, default=False)
+    ubicacion = Column(String(255), nullable=True)
     
     # Usamos timezone=True para guardar con zona horaria (TIMESTAMPTZ)
     fecha_registro = Column(DateTime(timezone=True), server_default=func.now())
@@ -46,10 +47,12 @@ class Variedad(Base):
     id_variedad = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(150), nullable=False, index=True) # index=True para búsquedas rápidas
     descripcion = Column(Text, nullable=False)
+    color = Column(String(50), nullable=True)
     
     # Usamos JSONB para guardar una lista de URLs o datos estructurados
     links_imagenes = Column(JSONB) 
     info_extra = Column(JSONB)
+    morfologia = Column(JSONB)
 
     # --- Relaciones ---
     # Esta Variedad puede estar en la Coleccion de muchos usuarios

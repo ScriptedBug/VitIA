@@ -5,6 +5,7 @@ from typing import List
 # Importaciones relativas (gracias a la estructura de carpetas)
 from .. import crud, models, schemas
 from ..database import get_db
+from ..auth import get_current_user
 
 router = APIRouter(
     prefix="/variedades",  # Prefijo para todas las rutas de este archivo
@@ -122,3 +123,26 @@ def delete_variedad_endpoint(
             detail="Variedad no encontrada"
         )
     return db_variedad
+
+@router.get("/check/{id_variedad}", 
+    summary="Verificar si tengo esta variedad"
+)
+def check_variedad_endpoint(
+    id_variedad: int,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    """
+    Devuelve true/false indicando si el usuario logueado
+    tiene la variedad X en su colección.
+    
+    El frontend usará esto:
+    - Si es True -> Muestra el botón 'Ver mis fotos'.
+    - Si es False -> Oculta el botón.
+    """
+    tiene_variedad = crud.check_variedad_in_coleccion(
+        db=db, 
+        id_usuario=current_user.id_usuario, 
+        id_variedad=id_variedad
+    )
+    return {"en_coleccion": tiene_variedad}
