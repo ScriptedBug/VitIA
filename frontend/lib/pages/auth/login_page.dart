@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:vinas_mobile/core/services/user_sesion.dart';
 import '../../core/services/api_config.dart';
 import '../main_layout/home_page.dart'; // Importa la nueva ubicación
 import 'register_page.dart';
@@ -34,7 +35,10 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("TOKEN: ${data["access_token"]}");
+        final token = data["access_token"];
+
+        UserSession.setToken(token);
+        print("Token guardado en sesión: $token");
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Inicio de sesión exitoso")),
