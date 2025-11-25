@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 // Quitar dart:convert y http
 // import 'dart:convert';
 // import 'package:http/http.dart' as http;
@@ -9,6 +10,13 @@ import 'package:flutter/material.dart';
 import '../../core/services/auth_service.dart'; 
 import '../../core/services/api_config.dart'; // Mantener api_config
 import '../main_layout/home_page.dart';
+=======
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:vinas_mobile/core/services/user_sesion.dart';
+import '../../core/services/api_config.dart';
+import '../main_layout/home_page.dart'; // Importa la nueva ubicación
+>>>>>>> bfada624155ab1db2c923d47e78c8c0d67f0c324
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -40,9 +48,18 @@ class _LoginPageState extends State<LoginPage> {
       
       if (!mounted) return;
 
+<<<<<<< HEAD
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Inicio de sesión exitoso")),
       );
+=======
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final token = data["access_token"];
+
+        UserSession.setToken(token);
+        print("Token guardado en sesión: $token");
+>>>>>>> bfada624155ab1db2c923d47e78c8c0d67f0c324
 
       Navigator.pushReplacement(
         context,

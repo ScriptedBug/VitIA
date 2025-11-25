@@ -18,7 +18,11 @@ dependencies:
   geolocator: ^14.0.2
   geocoding: ^4.0.0
   permission_handler: ^12.0.1
+<<<<<<< HEAD
   shared_preferences: ^2.5.3
+=======
+  camera: ^0.10.5
+>>>>>>> bfada624155ab1db2c923d47e78c8c0d67f0c324
 
 dev_dependencies:
   flutter_lints: ^3.0.1

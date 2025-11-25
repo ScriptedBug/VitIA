@@ -3,6 +3,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../core/api_client.dart';
+import '../../core/services/api_config.dart';
+import 'detalle_variedad_page.dart'; 
+import '../../pages/capture/foto_page.dart';
 
 
 class CatalogoPage extends StatefulWidget { // ⬅️ CLASE RENOMBRADA A CATÁLOGO
@@ -21,52 +25,53 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   
   // Variables del estado original (mantidas para la lógica)
   bool _modoOscuro = false;
-  List<Map<String, dynamic>> _variedades = [];
+  // 1. AÑADE ESTAS VARIABLES
+  List<Map<String, dynamic>> _variedades = []; 
   List<Map<String, dynamic>> _filtradas = [];
+  bool _isLoading = true;
+  ApiClient? _apiClient; // Usa ? para evitar problemas de late si algo falla
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // Usar el índice inicial pasado desde HomePage
-    _tabController.index = widget.initialTab; 
+    _tabController.index = widget.initialTab;
 
-    // Datos de ejemplo adaptados al nuevo estilo de tarjeta
-    _variedades = [
-      {
-        'nombre': 'Moscatel',
-        'region': 'Levante español y Canarias',
-        'tipo': 'Blanca',
-        'imagen': 'assets/hoja1.jpg',
-        'descripcion': 'Variedad aromática y dulce. Se usa para vinos de postre.',
-        'ubicacion': 'Valencia, España'
-      },
-      {
-        'nombre': 'Merseguera',
-        'region': 'Comunidad Valenciana',
-        'tipo': 'Blanca',
-        'imagen': 'assets/hoja2.jpg',
-        'descripcion': 'Uva blanca de la Comunidad Valenciana, resistente a la sequía.',
-        'ubicacion': 'Valencia, España'
-      },
-      {
-        'nombre': 'Giró',
-        'region': 'Islas Baleares (Mallorca)',
-        'tipo': 'Tinta',
-        'imagen': 'assets/hoja3.jpg',
-        'descripcion': 'Variedad tinta autóctona de Baleares.',
-        'ubicacion': 'Mallorca, España'
-      },
-      {
-        'nombre': 'Monastrell',
-        'region': 'Sureste de España',
-        'tipo': 'Tinta',
-        'imagen': 'assets/hoja4.jpg',
-        'descripcion': 'Variedad muy extendida en Murcia y Alicante.',
-        'ubicacion': 'Murcia, España'
-      },
-    ];
-    _filtradas = List.from(_variedades);
+    // 2. INICIALIZAR Y CARGAR
+    _apiClient = ApiClient(getBaseUrl());
+    _cargarVariedadesBackend();
+  }
+
+  // 3. AÑADE ESTE MÉTODO
+  Future<void> _cargarVariedadesBackend() async {
+    try {
+      final lista = await _apiClient!.getVariedades();
+      
+      setState(() {
+        _variedades = lista.map((item) {
+           // Mapeo simple de lo que devuelve el backend a tu UI
+           return {
+             'id': item['id_variedad'],
+             'nombre': item['nombre'],
+             'descripcion': item['descripcion'],
+             'region': 'España', // Tu backend aun no manda región, ponemos placeholder
+             'tipo': item['color'] ?? 'Desconocido',
+             // Si hay imágenes, tomamos la primera, si no null
+             'imagen': (item['links_imagenes'] != null && (item['links_imagenes'] as List).isNotEmpty)
+                 ? item['links_imagenes'][0] 
+                 : null,
+              'morfologia': item['morfologia'], 
+              'info_extra': item['info_extra'],
+           };
+        }).toList().cast<Map<String, dynamic>>();
+        
+        _filtradas = _variedades;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error cargando catálogo: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -86,38 +91,18 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     });
   }
 
-  Future<void> _abrirCamara() async {
-    var statusCamara = await Permission.camera.request();
-    var statusUbicacion = await Permission.locationWhenInUse.request();
-
-    if (statusCamara.isDenied || statusUbicacion.isDenied) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Permisos de cámara y ubicación son necesarios.")),
-      );
-      return;
-    }
-
-    final ImagePicker picker = ImagePicker();
-    final XFile? foto = await picker.pickImage(source: ImageSource.camera);
-
-    if (foto == null) { return; }
-
-    Position? posicion;
-    try {
-      posicion = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-      );
-    } catch(e) {
-      print("Error obteniendo ubicación: $e");
-    }
-
-    String ubicacionTexto = posicion != null
-        ? "Lat: ${posicion.latitude}, Lon: ${posicion.longitude}"
-        : "Ubicación no disponible";
-
-    _mostrarDialogoNuevaVariedad(File(foto.path), ubicacionTexto);
+ 
+  void _abrirCamara() {
+    // Navegamos directamente a la pantalla de cámara (FotoPage)
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FotoPage()),
+    ).then((_) {
+      // Opcional: Cuando vuelvas de la cámara, recargar la lista por si guardaste algo nuevo
+      _cargarVariedadesBackend(); 
+    });
   }
+  
 
   void _mostrarDialogoNuevaVariedad(File imagen, String ubicacionInicial) {
     final nombreCtrl = TextEditingController();
@@ -349,7 +334,14 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
         elevation: 1.5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: InkWell(
-          onTap: () => _mostrarFichaTecnica(variedad),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetalleVariedadPage(variedad: variedad),
+              ),
+            );
+          },
           borderRadius: BorderRadius.circular(15),
           child: Padding(
             padding: const EdgeInsets.all(16.0),

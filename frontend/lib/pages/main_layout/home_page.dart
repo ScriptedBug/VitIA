@@ -38,6 +38,9 @@ class _HomepageState extends State<HomePage> {
     const Color darkBarColor = Color(0xFF142018); 
 
     return Scaffold(
+
+      extendBody: true,
+
       appBar: currentIndex == 0 ? _buildAppBarInicio(context) : null,
       
       body: _screens[currentIndex],

@@ -13,9 +13,14 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    IMAGEKIT_PRIVATE_KEY: str
+    IMAGEKIT_PUBLIC_KEY: str
+    IMAGEKIT_URL_ENDPOINT: str
+
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
-        env_file_encoding="utf-8"
+        env_file_encoding="utf-8",
+        extra="ignore"
     )
 
 settings = Settings()
