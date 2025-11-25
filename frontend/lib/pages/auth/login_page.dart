@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 <<<<<<< HEAD
+<<<<<<< HEAD
 // Quitar dart:convert y http
 // import 'dart:convert';
 // import 'package:http/http.dart' as http;
@@ -17,6 +18,12 @@ import 'package:vinas_mobile/core/services/user_sesion.dart';
 import '../../core/services/api_config.dart';
 import '../main_layout/home_page.dart'; // Importa la nueva ubicación
 >>>>>>> bfada624155ab1db2c923d47e78c8c0d67f0c324
+=======
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../core/services/api_config.dart';
+import '../main_layout/home_page.dart'; // Importa la nueva ubicación
+>>>>>>> parent of 26f4360 (ubicacion)
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -29,25 +36,24 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
-  bool _isLoading = false; 
-  final AuthService _authService = AuthService(); // Instancia del servicio
 
   Future<void> login() async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-    final emailInput = emailCtrl.text.trim();
-    final passwordInput = passwordCtrl.text.trim();
+    final baseUrl = getBaseUrl();
+    final url = Uri.parse("$baseUrl/auth/token");
 
     try {
-      // 1. Obtener Token y guardarlo (llamada al servicio)
-      final token = await _authService.getToken(emailInput, passwordInput);
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: {
+          "username": emailCtrl.text.trim(),
+          "password": passwordCtrl.text.trim(),
+        },
+      );
 
-      // 2. Obtener Nombre de usuario y guardarlo (llamada al servicio)
-      await _authService.fetchAndSaveUserName(token, emailInput); 
-      
       if (!mounted) return;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Inicio de sesión exitoso")),
@@ -60,26 +66,33 @@ class _LoginPageState extends State<LoginPage> {
         UserSession.setToken(token);
         print("Token guardado en sesión: $token");
 >>>>>>> bfada624155ab1db2c923d47e78c8c0d67f0c324
+=======
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("TOKEN: ${data["access_token"]}");
+>>>>>>> parent of 26f4360 (ubicacion)
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-      
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Inicio de sesión exitoso")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        final data = jsonDecode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["detail"] ?? "Error al iniciar sesión")),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       print("ERROR DE CONEXIÓN O PETICIÓN: $e");
-      
-      // Muestra el mensaje de error del servicio o un genérico
-      final errorMessage = e.toString().contains("Exception:") 
-          ? e.toString().replaceFirst("Exception: ", "") 
-          : "Error de conexión al servidor.";
-          
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
+        SnackBar(content: Text("Error de conexión al servidor: ${e.runtimeType}")),
       );
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
@@ -111,14 +124,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _isLoading ? null : login, 
-                child: _isLoading 
-                  ? const SizedBox(
-                      width: 20, 
-                      height: 20, 
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    )
-                  : const Text("Iniciar sesión"),
+                onPressed: login,
+                child: const Text("Iniciar sesión"),
               ),
               TextButton(
                 onPressed: () {
