@@ -109,4 +109,52 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     }
   }
 
+  // --- SECCIÓN FORO / PUBLICACIONES ---
+
+  // 1. Obtener el feed global (Todos)
+  Future<List<dynamic>> getPublicaciones() async {
+    try {
+      final response = await _dio.get('/publicaciones/');
+      return response.data as List<dynamic>;
+    } catch (e) {
+      print("Error al obtener feed: $e");
+      return [];
+    }
+  }
+
+  // 2. Obtener mis hilos (Solo usuario actual)
+  Future<List<dynamic>> getUserPublicaciones() async {
+    try {
+      final response = await _dio.get('/publicaciones/me');
+      return response.data as List<dynamic>;
+    } catch (e) {
+      print("Error al obtener mis publicaciones: $e");
+      rethrow;
+    }
+  }
+
+  // 3. Crear nueva publicación (Para el futuro botón "+")
+  Future<void> createPublicacion(String titulo, String texto) async {
+    try {
+      await _dio.post('/publicaciones/', data: {
+        "titulo": titulo,
+        "texto": texto,
+        "links_fotos": [] // Por ahora lista vacía, luego podrás subir fotos
+      });
+    } catch (e) {
+      print("Error al crear publicación: $e");
+      rethrow;
+    }
+  }
+
+  // 4. Eliminar publicación
+  Future<void> deletePublicacion(int idPublicacion) async {
+    try {
+      await _dio.delete('/publicaciones/$idPublicacion');
+    } catch (e) {
+      print("Error al eliminar publicación: $e");
+      rethrow;
+    }
+  }
+
 }
