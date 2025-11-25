@@ -13,6 +13,17 @@ Future<Map<String, dynamic>> ping() async {
 final r = await _dio.get('/health/ping');
 return r.data as Map<String, dynamic>;
 }
+
+Future<List<dynamic>> getVariedades() async {
+    try {
+      final response = await _dio.get('/variedades/');
+      return response.data as List<dynamic>;
+    } catch (e) {
+      print("Error al obtener variedades: $e");
+      rethrow;
+    }
+  }
+
 Future<List<PredictionModel>> predictImage(XFile file) async {
     try {
       // 1. Leemos los bytes del archivo (Funciona en Web y Móvil)
@@ -68,4 +79,5 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   void setToken(String token) {
     _dio.options.headers["Authorization"] = "Bearer $token";
   }
+
 }
