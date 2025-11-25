@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart'; // 🚨 IMPORTANTE: Necesario para la función de edición
-import '../../core/services/weather_service.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:geolocator/geolocator.dart'; 
+import '../../core/services/weather_service.dart'; 
 
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
@@ -12,10 +11,10 @@ class InicioScreen extends StatefulWidget {
 }
 
 class _InicioScreenState extends State<InicioScreen> {
-  String _userName = 'Viñador';
+  String _userName = 'Viñador'; 
   final WeatherService _weatherService = WeatherService();
   
-  Map<String, dynamic>? _weatherData;
+  Map<String, dynamic>? _weatherData; 
   String _currentLocationName = 'Cargando...';
   bool _isLoadingWeather = true;
 
@@ -23,12 +22,84 @@ class _InicioScreenState extends State<InicioScreen> {
   void initState() {
     super.initState();
     _loadUserName();
-    _loadWeather();
+    _loadWeather(); 
   }
 
-  // --- MÉTODOS DE UBICACIÓN Y EDICIÓN ---
+  // --- LÓGICA DE CARGA DE DATOS (Mantenida) ---
 
-  // 1. Obtener ubicación del dispositivo (GPS)
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('user_name');
+    
+    if (name != null && name.isNotEmpty) {
+      final firstName = name.split(' ')[0]; 
+      if(mounted) {
+        setState(() {
+          _userName = firstName;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadWeather() async {
+    setState(() {
+      _isLoadingWeather = true;
+      _weatherData = null; 
+      _currentLocationName = 'Buscando ubicación...';
+    });
+    
+    Map<String, dynamic>? location = await _weatherService.getLastSavedLocation();
+
+    if (location == null) {
+        location = await _getDeviceLocation();
+    }
+    
+    if (location != null && mounted) {
+      
+      setState(() {
+        _currentLocationName = location!['name']; 
+      });
+      
+      try {
+        final data = await _weatherService.fetchWeather(
+          location['latitude'],
+          location['longitude'],
+          location['name'],
+        );
+
+        if (mounted) {
+          setState(() {
+            _weatherData = data;
+            _currentLocationName = data['location']; 
+          });
+        }
+      } catch (e) {
+        print("Error cargando el clima: $e");
+        if (mounted) {
+           setState(() {
+            _weatherData = null;
+            _currentLocationName = 'Error de conexión API';
+           });
+        }
+      }
+    } else {
+       if (mounted) {
+         setState(() {
+            _weatherData = null; 
+            _currentLocationName = 'Ubicación no disponible';
+         });
+       }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingWeather = false;
+      });
+    }
+  }
+
+  // --- MÉTODOS DE UBICACIÓN Y GPS (Mantenidos) ---
+  
   Future<Map<String, dynamic>?> _getDeviceLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -40,13 +111,13 @@ class _InicioScreenState extends State<InicioScreen> {
                 const SnackBar(content: Text("Servicios de ubicación deshabilitados.")),
             );
         }
-        return null;
+        return null; 
     }
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied ||
+        if (permission == LocationPermission.denied || 
             permission == LocationPermission.deniedForever) {
             if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +137,7 @@ class _InicioScreenState extends State<InicioScreen> {
         return {
             'latitude': position.latitude,
             'longitude': position.longitude,
-            'name': tempName,
+            'name': tempName, 
         };
     } catch (e) {
         print("Error obteniendo ubicación por GPS: $e");
@@ -74,207 +145,8 @@ class _InicioScreenState extends State<InicioScreen> {
     }
   }
 
-  // 2. Diálogo para editar y guardar nueva ubicación
-  Future<void> _editLocation() async {
-    final TextEditingController controller = TextEditingController();
 
-    await showDialog(
-      context: context,
-      builder: (ctx) {
-        // Estado local para las sugerencias dentro del diálogo
-        List<Placemark> suggestions = [];
-        String searchError = '';
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            
-            void searchAddress(String query) async {
-              if (query.length < 3) {
-                setStateDialog(() {
-                  suggestions = [];
-                  searchError = '';
-                });
-                return;
-              }
-
-              setStateDialog(() {
-                searchError = 'Buscando...';
-              });
-
-              try {
-                // 🚨 CORRECCIÓN CLAVE: Usamos locationFromAddress sin prefijo si se importa directamente.
-                final placemarks = await placemarkFromAddress(query); 
-                
-                setStateDialog(() {
-                  suggestions = placemarks;
-                  searchError = placemarks.isEmpty ? 'No se encontraron resultados.' : '';
-                });
-
-              } catch (e) {
-                setStateDialog(() {
-                  suggestions = [];
-                  searchError = 'Error de búsqueda. Intente un formato más simple.';
-                });
-              }
-            }
-
-            return AlertDialog(
-              title: const Text("Editar Ubicación"),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: controller,
-                      decoration: InputDecoration(
-                        hintText: "Ej: Valencia, España",
-                        labelText: "Buscar Ciudad",
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () => searchAddress(controller.text),
-                        ),
-                      ),
-                      onSubmitted: searchAddress,
-                    ),
-                    
-                    if (searchError.isNotEmpty) 
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(searchError, style: TextStyle(color: searchError.contains('Error') ? Colors.red : Colors.orange)),
-                      ),
-                    
-                    // Lista de sugerencias
-                    if (suggestions.isNotEmpty)
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 250),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: suggestions.length,
-                          itemBuilder: (context, index) {
-                            final suggestion = suggestions[index];
-                            
-                            // Construye un nombre legible a partir de los campos del Placemark
-                            final readableName = '${suggestion.street ?? ''}, ${suggestion.locality ?? suggestion.subAdministrativeArea ?? ''}, ${suggestion.country ?? ''}'
-                                                  .replaceAll(RegExp(r'(^, )|(, , )|(,$)'), '').trim();
-
-                            return ListTile(
-                              title: Text(readableName, maxLines: 1, overflow: TextOverflow.ellipsis),
-                              // 🚨 CORRECCIÓN CLAVE 2: Acceso directo a Latitud/Longitud
-                              subtitle: Text('Coord: ${suggestion.latitude.toStringAsFixed(2)}, Lon: ${suggestion.longitude.toStringAsFixed(2)}'),
-                              onTap: () async {
-                                
-                                await _weatherService.saveLocation(
-                                  suggestion.latitude, 
-                                  suggestion.longitude, 
-                                  readableName, 
-                                );
-                                
-                                if (mounted) {
-                                  Navigator.pop(ctx); 
-                                  _loadWeather(); 
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  child: const Text("Cancelar"),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-
-  // 3. Función principal de carga (Prioridad: Guardado > GPS > Error)
-  Future<void> _loadWeather() async {
-    setState(() {
-      _isLoadingWeather = true;
-      _weatherData = null;
-      _currentLocationName = 'Buscando ubicación...';
-    });
-    
-    Map<String, dynamic>? location = await _weatherService.getLastSavedLocation();
-
-    // PASO 1: Si no hay ubicación guardada, intentar obtener la ubicación actual (GPS).
-    if (location == null) {
-        location = await _getDeviceLocation();
-    }
-    
-    // PASO 2: Si encontramos una ubicación (guardada o por GPS), llamamos a la API.
-    if (location != null && mounted) {
-      
-      setState(() {
-        _currentLocationName = location!['name'];
-      });
-      
-      try {
-        final data = await _weatherService.fetchWeather(
-          location['latitude'],
-          location['longitude'],
-          location['name'],
-        );
-
-        if (mounted) {
-          setState(() {
-            _weatherData = data;
-            // Usamos el nombre oficial devuelto por la API
-            _currentLocationName = data['location'];
-          });
-        }
-      } catch (e) {
-        print("Error cargando el clima: $e");
-        if (mounted) {
-           setState(() {
-            _weatherData = null;
-            _currentLocationName = 'Error de conexión API';
-           });
-        }
-      }
-    } else {
-        // PASO 3: Fallo total
-       if (mounted) {
-         setState(() {
-            _weatherData = null;
-            _currentLocationName = 'Ubicación no disponible';
-         });
-       }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoadingWeather = false;
-      });
-    }
-  }
-
-  // --- LÓGICA DE CARGA DE NOMBRE ---
-
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString('user_name');
-    
-    if (name != null && name.isNotEmpty) {
-      final firstName = name.split(' ')[0];
-      if(mounted) {
-        setState(() {
-          _userName = firstName;
-        });
-      }
-    }
-  }
-
-  // --- WIDGET BUILDERS (Simplificados) ---
+  // --- WIDGET BUILDERS ---
 
   @override
   Widget build(BuildContext context) {
@@ -284,7 +156,10 @@ class _InicioScreenState extends State<InicioScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(context),
+            // ELIMINADO: _buildStatusCards(context),
             _buildWeatherSection(context),
+            // ELIMINADO: _buildAdviceSection(),
+            // ELIMINADO: _buildNewsSection(context),
             const SizedBox(height: 50),
           ],
         ),
@@ -292,7 +167,7 @@ class _InicioScreenState extends State<InicioScreen> {
     );
   }
 
-  // 1. CABECERA (Hola Usuario, Logo, Ubicación EDITABLE)
+  // 1. CABECERA (Hola Usuario, Logo, Ubicación)
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
@@ -303,19 +178,19 @@ class _InicioScreenState extends State<InicioScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Hola, Usuario!
+              // Muestra el nombre dinámico
               Text(
                 '¡Hola, $_userName!',
                 style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
-              // Avatar
+              // User profile avatar
               Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   image: const DecorationImage(
-                    image: AssetImage('assets/user_avatar.png'),
+                    image: AssetImage('assets/user_avatar.png'), 
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -323,26 +198,13 @@ class _InicioScreenState extends State<InicioScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          // Ícono del Viñedo / Gráfico
-          Image.asset(
-            'assets/vineyard_graphic.png',
-            height: 100,
-            width: double.infinity,
-            fit: BoxFit.fitWidth,
-          ),
-          const SizedBox(height: 10),
-          // Ubicación actual y Botón de Editar
           Row(
             children: [
               const Icon(Icons.location_on_outlined, size: 16, color: Colors.black54),
               const SizedBox(width: 5),
-              Text(_currentLocationName, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+              Text(_currentLocationName, style: const TextStyle(fontSize: 14, color: Colors.black54)), 
               const Spacer(),
-              // 🚨 BOTÓN DE EDITAR UBICACIÓN CON GESTURE DETECTOR
-              GestureDetector(
-                  onTap: _editLocation,
-                  child: const Icon(Icons.edit_outlined, size: 18, color: Colors.black54)
-              ),
+              const Icon(Icons.edit_outlined, size: 18, color: Colors.black54),
             ],
           ),
         ],
@@ -350,8 +212,9 @@ class _InicioScreenState extends State<InicioScreen> {
     );
   }
 
-  // 2. SECCIÓN DEL TIEMPO
+  // 2. SECCIÓN DEL TIEMPO (Mantenida)
   Widget _buildWeatherSection(BuildContext context) {
+    // 1. Estado de Carga / Error
     if (_isLoadingWeather || _weatherData == null) {
       return Padding(
         padding: const EdgeInsets.all(20.0),
@@ -362,7 +225,7 @@ class _InicioScreenState extends State<InicioScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Tiempo', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  TextButton(onPressed: _loadWeather, child: Text(_isLoadingWeather ? 'Cargando...' : 'Reintentar')),
+                  TextButton(onPressed: _loadWeather, child: Text(_isLoadingWeather ? 'Cargando...' : 'Reintentar')), 
                 ],
               ),
             const SizedBox(height: 10),
@@ -370,7 +233,7 @@ class _InicioScreenState extends State<InicioScreen> {
               child: (_isLoadingWeather && _weatherData == null)
                   ? const CircularProgressIndicator()
                   : Text(
-                      'No se pudo cargar el clima para $_currentLocationName.',
+                      'No se pudo cargar el clima para $_currentLocationName.', 
                       style: const TextStyle(color: Colors.red),
                       textAlign: TextAlign.center,
                     ),
@@ -380,6 +243,7 @@ class _InicioScreenState extends State<InicioScreen> {
       );
     }
     
+    // 2. Estado de Éxito
     final currentTemp = _weatherData!['current_temp'];
     final description = _weatherData!['description'];
     final tempMax = _weatherData!['temp_max'];
@@ -398,7 +262,7 @@ class _InicioScreenState extends State<InicioScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Tiempo', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              TextButton(onPressed: _loadWeather, child: const Text('Actualizar')),
+              TextButton(onPressed: _loadWeather, child: const Text('Actualizar')), 
             ],
           ),
           const SizedBox(height: 10),
@@ -432,7 +296,7 @@ class _InicioScreenState extends State<InicioScreen> {
             ],
           ),
           const SizedBox(height: 15),
-          // Weekly forecast
+          // Weekly forecast 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: dailyForecast.map((dayData) {
@@ -443,16 +307,15 @@ class _InicioScreenState extends State<InicioScreen> {
         ],
       ),
     );
-
   }
 
-  // --- MÉTODOS AUXILIARES ---
+  // --- MÉTODOS AUXILIARES (Mantenidos) ---
 
   IconData _getWeatherIcon(int code) {
-    if (code == 1000) return Icons.wb_sunny;
-    if (code >= 1003 && code <= 1009) return Icons.cloud;
-    if (code >= 1063 && code <= 1276) return Icons.cloudy_snowing;
-    return Icons.cloud;
+    if (code == 1000) return Icons.wb_sunny; 
+    if (code >= 1003 && code <= 1009) return Icons.cloud; 
+    if (code >= 1063 && code <= 1276) return Icons.cloudy_snowing; 
+    return Icons.cloud; 
   }
 
   Widget _buildDailyForecast(String day, String temp, IconData icon) {
