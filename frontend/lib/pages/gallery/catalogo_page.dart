@@ -3,10 +3,13 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../core/services/user_sesion.dart';
 import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
 import 'detalle_variedad_page.dart'; 
 import '../../pages/capture/foto_page.dart';
+import '../../pages/main_layout/home_page.dart';
+import 'detalle_coleccion_page.dart'; // <--- AÑADE ESTO
 
 
 class CatalogoPage extends StatefulWidget { // ⬅️ CLASE RENOMBRADA A CATÁLOGO
@@ -27,7 +30,11 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   bool _modoOscuro = false;
   // 1. AÑADE ESTAS VARIABLES
   List<Map<String, dynamic>> _variedades = []; 
+  List<Map<String, dynamic>> _coleccionUsuario = [];
+
   List<Map<String, dynamic>> _filtradas = [];
+  List<Map<String, dynamic>> _filtradasColeccion = [];
+
   bool _isLoading = true;
   ApiClient? _apiClient; // Usa ? para evitar problemas de late si algo falla
 
@@ -40,8 +47,30 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     // 2. INICIALIZAR Y CARGAR
     _apiClient = ApiClient(getBaseUrl());
     _cargarVariedadesBackend();
+
+    if (UserSession.token != null) {
+      _apiClient!.setToken(UserSession.token!);
+      _cargarTodo(); // Cargamos ambas listas si hay usuario
+    } else {
+      _cargarSoloBiblioteca(); // Si no hay usuario, solo biblioteca pública
+
+    }
   }
 
+  Future<void> _cargarTodo() async {
+    setState(() => _isLoading = true);
+    await Future.wait([
+      _cargarVariedadesBackend(),
+      _cargarColeccionBackend(),
+    ]);
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _cargarSoloBiblioteca() async {
+    setState(() => _isLoading = true);
+    await _cargarVariedadesBackend();
+    setState(() => _isLoading = false);
+  }
   // 3. AÑADE ESTE MÉTODO
   Future<void> _cargarVariedadesBackend() async {
     try {
@@ -74,6 +103,40 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     }
   }
 
+  Future<void> _cargarColeccionBackend() async {
+    try {
+      final lista = await _apiClient!.getUserCollection();
+      
+      setState(() {
+        _coleccionUsuario = lista.map((item) {
+           final variedadData = item['variedad'] ?? {};
+           
+           return {
+             'id': item['id_coleccion'], 
+             'nombre': variedadData['nombre'] ?? 'Sin nombre',
+             'descripcion': item['notas'] ?? variedadData['descripcion'],
+             'region': 'Mi Bodega', 
+             'tipo': variedadData['color'] ?? 'Personal',
+             'imagen': item['path_foto_usuario'], 
+             'morfologia': variedadData['morfologia'],
+             
+             // --- CAMBIOS AQUÍ: Pasamos los datos "crudos" ---
+             'fecha_captura': item['fecha_captura'], // Pasamos el String ISO original
+             'latitud': item['latitud'],             // Pasamos el double original
+             'longitud': item['longitud'],           // Pasamos el double original
+             // ------------------------------------------------
+             
+             'es_local': false,
+           };
+        }).toList().cast<Map<String, dynamic>>();
+        
+        _filtradasColeccion = _coleccionUsuario;
+      });
+    } catch (e) {
+      print("Error cargando colección: $e");
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -85,9 +148,16 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
 
   void _filtrar(String query) {
     setState(() {
-      _filtradas = _variedades
-          .where((v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      // Filtramos la lista activa según la pestaña
+      if (_tabController.index == 0) {
+        _filtradas = _variedades
+            .where((v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      } else {
+        _filtradasColeccion = _coleccionUsuario
+            .where((v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
     });
   }
 
@@ -324,9 +394,10 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   // ------------------------------------------------------------------
   // --- WIDGETS DE INTERFAZ (ADAPTADOS AL NUEVO DISEÑO) ---
 
-  Widget _buildVarietyCard(Map<String, dynamic> variedad) {
+  Widget _buildVarietyCard(Map<String, dynamic> variedad,{bool isColeccion = false}) {
     final bool isBlanca = variedad['tipo'] == 'Blanca';
-    
+    final String? imagenPath = variedad['imagen'];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Card(
@@ -334,13 +405,28 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
         elevation: 1.5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetalleVariedadPage(variedad: variedad),
-              ),
-            );
+          onTap: () async { // Hazlo async
+            if (isColeccion) {
+              final resultado = await Navigator.push( // Espera el resultado
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetalleColeccionPage(coleccionItem: variedad),
+                ),
+              );
+              
+              // Si devolvió 'true', significa que borramos o editamos algo -> Recargar lista
+              if (resultado == true) {
+                _cargarColeccionBackend(); 
+              }
+            } else {
+              // SI ES BIBLIOTECA -> Navega a la página original con morfología
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetalleVariedadPage(variedad: variedad),
+                ),
+              );
+            }
           },
           borderRadius: BorderRadius.circular(15),
           child: Padding(
@@ -354,19 +440,12 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                     children: [
                       Text(
                         variedad['region'] ?? 'Región Desconocida',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         variedad['nombre'],
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Container(
@@ -377,24 +456,23 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                         ),
                         child: Text(
                           variedad['tipo'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Icono de corazón (Estilo de la foto)
-                IconButton(
-                  icon: Icon(
-                    Icons.favorite,
-                    color: Colors.grey.shade300, 
-                    size: 24,
-                  ),
-                  onPressed: () {}, 
+                // Miniatura de imagen
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: imagenPath != null 
+                    ? Image.network(
+                        imagenPath, 
+                        width: 70, height: 70, 
+                        fit: BoxFit.cover,
+                        errorBuilder: (c,e,s) => Container(width:70, height:70, color:Colors.grey[300], child: const Icon(Icons.broken_image)),
+                      )
+                    : Container(width:70, height:70, color:Colors.grey[300], child: const Icon(Icons.wine_bar)),
                 ),
               ],
             ),
@@ -506,18 +584,50 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
           ),
 
           // Pestaña 2: MI COLECCIÓN PERSONAL
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('Aquí se mostrará tu colección personal.'),
-                ElevatedButton(
-                  onPressed: _abrirCamara,
-                  child: const Text('Añadir nueva variedad'),
+          UserSession.token == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Inicia sesión para ver tu colección"),
+                      ElevatedButton(
+                        onPressed: () {
+                           // Navegar a Login si no hay token (opcional)
+                        }, 
+                        child: const Text("Ir a Login")
+                      )
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text("Mis Capturas (${_filtradasColeccion.length})", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                    ),
+                    Expanded(
+                      child: _filtradasColeccion.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
+                                const SizedBox(height: 10),
+                                const Text('Tu colección está vacía.'),
+                                TextButton(
+                                  onPressed: _abrirCamara,
+                                  child: const Text('¡Escanea tu primera variedad!'),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _filtradasColeccion.length,
+                            itemBuilder: (context, index) => _buildVarietyCard(_filtradasColeccion[index], isColeccion: true),
+                          ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
         ],
       ),
     );

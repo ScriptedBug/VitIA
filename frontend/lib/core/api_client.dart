@@ -80,4 +80,33 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     _dio.options.headers["Authorization"] = "Bearer $token";
   }
 
+  Future<List<dynamic>> getUserCollection() async {
+    try {
+      final response = await _dio.get('/coleccion/');
+      return response.data as List<dynamic>;
+    } catch (e) {
+      print("Error al obtener colección: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> updateCollectionItem(int idColeccion, Map<String, dynamic> updates) async {
+    try {
+      // El backend espera un PATCH a /coleccion/{id}
+      await _dio.patch('/coleccion/$idColeccion', data: updates);
+    } catch (e) {
+      print("Error al actualizar item: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCollectionItem(int idColeccion) async {
+    try {
+      await _dio.delete('/coleccion/$idColeccion');
+    } catch (e) {
+      print("Error al eliminar item: $e");
+      rethrow;
+    }
+  }
+
 }
