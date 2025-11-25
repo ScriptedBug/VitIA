@@ -56,7 +56,7 @@ class Variedad(Base):
 
     # --- Relaciones ---
     # Esta Variedad puede estar en la Coleccion de muchos usuarios
-    items_coleccion = relationship("Coleccion", back_populates="variedad")
+    items_coleccion = relationship("Coleccion", back_populates="variedad", cascade="all, delete-orphan")
 
 
 # -----------------------------------------------------
