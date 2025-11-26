@@ -166,15 +166,25 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
   List<Map<String, dynamic>> _mapearPublicaciones(List<dynamic> rawList) {
     return rawList.map((item) {
       
+      // 1. Gestión de Imagen
       String? imagenUrl;
       if (item['links_fotos'] != null && (item['links_fotos'] as List).isNotEmpty) {
         imagenUrl = item['links_fotos'][0];
       }
 
-      String nombreUsuario = "Usuario";
-      if (item['usuario'] != null && item['usuario']['nombre'] != null) {
-        nombreUsuario = item['usuario']['nombre'];
-      } else if (item['id_usuario'] != null) {
+      // 2. OBTENER NOMBRE DEL AUTOR (Adaptado a tu nuevo JSON)
+      String nombreUsuario = "Anónimo";
+      
+      // Verificamos si viene el objeto 'autor'
+      if (item['autor'] != null) {
+        final autor = item['autor'];
+        // Concatenamos Nombre + Apellidos (si existen)
+        String nombre = autor['nombre'] ?? "Usuario";
+        String apellidos = autor['apellidos'] ?? "";
+        nombreUsuario = "$nombre $apellidos".trim();
+      } 
+      // Fallback por si acaso
+      else if (item['id_usuario'] != null) {
         nombreUsuario = "Usuario #${item['id_usuario']}";
       }
 
@@ -182,8 +192,11 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
         'id': item['id_publicacion'],
         'titulo': item['titulo'] ?? 'Sin título',
         'text': item['texto'] ?? '',
-        'user': nombreUsuario,
-        'time': _formatearFecha(item['fecha_creacion']),
+        'user': nombreUsuario, // <--- ¡Aquí ya sale "Admin Admin"!
+        
+        // 3. FECHA (Adaptado a 'fecha_publicacion')
+        'time': _formatearFecha(item['fecha_publicacion'] ?? item['fecha_creacion']), 
+        
         'image': imagenUrl,
         'likes': 0, 
         'comments': 0, 
