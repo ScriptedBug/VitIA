@@ -51,6 +51,18 @@ def delete_variedad(db: Session, id_variedad: int):
         db.commit()
     return db_variedad
 
+def create_variedad_automatica(db: Session, nombre: str):
+    """Crea una variedad nueva con datos por defecto"""
+    nueva_variedad = models.Variedad(
+        nombre=nombre,
+        descripcion=f"Variedad identificada automáticamente por VitIA: {nombre}",
+        # Añade otros campos obligatorios si tu modelo los requiere
+    )
+    db.add(nueva_variedad)
+    db.commit()
+    db.refresh(nueva_variedad)
+    return nueva_variedad
+
 # -----------------------------------------------------
 # Funciones CRUD para Coleccion (Personal)
 # -----------------------------------------------------

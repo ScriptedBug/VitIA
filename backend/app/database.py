@@ -7,7 +7,14 @@ from .config import settings
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 # 2. El motor de SQLAlchemy
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    
+    pool_pre_ping=True,  # <--- IMPORTANTE: Verifica que la conexión esté viva
+    pool_recycle=300,    # Recicla conexiones cada 5 minutos
+    pool_size=10,
+    max_overflow=20
+)
 
 # 3. El creador de sesiones
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

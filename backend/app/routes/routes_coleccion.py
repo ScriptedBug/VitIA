@@ -108,30 +108,36 @@ def delete_coleccion_item_endpoint(
 @router.post("/upload", response_model=schemas.Coleccion)
 async def create_coleccion_with_image(
     file: UploadFile = File(...),
-    id_variedad: int = Form(...),
+    nombre_variedad: str = Form(...), # <--- CAMBIO: Recibimos NOMBRE, no ID
     notas: str = Form(None),
     latitud: float = Form(None),
     longitud: float = Form(None),
     current_user: models.Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Recibe una imagen y datos, sube la imagen a ImageKit y guarda el registro en BD.
-    """
-    # 1. Leer el archivo
-    file_bytes = await file.read()
+    # 1. Lógica inteligente: Buscar ID o Crear Variedad
+    # Usamos las funciones que creamos en crud.py
+    variedad_db = crud.get_variedad_by_nombre(db, nombre_variedad)
     
+    if not variedad_db:
+        # ¡Si no existe, la creamos al vuelo!
+        print(f"Variedad '{nombre_variedad}' no existe. Creándola...")
+        variedad_db = crud.create_variedad_automatica(db, nombre_variedad)
+    
+    id_real_variedad = variedad_db.id_variedad
+
+    # 2. Subir imagen (Igual que antes)
     try:
-        # 2. Subir a ImageKit
+        file_bytes = await file.read()
         image_url = upload_image_to_imagekit(file_bytes, file.filename)
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error al subir la imagen al servidor de archivos")
+        raise HTTPException(status_code=500, detail="Error ImageKit")
 
-    # 3. Crear registro en la Base de Datos (Neon)
+    # 3. Guardar en Colección usando el ID real que acabamos de obtener
     nuevo_item = models.Coleccion(
         id_usuario=current_user.id_usuario,
-        id_variedad=id_variedad,
-        path_foto_usuario=image_url, # Guardamos la URL de ImageKit, no la foto
+        id_variedad=id_real_variedad, # <--- Usamos el ID recuperado/creado
+        path_foto_usuario=image_url,
         fecha_captura=datetime.utcnow(),
         notas=notas,
         latitud=latitud,

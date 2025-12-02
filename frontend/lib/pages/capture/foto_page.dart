@@ -372,7 +372,10 @@ class _FotoPageState extends State<FotoPage> with SingleTickerProviderStateMixin
         
         await _apiClient.saveToCollection(
           imageFile: fileToSave,
-          idVariedad: 1, // <--- TODO: DEBES OBTENER EL ID REAL DE LA VARIEDAD
+  
+          // ¡Pasamos el nombre real que viene de la IA!
+          nombreVariedad: prediction.variedad, 
+  
           notas: "Identificado con VitIA: ${prediction.variedad} (${prediction.confianza}%)"
         );
 

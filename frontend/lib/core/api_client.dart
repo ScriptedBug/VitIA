@@ -2,6 +2,9 @@
 import 'package:dio/dio.dart';
 import './models/prediction_model.dart';
 import 'package:image_picker/image_picker.dart';
+import 'models/coleccion_model.dart';
+import 'package:http_parser/http_parser.dart';
+
 
 
 class ApiClient {
@@ -34,6 +37,7 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
         "file": MultipartFile.fromBytes(
           bytes, 
           filename: file.name, // XFile ya trae el nombre
+          contentType: MediaType('image', 'jpeg'), // Ajusta según el tipo real si es necesario
         ),
       });
 
@@ -49,7 +53,7 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   // Método para guardar en la colección subiendo la imagen
   Future<void> saveToCollection({
     required XFile imageFile,
-    required int idVariedad,
+    required String nombreVariedad, // <--- CAMBIO DE TIPO
     String? notas,
     double? lat,
     double? lon,
@@ -58,21 +62,19 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
       final bytes = await imageFile.readAsBytes();
       
       FormData formData = FormData.fromMap({
-        "file": MultipartFile.fromBytes(bytes, filename: imageFile.name),
-        "id_variedad": idVariedad,
+        "file": MultipartFile.fromBytes(
+          bytes, 
+          filename: imageFile.name,
+          contentType: MediaType('image', 'jpeg')),
+        "nombre_variedad": nombreVariedad, // <--- Enviamos el nombre
         if (notas != null) "notas": notas,
         if (lat != null) "latitud": lat,
         if (lon != null) "longitud": lon,
       });
 
-      // Asegúrate de que el token de autenticación esté configurado en los headers de Dio
-      // Si usas un interceptor para el token, esto funcionará directo.
-      // Si no, necesitarás pasar el token aquí.
-      
       await _dio.post('/coleccion/upload', data: formData);
-      
     } catch (e) {
-      throw Exception('Error al guardar en colección: $e');
+      throw Exception('Error al guardar: $e');
     }
   }
 
@@ -154,6 +156,17 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     } catch (e) {
       print("Error al eliminar publicación: $e");
       rethrow;
+    }
+  }
+
+  // Función para descargar tus fotos
+  Future<List<ColeccionModel>> getCollection() async {
+    try {
+      final response = await _dio.get('/coleccion/');
+      final List<dynamic> data = response.data;
+      return data.map((json) => ColeccionModel.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Error al cargar la colección: $e');
     }
   }
 
