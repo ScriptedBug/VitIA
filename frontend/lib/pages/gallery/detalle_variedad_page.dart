@@ -1,36 +1,67 @@
 import 'dart:io';
-import 'package:flutter/gestures.dart'; // Necesario para detectar el clic en el texto
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // Necesario para abrir el navegador
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 
 class DetalleVariedadPage extends StatelessWidget {
   final Map<String, dynamic> variedad;
 
   const DetalleVariedadPage({super.key, required this.variedad});
 
-  // Función para abrir URLs
+  // Función ROBUSTA para abrir URLs
   Future<void> _launchURL(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('No se pudo abrir $url');
+    print("--- INTENTANDO ABRIR LINK ---");
+    String urlLimpia = urlString.trim();
+    // Si no empieza por http ni https, lo forzamos
+    if (!urlLimpia.startsWith('http://') && !urlLimpia.startsWith('https://')) {
+      urlLimpia = 'https://$urlLimpia';
+    }
+    
+    final Uri url = Uri.parse(urlLimpia);
+    
+    try {
+      bool lanzado = await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (!lanzado) {
+        // Intento de respaldo
+        await launchUrl(url); 
+      }
+    } catch (e) {
+      debugPrint('Error al intentar abrir URL: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Lógica para determinar el tema y color
     final bool isBlanca = variedad['tipo'] == 'Blanca';
     final colorTema = isBlanca ? Colors.lime.shade700 : Colors.purple.shade900;
     
-    // Extraemos los mapas de datos
     final Map<String, dynamic>? morfologia = variedad['morfologia'];
     final Map<String, dynamic>? infoExtra = variedad['info_extra'];
+
+    // --- ESTILOS DE TEXTO ---
+    const TextStyle textoGeneralStyle = TextStyle(
+      fontSize: 16,
+      height: 1.5, 
+      color: Colors.black87,
+    );
+
+    const TextStyle labelExtraStyle = TextStyle(
+      fontWeight: FontWeight.w600,
+      fontSize: 16,
+      color: Colors.black87,
+    );
+
+    const TextStyle contentListStyle = TextStyle(
+      color: Colors.black87, 
+      fontSize: 15, 
+      height: 1.4
+    );
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          // 1. APPBAR
+          // 1. APPBAR CON IMAGEN
           SliverAppBar(
             expandedHeight: 350.0,
             pinned: true,
@@ -38,7 +69,7 @@ class DetalleVariedadPage extends StatelessWidget {
             iconTheme: const IconThemeData(color: Colors.white),
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                variedad['nombre'],
+                variedad['nombre'] ?? 'Detalle',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -63,14 +94,14 @@ class DetalleVariedadPage extends StatelessWidget {
             ),
           ),
 
-          // 2. CONTENIDO
+          // 2. CONTENIDO PRINCIPAL
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Etiquetas superiores
+                  // Badges y ubicación
                   Row(
                     children: [
                       Container(
@@ -93,61 +124,46 @@ class DetalleVariedadPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 25),
 
-                  // SECCIÓN: DESCRIPCIÓN
+                  // Descripción General
                   _buildSectionTitle("Descripción"),
                   Text(
                     variedad['descripcion'] ?? "Sin descripción detallada.",
-                    style: TextStyle(fontSize: 16, height: 1.6, color: Colors.grey.shade800),
-                    textAlign: TextAlign.justify,
+                    style: textoGeneralStyle, 
                   ),
                   const SizedBox(height: 30),
 
-                  // SECCIÓN: MORFOLOGÍA
+                  // -----------------------------------------------------------
+                  // SECCIÓN: MORFOLOGÍA (AHORA CON LISTA SEPARADA)
+                  // -----------------------------------------------------------
                   if (morfologia != null) 
-                    _buildMorfologiaSectionNuevo(morfologia, isBlanca),
+                    _buildMorfologiaSectionNuevo(morfologia, isBlanca, contentListStyle),
 
-                  // SECCIÓN: INFO EXTRA (ACTUALIZADA CON LINKS)
+                  // -----------------------------------------------------------
+                  // SECCIÓN: DATOS ADICIONALES (LISTA SEPARADA)
+                  // -----------------------------------------------------------
                   if (infoExtra != null && infoExtra.isNotEmpty) ...[
                     const SizedBox(height: 30),
                     _buildSectionTitle("Datos Adicionales"),
+                    
                     ...infoExtra.entries.map((e) {
-                      // Detectamos si el valor es un Link
-                      String valor = e.value.toString();
-                      bool esLink = valor.startsWith('http') || valor.startsWith('https');
+                      final String rawValue = e.value.toString();
+                      final List<String> items = rawValue.split(',');
 
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Row(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.arrow_right, color: colorTema),
-                            Expanded(
-                              child: RichText(
-                                text: TextSpan(
-                                  style: TextStyle(color: Colors.grey.shade800, fontSize: 15),
-                                  children: [
-                                    TextSpan(
-                                      text: "${e.key}: ", 
-                                      style: const TextStyle(fontWeight: FontWeight.bold)
-                                    ),
-                                    // Si es link, lo ponemos azul, subrayado y clickeable
-                                    esLink 
-                                      ? TextSpan(
-                                          text: valor,
-                                          style: const TextStyle(
-                                            color: Colors.blue, 
-                                            decoration: TextDecoration.underline,
-                                          ),
-                                          recognizer: TapGestureRecognizer()
-                                            ..onTap = () {
-                                              _launchURL(valor);
-                                            },
-                                        )
-                                      : TextSpan(text: valor),
-                                  ],
-                                ),
-                              ),
+                            Row(
+                              children: [
+                                Icon(Icons.label_important_outline, size: 18, color: colorTema),
+                                const SizedBox(width: 8),
+                                Text("${e.key}:", style: labelExtraStyle),
+                              ],
                             ),
+                            const SizedBox(height: 8),
+                            // Generamos la lista de items
+                            ..._buildBulletedList(items, contentListStyle),
                           ],
                         ),
                       );
@@ -171,12 +187,53 @@ class DetalleVariedadPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
       ),
     );
   }
 
-  Widget _buildMorfologiaSectionNuevo(Map<String, dynamic> morfologia, bool isBlanca) {
+  // Construye la lista de viñetas (usada en Morfología y Datos Extra)
+  List<Widget> _buildBulletedList(List<String> items, TextStyle style) {
+    return items.map((item) {
+      String textoLimpio = item.trim();
+      if (textoLimpio.isEmpty) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // El puntito (bullet)
+            Container(
+              margin: const EdgeInsets.only(top: 8, right: 10),
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey[500],
+                shape: BoxShape.circle,
+              ),
+            ),
+            // El texto (con soporte para links)
+            Expanded(
+              child: Linkify(
+                onOpen: (link) => _launchURL(link.url),
+                text: textoLimpio,
+                style: style,
+                linkStyle: const TextStyle(
+                  color: Colors.blue, 
+                  decoration: TextDecoration.underline,
+                  fontWeight: FontWeight.bold
+                ),
+                options: const LinkifyOptions(humanize: false),
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildMorfologiaSectionNuevo(Map<String, dynamic> morfologia, bool isBlanca, TextStyle textStyle) {
     final int iconProp = isBlanca ? 3 : 1;
 
     return Column(
@@ -184,29 +241,26 @@ class DetalleVariedadPage extends StatelessWidget {
       children: [
         _buildSectionTitle("Morfología"),
         const SizedBox(height: 8),
-
-        // Hoja
         if (morfologia['hoja'] != null && morfologia['hoja'].toString().isNotEmpty)
           _buildMorfologiaCard(
             titulo: "Hoja",
             descripcion: morfologia['hoja'],
             iconPath: 'assets/icons/Propiedad$iconProp=hoja.png',
+            textStyle: textStyle,
           ),
-
-        // Racimo
         if (morfologia['racimo'] != null && morfologia['racimo'].toString().isNotEmpty)
           _buildMorfologiaCard(
             titulo: "Racimo",
             descripcion: morfologia['racimo'],
             iconPath: 'assets/icons/Propiedad$iconProp=racimo.png',
+            textStyle: textStyle,
           ),
-
-        // Uva
         if (morfologia['uva'] != null && morfologia['uva'].toString().isNotEmpty)
           _buildMorfologiaCard(
             titulo: "Uva",
             descripcion: morfologia['uva'],
             iconPath: 'assets/icons/Propiedad$iconProp=uva.png',
+            textStyle: textStyle,
           ),
       ],
     );
@@ -216,7 +270,12 @@ class DetalleVariedadPage extends StatelessWidget {
     required String titulo,
     required String descripcion,
     required String iconPath,
+    required TextStyle textStyle,
   }) {
+    // AQUÍ ESTÁ EL CAMBIO CLAVE:
+    // Separamos la descripción por comas para hacer la lista
+    List<String> items = descripcion.split(',');
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
@@ -231,13 +290,12 @@ class DetalleVariedadPage extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        // CAMBIO APLICADO: BORDE NEGRO
-        border: Border.all(color: Colors.black, width: 1.2), 
+        border: Border.all(color: Colors.black, width: 1.2), // Borde negro
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icono
+          // ICONO
           Container(
             width: 50,
             height: 50,
@@ -255,28 +313,20 @@ class DetalleVariedadPage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          // Texto
+          
+          // CONTENIDO DE TEXTO
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   titulo,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  descripcion,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.4,
-                  ),
-                ),
+                const SizedBox(height: 8), // Espacio entre título y lista
+                
+                // Generamos la lista de viñetas automáticamente
+                ..._buildBulletedList(items, textStyle),
               ],
             ),
           ),
