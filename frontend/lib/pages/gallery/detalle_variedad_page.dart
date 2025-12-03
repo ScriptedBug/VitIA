@@ -1,25 +1,36 @@
 import 'dart:io';
+import 'package:flutter/gestures.dart'; // Necesario para detectar el clic en el texto
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart'; // Necesario para abrir el navegador
 
 class DetalleVariedadPage extends StatelessWidget {
   final Map<String, dynamic> variedad;
 
   const DetalleVariedadPage({super.key, required this.variedad});
 
+  // Función para abrir URLs
+  Future<void> _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('No se pudo abrir $url');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Lógica para determinar el tema y color
     final bool isBlanca = variedad['tipo'] == 'Blanca';
     final colorTema = isBlanca ? Colors.lime.shade700 : Colors.purple.shade900;
     
-    // Extraemos los datos nuevos
+    // Extraemos los mapas de datos
     final Map<String, dynamic>? morfologia = variedad['morfologia'];
     final Map<String, dynamic>? infoExtra = variedad['info_extra'];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          // 1. APPBAR (Igual que antes)
+          // 1. APPBAR
           SliverAppBar(
             expandedHeight: 350.0,
             pinned: true,
@@ -91,39 +102,56 @@ class DetalleVariedadPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  // SECCIÓN: MORFOLOGÍA (Solo si existe)
-                  if (morfologia != null) ...[
-                    _buildSectionTitle("Morfología"),
-                    _buildMorfologiaItem("Hoja", morfologia['hoja']),
-                    _buildMorfologiaItem("Racimo", morfologia['racimo']),
-                    _buildMorfologiaItem("Uva", morfologia['uva']),
-                    const SizedBox(height: 30),
-                  ],
+                  // SECCIÓN: MORFOLOGÍA
+                  if (morfologia != null) 
+                    _buildMorfologiaSectionNuevo(morfologia, isBlanca),
 
-                  // SECCIÓN: INFO EXTRA (Solo si existe)
+                  // SECCIÓN: INFO EXTRA (ACTUALIZADA CON LINKS)
                   if (infoExtra != null && infoExtra.isNotEmpty) ...[
+                    const SizedBox(height: 30),
                     _buildSectionTitle("Datos Adicionales"),
-                    ...infoExtra.entries.map((e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.arrow_right, color: colorTema),
-                          Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                style: TextStyle(color: Colors.grey.shade800, fontSize: 15),
-                                children: [
-                                  TextSpan(text: "${e.key}: ", style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  TextSpan(text: "${e.value}"),
-                                ],
+                    ...infoExtra.entries.map((e) {
+                      // Detectamos si el valor es un Link
+                      String valor = e.value.toString();
+                      bool esLink = valor.startsWith('http') || valor.startsWith('https');
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.arrow_right, color: colorTema),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(color: Colors.grey.shade800, fontSize: 15),
+                                  children: [
+                                    TextSpan(
+                                      text: "${e.key}: ", 
+                                      style: const TextStyle(fontWeight: FontWeight.bold)
+                                    ),
+                                    // Si es link, lo ponemos azul, subrayado y clickeable
+                                    esLink 
+                                      ? TextSpan(
+                                          text: valor,
+                                          style: const TextStyle(
+                                            color: Colors.blue, 
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                          recognizer: TapGestureRecognizer()
+                                            ..onTap = () {
+                                              _launchURL(valor);
+                                            },
+                                        )
+                                      : TextSpan(text: valor),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )),
-                    const SizedBox(height: 30),
+                          ],
+                        ),
+                      );
+                    }),
                   ],
                   
                   const SizedBox(height: 50),
@@ -148,22 +176,109 @@ class DetalleVariedadPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMorfologiaItem(String label, String? value) {
-    if (value == null || value.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+  Widget _buildMorfologiaSectionNuevo(Map<String, dynamic> morfologia, bool isBlanca) {
+    final int iconProp = isBlanca ? 3 : 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("Morfología"),
+        const SizedBox(height: 8),
+
+        // Hoja
+        if (morfologia['hoja'] != null && morfologia['hoja'].toString().isNotEmpty)
+          _buildMorfologiaCard(
+            titulo: "Hoja",
+            descripcion: morfologia['hoja'],
+            iconPath: 'assets/icons/Propiedad$iconProp=hoja.png',
+          ),
+
+        // Racimo
+        if (morfologia['racimo'] != null && morfologia['racimo'].toString().isNotEmpty)
+          _buildMorfologiaCard(
+            titulo: "Racimo",
+            descripcion: morfologia['racimo'],
+            iconPath: 'assets/icons/Propiedad$iconProp=racimo.png',
+          ),
+
+        // Uva
+        if (morfologia['uva'] != null && morfologia['uva'].toString().isNotEmpty)
+          _buildMorfologiaCard(
+            titulo: "Uva",
+            descripcion: morfologia['uva'],
+            iconPath: 'assets/icons/Propiedad$iconProp=uva.png',
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMorfologiaCard({
+    required String titulo,
+    required String descripcion,
+    required String iconPath,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        // CAMBIO APLICADO: BORDE NEGRO
+        border: Border.all(color: Colors.black, width: 1.2), 
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 70,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
+          // Icono
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            padding: const EdgeInsets.all(8),
+            child: Image.asset(
+              iconPath,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.image_not_supported, color: Colors.grey);
+              },
             ),
           ),
+          const SizedBox(width: 16),
+          // Texto
           Expanded(
-            child: Text(value, style: TextStyle(color: Colors.grey.shade800)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  descripcion,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
