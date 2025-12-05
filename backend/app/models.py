@@ -1,6 +1,6 @@
 # --- En tu archivo /app/models.py ---
 
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, Float
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, Float, Table
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB  # Específico para PostgreSQL
@@ -8,6 +8,15 @@ from sqlalchemy.dialects.postgresql import JSONB  # Específico para PostgreSQL
 # Importas la 'Base' que creaste en tu archivo database.py
 # (El archivo que tiene el 'engine' y 'SessionLocal')
 from .database import Base  
+
+# 1. TABLA DE ASOCIACIÓN (NUEVA)
+# Esta tabla "invisible" conecta Publicaciones con Variedades (Muchos a Muchos)
+publicacion_variedad_assoc = Table(
+    'publicacion_variedad',
+    Base.metadata,
+    Column('id_publicacion', Integer, ForeignKey('Publicaciones.id_publicacion'), primary_key=True),
+    Column('id_variedad', Integer, ForeignKey('Variedades.id_variedad'), primary_key=True)
+)
 
 # -----------------------------------------------------
 # Modelo: Usuarios
@@ -22,6 +31,7 @@ class Usuario(Base):
     password_hash = Column(String(255), nullable=False)
     es_premium = Column(Boolean, default=False)
     ubicacion = Column(String(255), nullable=True)
+    tutorial_superado = Column(Boolean, default=False)
     
     # Usamos timezone=True para guardar con zona horaria (TIMESTAMPTZ)
     fecha_registro = Column(DateTime(timezone=True), server_default=func.now())
@@ -94,6 +104,14 @@ class Publicacion(Base):
     texto = Column(Text, nullable=False)
     links_fotos = Column(JSONB) # Lista de fotos para el post
     fecha_publicacion = Column(DateTime(timezone=True), server_default=func.now())
+    likes = Column(Integer, default=0)
+
+    # Relación Many-to-Many: Una publicación puede tener muchas variedades etiquetadas
+    variedades = relationship(
+        "Variedad",
+        secondary=publicacion_variedad_assoc,
+        backref="publicaciones"
+    )
 
     # --- Clave Foránea ---
     id_usuario = Column(Integer, ForeignKey("Usuarios.id_usuario"), nullable=False)
@@ -108,6 +126,7 @@ class Comentario(Base):
     id_comentario = Column(Integer, primary_key=True, index=True)
     texto = Column(Text, nullable=False)
     fecha_comentario = Column(DateTime(timezone=True), server_default=func.now())
+    likes = Column(Integer, default=0)
 
     # Claves foráneas
     id_usuario = Column(Integer, ForeignKey("Usuarios.id_usuario", ondelete="CASCADE"), nullable=False)

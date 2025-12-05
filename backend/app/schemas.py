@@ -4,6 +4,10 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, Float, Table # <-- AÑADIR Table
+from sqlalchemy.orm import relationship, backref
+from app.database import Base
+
 # -----------------------------------------------------
 # Configuración Base de Pydantic
 # -----------------------------------------------------
@@ -17,6 +21,7 @@ class BaseConfig(BaseModel):
     """
     model_config = ConfigDict(from_attributes=True)
 
+
 # -----------------------------------------------------
 # Esquemas: Variedad (Biblioteca)
 # -----------------------------------------------------
@@ -26,6 +31,12 @@ class MorfologiaData(BaseModel):
     racimo: Optional[str] = None
     uva: Optional[str] = None
 
+class EnlaceData(BaseModel):
+    titulo: str
+    url: str
+    # Opcional: si quieres distinguir tipos (video, web, pdf...)
+    tipo: Optional[str] = "web"
+
 class VariedadBase(BaseModel):
     """Campos base que comparte una Variedad."""
     nombre: str
@@ -34,7 +45,7 @@ class VariedadBase(BaseModel):
     # Usamos 'Any' para el JSONB, o puedes ser más específico
     # con List[str] para links_imagenes y Dict[str, Any] para info_extra
     links_imagenes: Optional[List[str]] = None 
-    info_extra: Optional[Dict[str, Any]] = None
+    info_extra: Optional[List[EnlaceData]] = None
     morfologia: Optional[MorfologiaData] = None
 
 class VariedadCreate(VariedadBase):
@@ -114,9 +125,11 @@ class PublicacionBase(BaseModel):
     texto: str
     links_fotos: Optional[List[str]] = None
 
+
 class PublicacionCreate(PublicacionBase):
     """Esquema para CREAR una publicación."""
     # El id_usuario se obtendrá del token, no del body
+    variedades_ids: Optional[List[int]] = []
     pass
 
 # --- Esquema intermedio para el autor ---
@@ -134,7 +147,8 @@ class Publicacion(PublicacionBase, BaseConfig):
     # --- Relación Anidada ---
     # Mostramos la información del autor usando el esquema reducido
     autor: AutorPublicacion
-
+    likes: int
+    variedades: List[Variedad] = []
 # -----------------------------------------------------
 # Esquemas: Usuario
 # -----------------------------------------------------
@@ -145,6 +159,7 @@ class UsuarioBase(BaseModel):
     nombre: str
     apellidos: str
     ubicacion: Optional[str] = None
+    tutorial_superado: bool = False
 
 class UsuarioCreate(UsuarioBase):
     """Esquema para CREAR un usuario (registro)."""
@@ -160,6 +175,7 @@ class UsuarioUpdate(BaseModel):
     apellidos: Optional[str] = None
     email: Optional[EmailStr] = None
     ubicacion: Optional[str] = None
+    tutorial_superado: Optional[bool] = None
 
 class Usuario(UsuarioBase, BaseConfig):
     """Esquema para LEER la info de un usuario (perfil)."""
@@ -206,6 +222,7 @@ class AutorComentario(BaseConfig):
 class Comentario(ComentarioBase, BaseConfig):
     id_comentario: int
     fecha_comentario: datetime
+    likes: int
     id_usuario: int
     id_publicacion: int
     id_padre: Optional[int] = None

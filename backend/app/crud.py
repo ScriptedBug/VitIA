@@ -184,11 +184,25 @@ def delete_user(db: Session, id_usuario: int):
 # -----------------------------------------------------
 
 def create_publicacion(db: Session, publicacion: schemas.PublicacionCreate, id_usuario: int):
-    """Crea una nueva publicación en el foro."""
+    # 1. Creamos la publicación base
     db_publicacion = models.Publicacion(
-        **publicacion.model_dump(),
+        titulo=publicacion.titulo,
+        texto=publicacion.texto,
+        links_fotos=publicacion.links_fotos, # Asumiendo que ya arreglaste el validador o la BD
         id_usuario=id_usuario
+        # 'likes' empieza en 0 por defecto
     )
+    
+    # 2. Gestionamos las variedades (Categorías)
+    if publicacion.variedades_ids:
+        # Buscamos en la BD todas las variedades que coincidan con los IDs enviados
+        variedades_db = db.query(models.Variedad).filter(
+            models.Variedad.id_variedad.in_(publicacion.variedades_ids)
+        ).all()
+        
+        # Se las asignamos a la publicación (SQLAlchemy rellena la tabla de asociación solo)
+        db_publicacion.variedades = variedades_db
+
     db.add(db_publicacion)
     db.commit()
     db.refresh(db_publicacion)
