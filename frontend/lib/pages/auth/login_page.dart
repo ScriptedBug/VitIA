@@ -1,3 +1,5 @@
+// lib/pages/auth/login_page.dart
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -37,8 +39,9 @@ class _LoginPageState extends State<LoginPage> {
         final data = jsonDecode(response.body);
         final token = data["access_token"];
 
+        // 🔑 FIX CLAVE: El token se guarda para que HomePage pueda usarlo.
         UserSession.setToken(token);
-        print("Token guardado en sesión: $token");
+        print("Token guardado en sesión: $token...");
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Inicio de sesión exitoso")),
@@ -49,10 +52,16 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (_) => const HomePage()),
         );
       } else {
-        final data = jsonDecode(response.body);
-
+        // Manejo de errores 4xx o 5xx
+        String message = "Credenciales incorrectas o error de servidor.";
+        if (response.body.isNotEmpty) {
+          try {
+            final errorData = jsonDecode(response.body);
+            message = errorData["detail"] ?? message;
+          } catch (_) {}
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["detail"] ?? "Error al iniciar sesión")),
+          SnackBar(content: Text(message)),
         );
       }
     } catch (e) {

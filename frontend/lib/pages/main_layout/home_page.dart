@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-// Importaciones de las páginas de contenido
-import '../gallery/catalogo_page.dart'; // Catálogo unificado
-import '../capture/foto_page.dart'; // Foto
-import '../library/foro_page.dart'; // Foro
-import 'inicio_screen.dart'; // Home
+import 'package:dio/dio.dart'; 
+
+// 🚨 Importaciones de páginas y servicios (AJUSTA LAS RUTAS SI ES NECESARIO)
+import '../gallery/catalogo_page.dart'; 
+import '../capture/foto_page.dart'; 
+import '../library/foro_page.dart'; 
+import 'inicio_screen.dart'; 
 import 'perfil_page.dart';
+import '../../core/api_client.dart'; 
+import '../../core/services/api_config.dart'; // Para getBaseUrl()
+import '../../core/services/user_sesion.dart'; 
+import '../tutorial/tutorial_page.dart'; // ⬅️ El widget del tutorial
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,82 +22,91 @@ class HomePage extends StatefulWidget {
 
 class _HomepageState extends State<HomePage> {
   int currentIndex = 0;
+  
+  // ESTADO AÑADIDO PARA EL TUTORIAL Y LA CARGA
+  bool _tutorialSuperado = true;
+  bool _isLoadingStatus = true;
+  late ApiClient _apiClient; 
 
-  // 1. LISTA DE PANTALLAS: DEBE SEGUIR EL ORDEN DE LOS BOTONES: [Home, Foto, Catálogo, Foro]
+  // Función Helper que verifica si hay un token válido
+  bool _checkIsAuthenticated() {
+      // Verifica directamente el getter estático 'token'
+      return UserSession.token != null && UserSession.token!.isNotEmpty;
+  }
+
+  // 1. LISTA DE PANTALLAS: [Home, Foto, Catálogo, Foro]
   final List<Widget> _screens = [
-    // Índice 0: Botón HOME
-    const InicioScreen(),
-    
-    // Índice 1: Botón CÁMARA/FOTO 
-    const FotoPage(),
-    
-    // Índice 2: Botón CATÁLOGO (Libro)
-    // Queremos que el catálogo inicie en la pestaña Biblioteca (Índice 0 en CatalogoPage)
-    const CatalogoPage(initialTab: 0), 
-    
-    // Índice 3: Botón FORO (Chat)
+    const InicioScreen(),                          
+    const FotoPage(),                                
+    const CatalogoPage(initialTab: 0),             
     const ForoPage(),
   ];
 
   @override
-  Widget build(BuildContext context) {
-    const Color darkBarColor = Color(0xFF142018); 
+  void initState() {
+    super.initState();
+    _apiClient = ApiClient(getBaseUrl());
+    
+    if (_checkIsAuthenticated()) { 
+        // 1. Configura el token del ApiClient (CRUCIAL para /users/me)
+        _apiClient.setToken(UserSession.token!);
+        // 2. Inicia la comprobación del tutorial
+        _checkTutorialStatus();
+    } else {
+        // Si no hay token, asumimos el estado normal (para evitar bucle)
+        _isLoadingStatus = false;
+        _tutorialSuperado = true; 
+    }
+  }
+  
+  // Lógica para comprobar el estado del tutorial desde el backend
+  Future<void> _checkTutorialStatus() async {
+      if (!mounted) return;
+      setState(() => _isLoadingStatus = true);
 
-    return Scaffold(
-
-      extendBody: true,
-
-      appBar: currentIndex == 0 ? _buildAppBarInicio(context) : null,
-      
-      body: _screens[currentIndex],
-      
-      // BARRA DE NAVEGACIÓN
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 25), 
-        
-        child: Container(
-          decoration: BoxDecoration(
-            color: darkBarColor,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: darkBarColor.withOpacity(0.5),
-                spreadRadius: 2,
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
+      try {
+          // LLAMADA AL API PARA OBTENER EL ESTADO REAL (GET /users/me)
+          final bool tutorialStatus = await _apiClient.getTutorialStatus(); 
           
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0), 
-            
-            child: GNav(
-              gap: 8,
-              color: Colors.white70,
-              activeColor: Colors.white,
-              tabBackgroundColor: const Color(0xFF283A2F), 
-              tabBorderRadius: 100,
-              tabShadow: const [], 
-              padding: const EdgeInsets.all(12),
-              selectedIndex: currentIndex,
-              onTabChange: (index) {
-                // Esto controla qué widget de _screens se muestra
-                setState(() => currentIndex = index);
-              },
-              
-              // 2. LISTA DE BOTONES: DEBE COINCIDIR EN ORDEN CON LAS PANTALLAS
-              tabs: const [
-                GButton(icon: Icons.home, iconSize: 30),                  // Índice 0 -> Inicio
-                GButton(icon: Icons.camera_alt_outlined, iconSize: 30),   // Índice 1 -> Foto
-                GButton(icon: Icons.menu_book, iconSize: 30),             // Índice 2 -> Catálogo
-                GButton(icon: Icons.forum, iconSize: 30),                 // Índice 3 -> Foro
-              ],
-            ),
+          if (!tutorialStatus) {
+              // Si NO está superado (FALSE), lo lanzamos en el siguiente frame
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _showTutorialPage();
+              });
+          }
+          
+          if (mounted) setState(() => _tutorialSuperado = tutorialStatus);
+
+      } on DioException catch (e) {
+          debugPrint("Error al cargar estado del tutorial: ${e.message}");
+          // Fallback seguro: asumimos superado si el servidor falla (para no bloquear la app)
+          if (mounted) setState(() => _tutorialSuperado = true); 
+      } catch (e) {
+          debugPrint("Error general al cargar estado del tutorial: $e");
+          if (mounted) setState(() => _tutorialSuperado = true);
+      } finally {
+          if (mounted) setState(() => _isLoadingStatus = false);
+      }
+  }
+
+  // Función para lanzar el tutorial en pantalla completa
+  void _showTutorialPage() {
+      Navigator.of(context).push(
+          MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (context) => TutorialPage(
+                  // 🚨 FIX CLAVE: Pasamos el cliente API al widget TutorialPage
+                  apiClient: _apiClient, 
+                  onFinished: () {
+                      // Cierra el tutorial y actualiza el estado local
+                      Navigator.of(context).pop(); 
+                      if (mounted) {
+                          setState(() => _tutorialSuperado = true); 
+                      }
+                  },
+              ),
           ),
-        ),
-      ),
-    );
+      );
   }
 
   PreferredSizeWidget _buildAppBarInicio(BuildContext context) {
@@ -120,5 +135,71 @@ class _HomepageState extends State<HomePage> {
         ),
       ],
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+      // ⚠️ Bloquea la interfaz principal si estamos cargando O si el tutorial no ha sido superado
+      if (_isLoadingStatus || !_tutorialSuperado) { 
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator(color: Color(0xFF6B8E23))),
+          );
+      }
+      
+      const Color darkBarColor = Color(0xFF142018); 
+
+      return Scaffold(
+          extendBody: true,
+          // Muestra el AppBar solo en la pantalla de inicio (currentIndex == 0)
+          appBar: currentIndex == 0 ? _buildAppBarInicio(context) : null,
+          
+          body: _screens[currentIndex],
+          
+          // BARRA DE NAVEGACIÓN FLOTANTE
+          bottomNavigationBar: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 25), 
+              
+              child: Container(
+                  decoration: BoxDecoration(
+                      color: darkBarColor,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                          BoxShadow(
+                              color: darkBarColor.withOpacity(0.5),
+                              spreadRadius: 2,
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                          ),
+                      ],
+                  ),
+                  
+                  child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0), 
+                      
+                      child: GNav(
+                          gap: 8,
+                          color: Colors.white70,
+                          activeColor: Colors.white,
+                          tabBackgroundColor: const Color(0xFF283A2F), 
+                          tabBorderRadius: 100,
+                          tabShadow: const [], 
+                          padding: const EdgeInsets.all(12),
+                          selectedIndex: currentIndex,
+                          onTabChange: (index) {
+                              setState(() => currentIndex = index);
+                          },
+                          
+                          // 2. LISTA DE BOTONES: [Home, Foto, Catálogo, Foro]
+                          tabs: const [
+                              GButton(icon: Icons.home, iconSize: 30),                 
+                              GButton(icon: Icons.camera_alt_outlined, iconSize: 30),   
+                              GButton(icon: Icons.menu_book, iconSize: 30),            
+                              GButton(icon: Icons.forum, iconSize: 30),                
+                          ],
+                      ),
+                  ),
+              ),
+          ),
+      );
   }
 }

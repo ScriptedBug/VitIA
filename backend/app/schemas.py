@@ -6,7 +6,7 @@ from datetime import datetime
 
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, Float, Table # <-- AÑADIR Table
 from sqlalchemy.orm import relationship, backref
-from app.database import Base
+from .database import Base
 
 # -----------------------------------------------------
 # Configuración Base de Pydantic

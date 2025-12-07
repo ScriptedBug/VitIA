@@ -1,8 +1,14 @@
+// lib/pages/auth/register_page.dart
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../core/services/api_config.dart';
-import '../main_layout/home_page.dart'; // Importa la nueva ubicación
+import '../main_layout/home_page.dart'; 
+import 'login_page.dart'; 
+// 🚨 FIX CRÍTICO: Necesario para guardar el token después del registro
+import 'package:vinas_mobile/core/services/user_sesion.dart'; 
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,11 +25,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> register() async {
     final baseUrl = getBaseUrl();
-    final url = Uri.parse("$baseUrl/auth/register");
+    final registerUrl = Uri.parse("$baseUrl/auth/register");
 
     try {
+      // 1. Petición de Registro
       final response = await http.post(
-        url,
+        registerUrl,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "email": emailCtrl.text.trim(),
@@ -35,28 +42,63 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!mounted) return;
 
-      print("STATUS: ${response.statusCode}");
-      print("BODY: ${response.body}");
-
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Usuario creado correctamente")),
+        
+        // 🚨 PASO 1: Iniciar sesión automáticamente para obtener el Token
+        final loginUrl = Uri.parse("$baseUrl/auth/token");
+        final loginResponse = await http.post(
+          loginUrl,
+          headers: {"Content-Type": "application/x-www-form-urlencoded"},
+          body: {
+            "username": emailCtrl.text.trim(), 
+            "password": passCtrl.text.trim(),
+          },
         );
+        
+        if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        if (loginResponse.statusCode == 200) {
+            final tokenData = jsonDecode(loginResponse.body);
+            final token = tokenData["access_token"];
+
+            // 🔑 FIX CLAVE: Guardar el token en la sesión
+            UserSession.setToken(token); 
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Usuario creado e iniciado sesión correctamente")),
+            );
+
+            // Redirigir a HomePage. HomePage chequeará el tutorial.
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomePage()),
+            );
+        } else {
+            // Fallo en la obtención del token después del registro
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Usuario creado, pero error al iniciar sesión automáticamente. Por favor, inicie sesión manualmente.")),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginPage()), 
+            );
+        }
+        
       } else {
-        final data = jsonDecode(response.body);
-
+        // Manejo de errores de registro (ej. email ya registrado)
+        String message = "Error al crear la cuenta.";
+        if (response.body.isNotEmpty) {
+          try {
+            final errorData = jsonDecode(response.body);
+            message = errorData["detail"] ?? message;
+          } catch (_) {}
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["detail"] ?? "Error al crear usuario")),
+          SnackBar(content: Text(message)),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      print("ERROR DE CONEXIÓN O PETICIÓN: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error de conexión al servidor: ${e.runtimeType}")),
       );
