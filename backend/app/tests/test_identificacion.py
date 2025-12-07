@@ -1,19 +1,27 @@
-from fastapi.testclient import TestClient 
+# backend/app/tests/test_identificacion.py
+import pytest
+import io
+from PIL import Image
+from fastapi.testclient import TestClient
 from app.main import app
-import os
 
-client = TestClient(app)
+@pytest.fixture
+def dummy_image_path(tmp_path):
+    """
+    Crea una imagen JPG real y válida de 100x100 píxeles (roja).
+    """
+    path = tmp_path / "test_image.jpg"
+    img = Image.new('RGB', (100, 100), color = 'red')
+    img.save(path, format='JPEG')
+    return str(path)
 
-def test_predict_image_ok(monkeypatch):
+def test_predict_image_ok(client, monkeypatch, dummy_image_path):
     """
     Caso de aceptación:
-    Dada una imagen válida,
-    cuando se envía al endpoint /ia/predict,
-    entonces se devuelve una lista de predicciones
-    con variedad y confianza.
+    Dada una imagen válida, se devuelve una predicción simulada.
     """
-
-    # MOCK del modelo YOLO
+    
+    # 1. Definimos el MOCK (Simulación)
     class FakeBox:
         def __init__(self):
             self.cls = 0
@@ -22,49 +30,36 @@ def test_predict_image_ok(monkeypatch):
     class FakeResult:
         def __init__(self):
             self.boxes = [FakeBox()]
+            # Trucos para que parezca una lista iterable
+            self.__len__ = lambda: 1
+            self.__getitem__ = lambda s, i: FakeBox()
 
     class FakeModel:
         names = {0: "Tempranillo"}
-
-        def predict(self, image, save=False, verbose=False):
-            print("➡️  MODELO FAKE: procesando imagen...")  # 👈 MOSTRAR EN TERMINAL
+        # Aceptamos cualquier argumento para que no falle
+        def predict(self, source=None, save=False, verbose=False, **kwargs):
             return [FakeResult()]
 
-    # PATCH al modelo real
-    monkeypatch.setattr(
-        "app.ia.model_loader.model",
-        FakeModel()
-    )
+    # --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
+    # En lugar de parchear 'app.ia.model_loader.model',
+    # parcheamos 'app.routes.ml_routes.model' que es donde se ESTÁ USANDO.
+    monkeypatch.setattr("app.routes.ml_routes.model", FakeModel())
 
-    # Imagen de prueba
-    sample_path = os.path.join(
-        os.path.dirname(__file__),
-        "samples",
-        "descarga(1).jpg"
-    )
-    assert os.path.exists(sample_path)
+    # 2. EJECUCIÓN
+    with open(dummy_image_path, "rb") as f:
+        response = client.post(
+            "/ia/predict",
+            files={"file": ("test_image.jpg", f, "image/jpeg")}
+        )
 
-    with open(sample_path, "rb") as f:
-        files = {"file": ("descarga(1).jpg", f, "image/jpeg")}
-        response = client.post("/ia/predict", files=files)
-
-    assert response.status_code == 200
-
-    body = response.json()
-
-    # 🔵 IMPRIMIMOS EN TERMINAL LO QUE LA API "DETECTÓ"
-    print("\n📸 RESULTADO DE LA DETECCIÓN:")
-    for pred in body["predicciones"]:
-        print(f" - Variedad detectada: {pred['variedad']}")
-        print(f" - Confianza: {pred['confianza']}%")
-
-    # VALIDACIONES
-    assert "predicciones" in body
-    assert isinstance(body["predicciones"], list)
-    assert len(body["predicciones"]) > 0
-
-    pred = body["predicciones"][0]
-    assert "variedad" in pred
-    assert "confianza" in pred
-    assert 0.0 <= pred["confianza"] <= 100.0
-
+    # 3. VERIFICACIÓN
+    assert response.status_code == 200, f"Error: {response.text}"
+    data = response.json()
+    
+    # Debug: Si falla, imprime qué devolvió para verlo en consola
+    print(f"DEBUG DATA: {data}")
+    
+    assert "predicciones" in data
+    assert len(data["predicciones"]) > 0
+    assert data["predicciones"][0]["variedad"] == "Tempranillo"
+    assert data["predicciones"][0]["confianza"] > 80

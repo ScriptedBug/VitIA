@@ -1,0 +1,4 @@
+# file: C:\Users\Usuario\VitIA\backend\app\auth.py
+# hypothesis_version: 6.148.7
+
+['Bearer', 'WWW-Authenticate', 'auth/token', 'exp', 'sub']
