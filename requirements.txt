@@ -10,3 +10,7 @@ bcrypt
 ultralytics
 python-multipart
 imagekitio
+pytest
+hypothesis
+pytest-cov
+httpx

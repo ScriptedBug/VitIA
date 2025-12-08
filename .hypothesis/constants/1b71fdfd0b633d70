@@ -1,0 +1,4 @@
+# file: C:\Users\Usuario\VitIA\backend\app\routes\routes_comentarios.py
+# hypothesis_version: 6.148.7
+
+[100, 404, '/', '/comentarios', '/{id_comentario}', 'Comentario eliminado', 'Comentarios', 'msg']

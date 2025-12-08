@@ -1,0 +1,4 @@
+# file: C:\Users\Usuario\VitIA\backend\app\routes\ml_routes.py
+# hypothesis_version: 6.148.7
+
+[100, 400, '/', '/ia', '/predict', 'RGB', 'confianza', 'ia', 'image', 'predicciones', 'variedad']

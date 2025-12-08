@@ -1,0 +1,4 @@
+# file: C:\Users\Usuario\VitIA\backend\app\routes\routes_variedad_biblioteca.py
+# hypothesis_version: 6.148.7
+
+[100, '/', '/check/{id_variedad}', '/variedades', '/{id_variedad}', 'en_coleccion']
