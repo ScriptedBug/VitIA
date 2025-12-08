@@ -148,12 +148,12 @@ GLOBAL_METRICS = {
 # -------------------------------------------------------------------------
 @pytest.fixture(scope="session", autouse=True)
 def print_final_scorecard():
-    """Genera el reporte final en un archivo 'reporte_rendimiento.txt'."""
+    """Genera el reporte final incluyendo el NOMBRE DEL GRUPO en las estadísticas de tiempo."""
     yield # Ejecución de tests
 
     # --- INICIO DEL REPORTE ---
-    output = [] # Usaremos una lista para guardar las líneas
-    TABLE_WIDTH = 125
+    output = []
+    TABLE_WIDTH = 130
     
     output.append("\n" + "="*TABLE_WIDTH)
     output.append("🤖  VITIA AI — REPORTE COMPARATIVO DE DATASETS  🤖".center(TABLE_WIDTH))
@@ -165,14 +165,19 @@ def print_final_scorecard():
         ("ROTACION", "Stress: Rotación 45°"),
     ]
 
-    row_fmt = "{:<30} | {:<18} | {:<18} | {:^8} | {:^8} | {:^8} | {:^10}"
+    # Archivo | Esperado | Detectado | Coincide | Conf | Tiempo | Estado
+    row_fmt = "{:<28} | {:<18} | {:<18} | {:^10} | {:^8} | {:^10} | {:^12}"
 
     for ds_name in DATASETS.keys():
         output.append(f"\n📦 GRUPO DE DATOS: {ds_name}")
         output.append("="*TABLE_WIDTH)
 
-        ds_passed = 0
+        ds_passed_strict = 0
+        ds_passed_soft = 0
         ds_total = 0
+        
+        # Recopilamos resultados de ESTE dataset
+        all_ds_results = [r for r in GLOBAL_METRICS["results"] if r['dataset'] == ds_name]
 
         for code_type, title in test_types:
             output.append(f"\n  📍 {title}")
@@ -180,53 +185,110 @@ def print_final_scorecard():
             output.append("  " + row_fmt.format("ARCHIVO", "ESPERADO", "DETECTADO", "COINCIDE", "CONF.", "TIEMPO", "ESTADO"))
             output.append("  " + "-" * (TABLE_WIDTH - 2))
 
-            section_results = [
-                r for r in GLOBAL_METRICS["results"] 
-                if r['dataset'] == ds_name and r['type'] == code_type
-            ]
+            section_results = [r for r in all_ds_results if r['type'] == code_type]
 
-            passed_count = 0
+            sect_passed_strict = 0
+            sect_passed_soft = 0
+
             for res in section_results:
                 class_match = res['expected'] == res['detected']
                 class_icon = "✅ SI" if class_match else "❌ NO"
                 
                 if res['passed']:
                     status = "✅ PASS"
-                    passed_count += 1
+                    sect_passed_strict += 1
                 elif class_match and not res['passed']:
                     status = "⚠️ LOW CONF"
                 else:
                     status = "❌ FAIL"
                 
+                if class_match: sect_passed_soft += 1
+                
                 fname = res['img']
-                if len(fname) > 27: fname = fname[:24] + "..."
+                if len(fname) > 25: fname = fname[:22] + "..."
                 
-                # Usamos .get() por seguridad por si alguna métrica falta
-                time_val = res.get('time', 'N/A')
+                # Tiempo formateado
+                raw_time = res.get('time_ms', 0)
+                time_str = f"{raw_time:.0f} ms" if isinstance(raw_time, (int, float)) else "N/A"
                 
-                output.append("  " + row_fmt.format(fname, res['expected'], res['detected'], class_icon, res['conf'], time_val, status))
+                output.append("  " + row_fmt.format(fname, res['expected'], res['detected'], class_icon, res['conf'], time_str, status))
 
             total = len(section_results)
+            ds_total += total
+            ds_passed_strict += sect_passed_strict
+            ds_passed_soft += sect_passed_soft
+
             if total > 0:
-                acc = (passed_count / total) * 100
+                acc_strict = (sect_passed_strict / total) * 100
+                acc_soft = (sect_passed_soft / total) * 100
                 output.append("  " + "-" * (TABLE_WIDTH - 2))
-                output.append(f"     🎯 Precisión: {acc:.1f}% ({passed_count}/{total})")
+                output.append(f"     🎯 Precisión (Calidad):  {acc_strict:.1f}% ({sect_passed_strict}/{total})")
+                output.append(f"     🔍 Identif.  (Flexible): {acc_soft:.1f}% ({sect_passed_soft}/{total})")
             else:
                 output.append("     (Sin pruebas)")
+
+        # --- ESTADÍSTICAS DE TIEMPO ---
+        output.append("\n" + "  " + "." * (TABLE_WIDTH - 2))
+        output.append("  ⏱️  ANÁLISIS DE TIEMPOS DE RESPUESTA:")
+
+        if all_ds_results:
+            means_str = []
+            for code_type, _ in test_types:
+                times = [r['time_ms'] for r in all_ds_results if r['type'] == code_type and isinstance(r.get('time_ms'), (int, float))]
+                if times:
+                    avg = sum(times) / len(times)
+                    means_str.append(f"{code_type}: {avg:.0f}ms")
             
-            ds_passed += passed_count
-            ds_total += total
+            output.append(f"     🔹 Promedios:  {' | '.join(means_str) if means_str else 'N/A'}")
+
+            # Récords (Min/Max)
+            valid_results = [r for r in all_ds_results if isinstance(r.get('time_ms'), (int, float))]
+            if valid_results:
+                sorted_res = sorted(valid_results, key=lambda x: x['time_ms'])
+                fastest = sorted_res[0]
+                slowest = sorted_res[-1]
+                
+                # --- AQUÍ ESTÁ EL CAMBIO: AÑADIDO 'dataset' ---
+                output.append(f"     🚀 Más rápido: {fastest['time_ms']:.0f}ms ({fastest['dataset']} | {fastest['img']} | {fastest['type']})")
+                output.append(f"     🐌 Más lento:  {slowest['time_ms']:.0f}ms ({slowest['dataset']} | {slowest['img']} | {slowest['type']})")
+        else:
+            output.append("     (Faltan datos de tiempo)")
         
-        output.append("."*TABLE_WIDTH)
-        acc_ds = (ds_passed/ds_total*100) if ds_total else 0
-        output.append(f"📊 RENDIMIENTO TOTAL '{ds_name}': {acc_ds:.2f}%")
+        output.append("  " + "." * (TABLE_WIDTH - 2))
+        
+        # Resumen Final Dataset
+        acc_total_strict = (ds_passed_strict/ds_total*100) if ds_total else 0
+        acc_total_soft = (ds_passed_soft/ds_total*100) if ds_total else 0
+        
+        output.append(f"📊 RENDIMIENTO '{ds_name}':")
+        output.append(f"   ✅ Estricto (Pasa Umbral): {acc_total_strict:.2f}%")
+        output.append(f"   ⚠️ Flexible (Sabe qué es): {acc_total_soft:.2f}%")
         output.append("="*TABLE_WIDTH)
 
-    # --- GUARDAR EN ARCHIVO ---
+    # --- SECCIÓN COBERTURA ---
+    output.append("\n\n📍 DIAGNÓSTICO DE COBERTURA (DATASET HEALTH)")
+    output.append("-" * TABLE_WIDTH)
+
+    for ds_name in sorted(DATASETS.keys()):
+        if ds_name in GLOBAL_METRICS["coverage"]:
+            cov = GLOBAL_METRICS["coverage"][ds_name]
+            output.append(f"\n📂 {ds_name}:")
+            output.append(f"   📊 Cobertura Variedades: {cov['pct']:.1f}%")
+            if cov['missing']:
+                missing_str = ", ".join(sorted(list(cov['missing'])))
+                output.append(f"   ⚠️  FALTAN: {missing_str}")
+            else:
+                output.append(f"   ✨  Completo")
+            for warn in cov['balance_warnings']:
+                output.append(f"   ⚖️  {warn}")
+
+    output.append("\n" + "="*TABLE_WIDTH + "\n")
+
     with open("reporte_rendimiento.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(output))
     
-    print(f"\n\n📄 REPORTE GENERADO: Busca el archivo 'reporte_rendimiento.txt' en tu carpeta.\n")
+    print("\n".join(output))
+    print(f"\n\n📄 REPORTE GENERADO: Busca el archivo 'reporte_rendimiento.txt'.\n")
 
 
 # -------------------------------------------------------------------------
@@ -258,7 +320,7 @@ def record_metric(dataset, filename, expected, detected, conf, time_ms, passed, 
         "expected": expected,
         "detected": detected,
         "conf": f"{conf:.1%}",
-        "time_ms": f"{time_ms:.0f} ms",
+        "time_ms": time_ms,
         "passed": passed,
         "type": test_type
     })

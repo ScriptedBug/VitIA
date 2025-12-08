@@ -1,0 +1,4 @@
+# file: C:\Users\joans\OneDrive\Escritorio\PIN\VitIA\backend\app\routes\routes_publicacion.py
+# hypothesis_version: 6.148.7
+
+[100, '/', '/me', '/publicaciones', '/{id_publicacion}', 'Publicaciones (Foro)']
