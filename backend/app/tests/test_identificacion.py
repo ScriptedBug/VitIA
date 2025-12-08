@@ -1,5 +1,6 @@
 import os
 import pytest
+import time
 from PIL import Image, ImageEnhance
 from collections import Counter
 from app.ia.model_loader import model
@@ -147,38 +148,38 @@ GLOBAL_METRICS = {
 # -------------------------------------------------------------------------
 @pytest.fixture(scope="session", autouse=True)
 def print_final_scorecard():
-    """Genera el reporte final organizado por Dataset y luego por Pruebas."""
+    """Genera el reporte final en un archivo 'reporte_rendimiento.txt'."""
     yield # Ejecución de tests
 
+    # --- INICIO DEL REPORTE ---
+    output = [] # Usaremos una lista para guardar las líneas
     TABLE_WIDTH = 125
-    print("\n" + "="*TABLE_WIDTH)
-    print("🤖  VITIA AI — REPORTE COMPARATIVO DE DATASETS  🤖".center(TABLE_WIDTH))
-    print("="*TABLE_WIDTH)
+    
+    output.append("\n" + "="*TABLE_WIDTH)
+    output.append("🤖  VITIA AI — REPORTE COMPARATIVO DE DATASETS  🤖".center(TABLE_WIDTH))
+    output.append("="*TABLE_WIDTH)
 
-    # Tipos de prueba a reportar
     test_types = [
         ("NORMAL", "Validación Estándar"),
         ("BRILLO", "Stress: Baja Luminosidad"),
         ("ROTACION", "Stress: Rotación 45°"),
     ]
 
-    row_fmt = "{:<30} | {:<18} | {:<18} | {:^12} | {:^12} | {:^16}"
+    row_fmt = "{:<30} | {:<18} | {:<18} | {:^8} | {:^8} | {:^8} | {:^10}"
 
-    # Iteramos por cada Dataset definido
     for ds_name in DATASETS.keys():
-        print(f"\n📦 GRUPO DE DATOS: {ds_name}")
-        print("="*TABLE_WIDTH)
+        output.append(f"\n📦 GRUPO DE DATOS: {ds_name}")
+        output.append("="*TABLE_WIDTH)
 
         ds_passed = 0
         ds_total = 0
 
         for code_type, title in test_types:
-            print(f"\n  📍 {title}")
-            print("  " + "-" * (TABLE_WIDTH - 2))
-            print("  " + row_fmt.format("ARCHIVO", "ESPERADO", "DETECTADO", "COINCIDE", "CONF.", "ESTADO"))
-            print("  " + "-" * (TABLE_WIDTH - 2))
+            output.append(f"\n  📍 {title}")
+            output.append("  " + "-" * (TABLE_WIDTH - 2))
+            output.append("  " + row_fmt.format("ARCHIVO", "ESPERADO", "DETECTADO", "COINCIDE", "CONF.", "TIEMPO", "ESTADO"))
+            output.append("  " + "-" * (TABLE_WIDTH - 2))
 
-            # Filtrar resultados por Dataset y Tipo de Test
             section_results = [
                 r for r in GLOBAL_METRICS["results"] 
                 if r['dataset'] == ds_name and r['type'] == code_type
@@ -197,52 +198,48 @@ def print_final_scorecard():
                 else:
                     status = "❌ FAIL"
                 
-                # Truncar nombre
                 fname = res['img']
                 if len(fname) > 27: fname = fname[:24] + "..."
                 
-                print("  " + row_fmt.format(fname, res['expected'], res['detected'], class_icon, res['conf'], status))
+                # Usamos .get() por seguridad por si alguna métrica falta
+                time_val = res.get('time', 'N/A')
+                
+                output.append("  " + row_fmt.format(fname, res['expected'], res['detected'], class_icon, res['conf'], time_val, status))
 
             total = len(section_results)
             if total > 0:
                 acc = (passed_count / total) * 100
-                print("  " + "-" * (TABLE_WIDTH - 2))
-                print(f"     🎯 Precisión: {acc:.1f}% ({passed_count}/{total})")
+                output.append("  " + "-" * (TABLE_WIDTH - 2))
+                output.append(f"     🎯 Precisión: {acc:.1f}% ({passed_count}/{total})")
             else:
-                print("     (Sin pruebas)")
+                output.append("     (Sin pruebas)")
             
             ds_passed += passed_count
             ds_total += total
         
-        # Resumen del Dataset
-        print("."*TABLE_WIDTH)
+        output.append("."*TABLE_WIDTH)
         acc_ds = (ds_passed/ds_total*100) if ds_total else 0
-        print(f"📊 RENDIMIENTO TOTAL '{ds_name}': {acc_ds:.2f}%")
-        print("="*TABLE_WIDTH)
+        output.append(f"📊 RENDIMIENTO TOTAL '{ds_name}': {acc_ds:.2f}%")
+        output.append("="*TABLE_WIDTH)
 
-    # --- SECCIÓN DE COBERTURA (Por Dataset) ---
-    print("\n\n📍 DIAGNÓSTICO DE COBERTURA (DATASET HEALTH)")
-    print("-" * TABLE_WIDTH)
+    # --- GUARDAR EN ARCHIVO ---
+    with open("reporte_rendimiento.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(output))
     
-    for ds_name, cov in GLOBAL_METRICS["coverage"].items():
-        print(f"\n📂 {ds_name}:")
-        print(f"   📊 Cobertura Variedades: {cov['pct']:.1f}%")
-        if cov['missing']:
-            print(f"   ⚠️  FALTAN: {', '.join(cov['missing'])}")
-        else:
-            print(f"   ✨  Completo (Todas las variedades probadas)")
-            
-        for warn in cov['balance_warnings']:
-            print(f"   ⚖️  {warn}")
-
-    print("\n" + "="*TABLE_WIDTH + "\n")
+    print(f"\n\n📄 REPORTE GENERADO: Busca el archivo 'reporte_rendimiento.txt' en tu carpeta.\n")
 
 
 # -------------------------------------------------------------------------
 # 3. HELPER: INFERENCIA Y REGISTRO
 # -------------------------------------------------------------------------
 def run_inference(image):
+    start = time.perf_counter()
+
     results = model.predict(image, save=False, verbose=False)
+
+    end = time.perf_counter()
+    inference_time_ms = (end - start) * 1000
+
     top_pred = "Desconocido"
     top_conf = 0.0
     for r in results:
@@ -252,15 +249,16 @@ def run_inference(image):
                 top_conf = conf
                 cls_id = int(box.cls)
                 top_pred = model.names[cls_id]
-    return top_pred, top_conf
+    return top_pred, top_conf, inference_time_ms
 
-def record_metric(dataset, filename, expected, detected, conf, passed, test_type):
+def record_metric(dataset, filename, expected, detected, conf, time_ms, passed, test_type):
     GLOBAL_METRICS["results"].append({
         "dataset": dataset,
         "img": filename,
         "expected": expected,
         "detected": detected,
         "conf": f"{conf:.1%}",
+        "time_ms": f"{time_ms:.0f} ms",
         "passed": passed,
         "type": test_type
     })
@@ -276,10 +274,20 @@ def test_performance_normal(ds_name, filename, expected_class, min_conf):
     if not os.path.exists(img_path): pytest.fail(f"No existe: {filename}")
     
     image = Image.open(img_path).convert("RGB")
-    detected, conf = run_inference(image)
+    detected, conf, time_ms = run_inference(image)
+
+    MAX_LATENCY_MS = 1000
+
+    accuracy_pass = (detected == expected_class) and (conf >= min_conf)
+    latency_pass = time_ms <= MAX_LATENCY_MS
+
+    passed = accuracy_pass and latency_pass
     
-    passed = (detected == expected_class) and (conf >= min_conf)
-    record_metric(ds_name, filename, expected_class, detected, conf, passed, "NORMAL")
+    record_metric(ds_name, filename, expected_class, detected, conf, time_ms, passed, "NORMAL")
+    
+    if not latency_pass:
+        print(f"\n LENTITUD DETECTADA: {filename} tardó {time_ms:.2f}ms")
+    
     assert passed
 
 # B) BRILLO
@@ -290,9 +298,13 @@ def test_performance_brightness(ds_name, filename, expected_class, _):
     enhancer = ImageEnhance.Brightness(image)
     dark_image = enhancer.enhance(0.5)
     
-    detected, conf = run_inference(dark_image)
+    # ✅ CORREGIDO: Ahora recibimos 3 valores (incluyendo time_ms)
+    detected, conf, time_ms = run_inference(dark_image)
+    
     passed = (detected == expected_class) and (conf > 0.40)
-    record_metric(ds_name, filename, expected_class, detected, conf, passed, "BRILLO")
+    
+    # ✅ CORREGIDO: Pasamos time_ms a record_metric
+    record_metric(ds_name, filename, expected_class, detected, conf, time_ms, passed, "BRILLO")
     assert passed
 
 # C) ROTACIÓN
@@ -302,9 +314,13 @@ def test_performance_rotation(ds_name, filename, expected_class, _):
     image = Image.open(img_path).convert("RGB")
     rotated_image = image.rotate(45, expand=True)
     
-    detected, conf = run_inference(rotated_image)
+    # ✅ CORREGIDO: Recibimos time_ms
+    detected, conf, time_ms = run_inference(rotated_image)
+    
     passed = (detected == expected_class) and (conf > 0.40)
-    record_metric(ds_name, filename, expected_class, detected, conf, passed, "ROTACION")
+    
+    # ✅ CORREGIDO: Pasamos time_ms
+    record_metric(ds_name, filename, expected_class, detected, conf, time_ms, passed, "ROTACION")
     assert passed
 
 # -------------------------------------------------------------------------
@@ -330,4 +346,4 @@ def test_dataset_coverage_metrics():
     for ds_name, metric in GLOBAL_METRICS["coverage"].items():
         if metric["missing"]:
             pytest.fail(f"El dataset '{ds_name}' está incompleto. Faltan: {metric['missing']}")
->>>>>>> a26c62b (PYtest IA)
+#>>>>>>> a26c62b (PYtest IA)

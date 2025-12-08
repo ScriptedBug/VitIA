@@ -1,0 +1,277 @@
+
+=============================================================================================================================
+                                       🤖  VITIA AI — REPORTE COMPARATIVO DE DATASETS  🤖                                      
+=============================================================================================================================
+
+📦 GRUPO DE DATOS: DATASET_ALTA_CALIDAD
+=============================================================================================================================
+
+  📍 Validación Estándar
+  ---------------------------------------------------------------------------------------------------------------------------
+  ARCHIVO                        | ESPERADO           | DETECTADO          | COINCIDE |  CONF.   |  TIEMPO  |   ESTADO  
+  ---------------------------------------------------------------------------------------------------------------------------
+  ahmerbounamer1.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  95.7%   |   N/A    |   ✅ PASS  
+  ahmerbounamer2.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  96.5%   |   N/A    |   ✅ PASS  
+  ahmerbounamer3.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  99.2%   |   N/A    |   ✅ PASS  
+  aledo1.jpg                     | Aledo              | Aledo              |   ✅ SI   |  96.5%   |   N/A    |   ✅ PASS  
+  aledo2.jpg                     | Aledo              | Aledo              |   ✅ SI   |  81.8%   |   N/A    |   ✅ PASS  
+  aledo3.jpg                     | Aledo              | Aledo              |   ✅ SI   |  92.3%   |   N/A    |   ✅ PASS  
+  fernandella1.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  79.2%   |   N/A    |   ✅ PASS  
+  fernandella2.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  90.4%   |   N/A    |   ✅ PASS  
+  fernandella3.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  98.2%   |   N/A    |   ✅ PASS  
+  jacquet1.jpg                   | Jacquet            | Jacquet            |   ✅ SI   |  87.0%   |   N/A    |   ✅ PASS  
+  jacquet2.jpg                   | Jacquet            | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  jacquet3.jpg                   | Jacquet            | Jacquet            |   ✅ SI   |  96.0%   |   N/A    |   ✅ PASS  
+  merseguera1.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  86.0%   |   N/A    |   ✅ PASS  
+  merseguera2.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  75.2%   |   N/A    |   ✅ PASS  
+  merseguera3.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  96.0%   |   N/A    |   ✅ PASS  
+  moscatells1.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  69.0%   |   N/A    |   ✅ PASS  
+  moscatells2.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  87.7%   |   N/A    |   ✅ PASS  
+  moscatells3.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  82.1%   |   N/A    |   ✅ PASS  
+  plantafinapedralba1.jpg        | Planta fina de pedralba | Planta fina de pedralba |   ✅ SI   |  73.3%   |   N/A    |   ✅ PASS  
+  plantafinapedralba2.jpg        | Planta fina de pedralba | Planta fina de pedralba |   ✅ SI   |  53.7%   |   N/A    |   ✅ PASS  
+  plantafinapedralba3.jpg        | Planta fina de pedralba | Valenci negre      |   ❌ NO   |  68.7%   |   N/A    |   ❌ FAIL  
+  roseti1.jpg                    | Roseti             | Roseti             |   ✅ SI   |  84.3%   |   N/A    |   ✅ PASS  
+  roseti2.jpg                    | Roseti             | Roseti             |   ✅ SI   |  55.2%   |   N/A    |   ✅ PASS  
+  roseti3.jpg                    | Roseti             | Roseti             |   ✅ SI   |  94.0%   |   N/A    |   ✅ PASS  
+  trepadell1.jpg                 | Trepadell          | Trepadell          |   ✅ SI   |  98.8%   |   N/A    |   ✅ PASS  
+  trepadell2.jpg                 | Trepadell          | Trepadell          |   ✅ SI   |  69.7%   |   N/A    |   ✅ PASS  
+  trepadell3.jpg                 | Trepadell          | Trepadell          |   ✅ SI   |  80.8%   |   N/A    |   ✅ PASS  
+  chardonay1.jpg                 | Chardonay          | Chardonay          |   ✅ SI   |  98.9%   |   N/A    |   ✅ PASS  
+  chardonay2.jpg                 | Chardonay          | Merseguera         |   ❌ NO   |  44.6%   |   N/A    |   ❌ FAIL  
+  chardonay3.jpg                 | Chardonay          | Chardonay          |   ✅ SI   |  93.8%   |   N/A    |   ✅ PASS  
+  tintorera1.jpg                 | Tintorera          | Planta fina de pedralba |   ❌ NO   |  68.7%   |   N/A    |   ❌ FAIL  
+  tintorera2.jpg                 | Tintorera          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  tintorera3.jpg                 | Tintorera          | Tintorera          |   ✅ SI   |  99.6%   |   N/A    |   ✅ PASS  
+  monastrell1.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  95.1%   |   N/A    |   ✅ PASS  
+  monastrell2.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  94.2%   |   N/A    |   ✅ PASS  
+  monastrell3.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  74.1%   |   N/A    |   ✅ PASS  
+  cabernetsauvignon1.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  98.2%   |   N/A    |   ✅ PASS  
+  cabernetsauvignon2.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  75.3%   |   N/A    |   ✅ PASS  
+  cabernetsauvignon3.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  85.3%   |   N/A    |   ✅ PASS  
+  decuerno1.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  79.5%   |   N/A    |   ✅ PASS  
+  decuerno2.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  94.1%   |   N/A    |   ✅ PASS  
+  decuerno3.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  98.8%   |   N/A    |   ✅ PASS  
+  garnacha1.jpg                  | Garnacha           | Garnacha           |   ✅ SI   |  99.1%   |   N/A    |   ✅ PASS  
+  garnacha2.jpg                  | Garnacha           | Garnacha           |   ✅ SI   |  66.7%   |   N/A    |   ✅ PASS  
+  garnacha3.jpg                  | Garnacha           | Garnacha           |   ✅ SI   |  99.4%   |   N/A    |   ✅ PASS  
+  merlot1.jpg                    | Merlot             | Merlot             |   ✅ SI   |  97.7%   |   N/A    |   ✅ PASS  
+  merlot2.jpg                    | Merlot             | Merlot             |   ✅ SI   |  98.1%   |   N/A    |   ✅ PASS  
+  merlot3.jpg                    | Merlot             | Merlot             |   ✅ SI   |  96.3%   |   N/A    |   ✅ PASS  
+  valencinegre1.jpg              | Valenci negre      | Valenci negre      |   ✅ SI   |  67.6%   |   N/A    |   ✅ PASS  
+  valencinegre2.jpg              | Valenci negre      | Valenci negre      |   ✅ SI   |  98.5%   |   N/A    |   ✅ PASS  
+  valencinegre3.jpg              | Valenci negre      | Valenci negre      |   ✅ SI   |  47.8%   |   N/A    | ⚠️ LOW CONF
+  valenciblanc1.jpg              | Valensi blanc      | Valensi blanc      |   ✅ SI   |  99.8%   |   N/A    |   ✅ PASS  
+  valenciblanc2.jpg              | Valensi blanc      | Valensi blanc      |   ✅ SI   |  57.7%   |   N/A    |   ✅ PASS  
+  valenciblanc3.jpg              | Valensi blanc      | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  raimtotssants1.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  99.5%   |   N/A    |   ✅ PASS  
+  raimtotssants2.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  90.4%   |   N/A    |   ✅ PASS  
+  raimtotssants3.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  99.4%   |   N/A    |   ✅ PASS  
+  ---------------------------------------------------------------------------------------------------------------------------
+     🎯 Precisión: 87.7% (50/57)
+
+  📍 Stress: Baja Luminosidad
+  ---------------------------------------------------------------------------------------------------------------------------
+  ARCHIVO                        | ESPERADO           | DETECTADO          | COINCIDE |  CONF.   |  TIEMPO  |   ESTADO  
+  ---------------------------------------------------------------------------------------------------------------------------
+  ahmerbounamer1.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  97.6%   |   N/A    |   ✅ PASS  
+  ahmerbounamer2.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  94.7%   |   N/A    |   ✅ PASS  
+  ahmerbounamer3.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  97.2%   |   N/A    |   ✅ PASS  
+  aledo1.jpg                     | Aledo              | Aledo              |   ✅ SI   |  98.0%   |   N/A    |   ✅ PASS  
+  aledo2.jpg                     | Aledo              | Aledo              |   ✅ SI   |  88.3%   |   N/A    |   ✅ PASS  
+  aledo3.jpg                     | Aledo              | Aledo              |   ✅ SI   |  93.6%   |   N/A    |   ✅ PASS  
+  fernandella1.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  84.1%   |   N/A    |   ✅ PASS  
+  fernandella2.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  94.6%   |   N/A    |   ✅ PASS  
+  fernandella3.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  98.7%   |   N/A    |   ✅ PASS  
+  jacquet1.jpg                   | Jacquet            | Jacquet            |   ✅ SI   |  83.2%   |   N/A    |   ✅ PASS  
+  jacquet2.jpg                   | Jacquet            | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  jacquet3.jpg                   | Jacquet            | Jacquet            |   ✅ SI   |  93.1%   |   N/A    |   ✅ PASS  
+  merseguera1.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  78.2%   |   N/A    |   ✅ PASS  
+  merseguera2.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  90.9%   |   N/A    |   ✅ PASS  
+  merseguera3.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  96.7%   |   N/A    |   ✅ PASS  
+  moscatells1.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  44.0%   |   N/A    |   ✅ PASS  
+  moscatells2.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  86.6%   |   N/A    |   ✅ PASS  
+  moscatells3.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  76.3%   |   N/A    |   ✅ PASS  
+  plantafinapedralba1.jpg        | Planta fina de pedralba | Planta fina de pedralba |   ✅ SI   |  31.1%   |   N/A    | ⚠️ LOW CONF
+  plantafinapedralba2.jpg        | Planta fina de pedralba | Planta fina de pedralba |   ✅ SI   |  53.6%   |   N/A    |   ✅ PASS  
+  plantafinapedralba3.jpg        | Planta fina de pedralba | Valenci negre      |   ❌ NO   |  80.4%   |   N/A    |   ❌ FAIL  
+  roseti1.jpg                    | Roseti             | Roseti             |   ✅ SI   |  83.9%   |   N/A    |   ✅ PASS  
+  roseti2.jpg                    | Roseti             | Aledo              |   ❌ NO   |  43.1%   |   N/A    |   ❌ FAIL  
+  roseti3.jpg                    | Roseti             | Roseti             |   ✅ SI   |  87.6%   |   N/A    |   ✅ PASS  
+  trepadell1.jpg                 | Trepadell          | Trepadell          |   ✅ SI   |  93.0%   |   N/A    |   ✅ PASS  
+  trepadell2.jpg                 | Trepadell          | Trepadell          |   ✅ SI   |  62.2%   |   N/A    |   ✅ PASS  
+  trepadell3.jpg                 | Trepadell          | Trepadell          |   ✅ SI   |  60.6%   |   N/A    |   ✅ PASS  
+  chardonay1.jpg                 | Chardonay          | Chardonay          |   ✅ SI   |  99.2%   |   N/A    |   ✅ PASS  
+  chardonay2.jpg                 | Chardonay          | Chardonay          |   ✅ SI   |  52.3%   |   N/A    |   ✅ PASS  
+  chardonay3.jpg                 | Chardonay          | Chardonay          |   ✅ SI   |  93.8%   |   N/A    |   ✅ PASS  
+  tintorera1.jpg                 | Tintorera          | Planta fina de pedralba |   ❌ NO   |  69.4%   |   N/A    |   ❌ FAIL  
+  tintorera2.jpg                 | Tintorera          | Ahmer Bounamer     |   ❌ NO   |  34.7%   |   N/A    |   ❌ FAIL  
+  tintorera3.jpg                 | Tintorera          | Tintorera          |   ✅ SI   |  99.0%   |   N/A    |   ✅ PASS  
+  monastrell1.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  95.7%   |   N/A    |   ✅ PASS  
+  monastrell2.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  93.5%   |   N/A    |   ✅ PASS  
+  monastrell3.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  75.3%   |   N/A    |   ✅ PASS  
+  cabernetsauvignon1.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  37.3%   |   N/A    | ⚠️ LOW CONF
+  cabernetsauvignon2.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  82.6%   |   N/A    |   ✅ PASS  
+  cabernetsauvignon3.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  83.0%   |   N/A    |   ✅ PASS  
+  decuerno1.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  54.4%   |   N/A    |   ✅ PASS  
+  decuerno2.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  97.7%   |   N/A    |   ✅ PASS  
+  decuerno3.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  98.2%   |   N/A    |   ✅ PASS  
+  garnacha1.jpg                  | Garnacha           | Garnacha           |   ✅ SI   |  98.9%   |   N/A    |   ✅ PASS  
+  garnacha2.jpg                  | Garnacha           | Garnacha           |   ✅ SI   |  88.3%   |   N/A    |   ✅ PASS  
+  garnacha3.jpg                  | Garnacha           | Garnacha           |   ✅ SI   |  99.3%   |   N/A    |   ✅ PASS  
+  merlot1.jpg                    | Merlot             | Merlot             |   ✅ SI   |  97.6%   |   N/A    |   ✅ PASS  
+  merlot2.jpg                    | Merlot             | Merlot             |   ✅ SI   |  98.8%   |   N/A    |   ✅ PASS  
+  merlot3.jpg                    | Merlot             | Merlot             |   ✅ SI   |  96.3%   |   N/A    |   ✅ PASS  
+  valencinegre1.jpg              | Valenci negre      | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  valencinegre2.jpg              | Valenci negre      | Valenci negre      |   ✅ SI   |  97.6%   |   N/A    |   ✅ PASS  
+  valencinegre3.jpg              | Valenci negre      | Cabernet-Sauvignon |   ❌ NO   |  41.2%   |   N/A    |   ❌ FAIL  
+  valenciblanc1.jpg              | Valensi blanc      | Valensi blanc      |   ✅ SI   |  99.7%   |   N/A    |   ✅ PASS  
+  valenciblanc2.jpg              | Valensi blanc      | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  valenciblanc3.jpg              | Valensi blanc      | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  raimtotssants1.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  98.8%   |   N/A    |   ✅ PASS  
+  raimtotssants2.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  93.3%   |   N/A    |   ✅ PASS  
+  raimtotssants3.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  92.4%   |   N/A    |   ✅ PASS  
+  ---------------------------------------------------------------------------------------------------------------------------
+     🎯 Precisión: 80.7% (46/57)
+
+  📍 Stress: Rotación 45°
+  ---------------------------------------------------------------------------------------------------------------------------
+  ARCHIVO                        | ESPERADO           | DETECTADO          | COINCIDE |  CONF.   |  TIEMPO  |   ESTADO  
+  ---------------------------------------------------------------------------------------------------------------------------
+  ahmerbounamer1.jpg             | Ahmer Bounamer     | Raim de tots sants |   ❌ NO   |  36.8%   |   N/A    |   ❌ FAIL  
+  ahmerbounamer2.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  62.7%   |   N/A    |   ✅ PASS  
+  ahmerbounamer3.jpg             | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  89.1%   |   N/A    |   ✅ PASS  
+  aledo1.jpg                     | Aledo              | Aledo              |   ✅ SI   |  38.0%   |   N/A    | ⚠️ LOW CONF
+  aledo2.jpg                     | Aledo              | Aledo              |   ✅ SI   |  27.7%   |   N/A    | ⚠️ LOW CONF
+  aledo3.jpg                     | Aledo              | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  fernandella1.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  58.9%   |   N/A    |   ✅ PASS  
+  fernandella2.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  73.2%   |   N/A    |   ✅ PASS  
+  fernandella3.jpg               | Fernandella        | Fernandella        |   ✅ SI   |  45.0%   |   N/A    |   ✅ PASS  
+  jacquet1.jpg                   | Jacquet            | Monastrell         |   ❌ NO   |  66.7%   |   N/A    |   ❌ FAIL  
+  jacquet2.jpg                   | Jacquet            | Merseguera         |   ❌ NO   |  36.8%   |   N/A    |   ❌ FAIL  
+  jacquet3.jpg                   | Jacquet            | Jacquet            |   ✅ SI   |  78.1%   |   N/A    |   ✅ PASS  
+  merseguera1.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  68.0%   |   N/A    |   ✅ PASS  
+  merseguera2.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  65.9%   |   N/A    |   ✅ PASS  
+  merseguera3.jpg                | Merseguera         | Merseguera         |   ✅ SI   |  52.1%   |   N/A    |   ✅ PASS  
+  moscatells1.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  52.2%   |   N/A    |   ✅ PASS  
+  moscatells2.jpg                | Moscatell          | Chardonay          |   ❌ NO   |  53.2%   |   N/A    |   ❌ FAIL  
+  moscatells3.jpg                | Moscatell          | Moscatell          |   ✅ SI   |  44.1%   |   N/A    |   ✅ PASS  
+  plantafinapedralba1.jpg        | Planta fina de pedralba | Aledo              |   ❌ NO   |  26.8%   |   N/A    |   ❌ FAIL  
+  plantafinapedralba2.jpg        | Planta fina de pedralba | Chardonay          |   ❌ NO   |  52.8%   |   N/A    |   ❌ FAIL  
+  plantafinapedralba3.jpg        | Planta fina de pedralba | Valenci negre      |   ❌ NO   |  25.2%   |   N/A    |   ❌ FAIL  
+  roseti1.jpg                    | Roseti             | Roseti             |   ✅ SI   |  68.0%   |   N/A    |   ✅ PASS  
+  roseti2.jpg                    | Roseti             | Aledo              |   ❌ NO   |  61.9%   |   N/A    |   ❌ FAIL  
+  roseti3.jpg                    | Roseti             | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  trepadell1.jpg                 | Trepadell          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  trepadell2.jpg                 | Trepadell          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  trepadell3.jpg                 | Trepadell          | Trepadell          |   ✅ SI   |  79.1%   |   N/A    |   ✅ PASS  
+  chardonay1.jpg                 | Chardonay          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  chardonay2.jpg                 | Chardonay          | Chardonay          |   ✅ SI   |  87.6%   |   N/A    |   ✅ PASS  
+  chardonay3.jpg                 | Chardonay          | Chardonay          |   ✅ SI   |  58.6%   |   N/A    |   ✅ PASS  
+  tintorera1.jpg                 | Tintorera          | Tintorera          |   ✅ SI   |  60.9%   |   N/A    |   ✅ PASS  
+  tintorera2.jpg                 | Tintorera          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  tintorera3.jpg                 | Tintorera          | Monastrell         |   ❌ NO   |  81.7%   |   N/A    |   ❌ FAIL  
+  monastrell1.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  25.6%   |   N/A    | ⚠️ LOW CONF
+  monastrell2.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  75.4%   |   N/A    |   ✅ PASS  
+  monastrell3.jpg                | Monastrell         | Monastrell         |   ✅ SI   |  91.2%   |   N/A    |   ✅ PASS  
+  cabernetsauvignon1.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  30.2%   |   N/A    | ⚠️ LOW CONF
+  cabernetsauvignon2.jpg         | Cabernet-Sauvignon | Fernandella        |   ❌ NO   |  43.5%   |   N/A    |   ❌ FAIL  
+  cabernetsauvignon3.jpg         | Cabernet-Sauvignon | Cabernet-Sauvignon |   ✅ SI   |  66.3%   |   N/A    |   ✅ PASS  
+  decuerno1.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  53.1%   |   N/A    |   ✅ PASS  
+  decuerno2.jpg                  | De Cuerno          | De Cuerno          |   ✅ SI   |  93.8%   |   N/A    |   ✅ PASS  
+  decuerno3.jpg                  | De Cuerno          | Aledo              |   ❌ NO   |  70.4%   |   N/A    |   ❌ FAIL  
+  garnacha1.jpg                  | Garnacha           | Monastrell         |   ❌ NO   |  33.0%   |   N/A    |   ❌ FAIL  
+  garnacha2.jpg                  | Garnacha           | Chardonay          |   ❌ NO   |  57.6%   |   N/A    |   ❌ FAIL  
+  garnacha3.jpg                  | Garnacha           | Garnacha           |   ✅ SI   |  26.3%   |   N/A    | ⚠️ LOW CONF
+  merlot1.jpg                    | Merlot             | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  merlot2.jpg                    | Merlot             | Merlot             |   ✅ SI   |  61.8%   |   N/A    |   ✅ PASS  
+  merlot3.jpg                    | Merlot             | Merlot             |   ✅ SI   |  27.8%   |   N/A    | ⚠️ LOW CONF
+  valencinegre1.jpg              | Valenci negre      | Valenci negre      |   ✅ SI   |  36.0%   |   N/A    | ⚠️ LOW CONF
+  valencinegre2.jpg              | Valenci negre      | Valenci negre      |   ✅ SI   |  83.1%   |   N/A    |   ✅ PASS  
+  valencinegre3.jpg              | Valenci negre      | Raim de tots sants |   ❌ NO   |  56.0%   |   N/A    |   ❌ FAIL  
+  valenciblanc1.jpg              | Valensi blanc      | Valensi blanc      |   ✅ SI   |  94.3%   |   N/A    |   ✅ PASS  
+  valenciblanc2.jpg              | Valensi blanc      | Merseguera         |   ❌ NO   |  39.9%   |   N/A    |   ❌ FAIL  
+  valenciblanc3.jpg              | Valensi blanc      | Valensi blanc      |   ✅ SI   |  32.7%   |   N/A    | ⚠️ LOW CONF
+  raimtotssants1.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  74.5%   |   N/A    |   ✅ PASS  
+  raimtotssants2.jpg             | Raim de tots sants | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  raimtotssants3.jpg             | Raim de tots sants | Raim de tots sants |   ✅ SI   |  88.4%   |   N/A    |   ✅ PASS  
+  ---------------------------------------------------------------------------------------------------------------------------
+     🎯 Precisión: 45.6% (26/57)
+.............................................................................................................................
+📊 RENDIMIENTO TOTAL 'DATASET_ALTA_CALIDAD': 71.35%
+=============================================================================================================================
+
+📦 GRUPO DE DATOS: DATASET_BAJA_CALIDAD
+=============================================================================================================================
+
+  📍 Validación Estándar
+  ---------------------------------------------------------------------------------------------------------------------------
+  ARCHIVO                        | ESPERADO           | DETECTADO          | COINCIDE |  CONF.   |  TIEMPO  |   ESTADO  
+  ---------------------------------------------------------------------------------------------------------------------------
+  LQahmer1.JPG                   | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  28.9%   |   N/A    | ⚠️ LOW CONF
+  LQmerseguera1.JPG              | Merseguera         | Merseguera         |   ✅ SI   |  32.4%   |   N/A    | ⚠️ LOW CONF
+  LQmerseguera2.JPG              | Merseguera         | Roseti             |   ❌ NO   |  41.1%   |   N/A    |   ❌ FAIL  
+  LQmonastrell1.JPG              | Monastrell         | Garnacha           |   ❌ NO   |  64.9%   |   N/A    |   ❌ FAIL  
+  LQmoscatell1.JPG               | Moscatell          | Moscatell          |   ✅ SI   |  60.5%   |   N/A    |   ✅ PASS  
+  LQmoscatell2.JPG               | Moscatell          | Moscatell          |   ✅ SI   |  78.1%   |   N/A    |   ✅ PASS  
+  LQmoscatell3.JPG               | Moscatell          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQmoscatell4.JPG               | Moscatell          | Aledo              |   ❌ NO   |  69.6%   |   N/A    |   ❌ FAIL  
+  LQmoscatell5.JPG               | Moscatell          | Aledo              |   ❌ NO   |  27.4%   |   N/A    |   ❌ FAIL  
+  LQtotsants1.JPG                | Raim de tots sants | Raim de tots sants |   ✅ SI   |  89.1%   |   N/A    |   ✅ PASS  
+  LQtrepadell1.JPG               | Trepadell          | Monastrell         |   ❌ NO   |  84.3%   |   N/A    |   ❌ FAIL  
+  LQtrepadell2.JPG               | Trepadell          | Merseguera         |   ❌ NO   |  65.0%   |   N/A    |   ❌ FAIL  
+  LQvalencinegre1.JPG            | Valenci negre      | Ahmer Bounamer     |   ❌ NO   |  46.2%   |   N/A    |   ❌ FAIL  
+  LQvalencinegre2.JPG            | Valenci negre      | Ahmer Bounamer     |   ❌ NO   |  53.7%   |   N/A    |   ❌ FAIL  
+  LQvalensiblanc1.JPG            | Valensi blanc      | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQvalensiblanc2.JPG            | Valensi blanc      | Moscatell          |   ❌ NO   |  98.4%   |   N/A    |   ❌ FAIL  
+  ---------------------------------------------------------------------------------------------------------------------------
+     🎯 Precisión: 18.8% (3/16)
+
+  📍 Stress: Baja Luminosidad
+  ---------------------------------------------------------------------------------------------------------------------------
+  ARCHIVO                        | ESPERADO           | DETECTADO          | COINCIDE |  CONF.   |  TIEMPO  |   ESTADO  
+  ---------------------------------------------------------------------------------------------------------------------------
+  LQahmer1.JPG                   | Ahmer Bounamer     | Ahmer Bounamer     |   ✅ SI   |  29.3%   |   N/A    | ⚠️ LOW CONF
+  LQmerseguera1.JPG              | Merseguera         | Merseguera         |   ✅ SI   |  49.3%   |   N/A    |   ✅ PASS  
+  LQmerseguera2.JPG              | Merseguera         | Ahmer Bounamer     |   ❌ NO   |  40.7%   |   N/A    |   ❌ FAIL  
+  LQmonastrell1.JPG              | Monastrell         | Garnacha           |   ❌ NO   |  63.5%   |   N/A    |   ❌ FAIL  
+  LQmoscatell1.JPG               | Moscatell          | Monastrell         |   ❌ NO   |  86.6%   |   N/A    |   ❌ FAIL  
+  LQmoscatell2.JPG               | Moscatell          | Moscatell          |   ✅ SI   |  41.8%   |   N/A    |   ✅ PASS  
+  LQmoscatell3.JPG               | Moscatell          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQmoscatell4.JPG               | Moscatell          | Aledo              |   ❌ NO   |  43.6%   |   N/A    |   ❌ FAIL  
+  LQmoscatell5.JPG               | Moscatell          | Aledo              |   ❌ NO   |  50.4%   |   N/A    |   ❌ FAIL  
+  LQtotsants1.JPG                | Raim de tots sants | Raim de tots sants |   ✅ SI   |  82.9%   |   N/A    |   ✅ PASS  
+  LQtrepadell1.JPG               | Trepadell          | Monastrell         |   ❌ NO   |  37.6%   |   N/A    |   ❌ FAIL  
+  LQtrepadell2.JPG               | Trepadell          | Merseguera         |   ❌ NO   |  42.1%   |   N/A    |   ❌ FAIL  
+  LQvalencinegre1.JPG            | Valenci negre      | Ahmer Bounamer     |   ❌ NO   |  62.0%   |   N/A    |   ❌ FAIL  
+  LQvalencinegre2.JPG            | Valenci negre      | Ahmer Bounamer     |   ❌ NO   |  52.4%   |   N/A    |   ❌ FAIL  
+  LQvalensiblanc1.JPG            | Valensi blanc      | Merseguera         |   ❌ NO   |  56.5%   |   N/A    |   ❌ FAIL  
+  LQvalensiblanc2.JPG            | Valensi blanc      | Moscatell          |   ❌ NO   |  97.4%   |   N/A    |   ❌ FAIL  
+  ---------------------------------------------------------------------------------------------------------------------------
+     🎯 Precisión: 18.8% (3/16)
+
+  📍 Stress: Rotación 45°
+  ---------------------------------------------------------------------------------------------------------------------------
+  ARCHIVO                        | ESPERADO           | DETECTADO          | COINCIDE |  CONF.   |  TIEMPO  |   ESTADO  
+  ---------------------------------------------------------------------------------------------------------------------------
+  LQahmer1.JPG                   | Ahmer Bounamer     | Merseguera         |   ❌ NO   |  72.3%   |   N/A    |   ❌ FAIL  
+  LQmerseguera1.JPG              | Merseguera         | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQmerseguera2.JPG              | Merseguera         | Merseguera         |   ✅ SI   |  41.8%   |   N/A    |   ✅ PASS  
+  LQmonastrell1.JPG              | Monastrell         | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQmoscatell1.JPG               | Moscatell          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQmoscatell2.JPG               | Moscatell          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQmoscatell3.JPG               | Moscatell          | Planta fina de pedralba |   ❌ NO   |  56.0%   |   N/A    |   ❌ FAIL  
+  LQmoscatell4.JPG               | Moscatell          | Merseguera         |   ❌ NO   |  29.5%   |   N/A    |   ❌ FAIL  
+  LQmoscatell5.JPG               | Moscatell          | Aledo              |   ❌ NO   |  32.5%   |   N/A    |   ❌ FAIL  
+  LQtotsants1.JPG                | Raim de tots sants | Raim de tots sants |   ✅ SI   |  93.1%   |   N/A    |   ✅ PASS  
+  LQtrepadell1.JPG               | Trepadell          | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQtrepadell2.JPG               | Trepadell          | Merseguera         |   ❌ NO   |  27.8%   |   N/A    |   ❌ FAIL  
+  LQvalencinegre1.JPG            | Valenci negre      | Desconocido        |   ❌ NO   |   0.0%   |   N/A    |   ❌ FAIL  
+  LQvalencinegre2.JPG            | Valenci negre      | Ahmer Bounamer     |   ❌ NO   |  63.9%   |   N/A    |   ❌ FAIL  
+  LQvalensiblanc1.JPG            | Valensi blanc      | Merseguera         |   ❌ NO   |  29.6%   |   N/A    |   ❌ FAIL  
+  LQvalensiblanc2.JPG            | Valensi blanc      | Moscatell          |   ❌ NO   |  94.6%   |   N/A    |   ❌ FAIL  
+  ---------------------------------------------------------------------------------------------------------------------------
+     🎯 Precisión: 12.5% (2/16)
+.............................................................................................................................
+📊 RENDIMIENTO TOTAL 'DATASET_BAJA_CALIDAD': 16.67%
+=============================================================================================================================
