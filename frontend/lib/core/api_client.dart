@@ -175,15 +175,15 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   /// Obtiene el estado 'tutorial_superado' del usuario actual (GET /users/me).
   Future<bool> getTutorialStatus() async {
     try {
+      // Esta llamada requiere que el token haya sido configurado previamente.
       final response = await _dio.get('/users/me');
       
-      // 🚨 Leemos el campo específico 'tutorial_superado' del JSON de respuesta
+      // La respuesta de /users/me contiene el objeto Usuario con el campo
       return response.data['tutorial_superado'] as bool? ?? false;
       
     } catch (e) {
-      print("Error al obtener el estado del tutorial: $e");
-      // Fallback seguro: Si falla (401, red), asumimos true para no bloquear el build
-      // (En HomePage gestionaremos que si falla, se redirija si es necesario).
+      print("Error al obtener el estado del tutorial (GET /users/me): $e");
+      // Fallback defensivo: Si falla (401, red), asumimos true para no bloquear el build
       return true; 
     }
   }
@@ -191,11 +191,12 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   /// Llama a PATCH /users/me para actualizar 'tutorial_superado' a true.
   Future<void> markTutorialAsComplete() async {
     try {
+      // Reutilizamos PATCH /users/me enviando SOLO el campo a actualizar
       await _dio.patch('/users/me', data: {
         "tutorial_superado": true
       });
     } catch (e) {
-      print("Error al marcar tutorial como completo: $e");
+      print("Error al marcar tutorial como completo (PATCH /users/me): $e");
       throw Exception('Fallo al actualizar estado del tutorial en el servidor.');
     }
   }

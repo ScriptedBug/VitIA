@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:dio/dio.dart'; 
+import 'package:dio/dio.dart'; // Para manejar errores de Dio
 
-// 🚨 Importaciones de páginas y servicios (AJUSTA LAS RUTAS SI ES NECESARIO)
+// 🚨 Importaciones de páginas y servicios (Asegúrate que las rutas sean correctas)
 import '../gallery/catalogo_page.dart'; 
-import '../capture/foto_page.dart'; 
+import '../capture/foto_page.dart';
 import '../library/foro_page.dart'; 
 import 'inicio_screen.dart'; 
 import 'perfil_page.dart';
 import '../../core/api_client.dart'; 
 import '../../core/services/api_config.dart'; // Para getBaseUrl()
-import '../../core/services/user_sesion.dart'; 
-import '../tutorial/tutorial_page.dart'; // ⬅️ El widget del tutorial
+import '../../core/services/user_sesion.dart'; // ⬅️ Tu clase UserSession
+import '../tutorial/tutorial_page.dart'; // ⬅️ Tu widget TutorialPage
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -69,9 +69,9 @@ class _HomepageState extends State<HomePage> {
           final bool tutorialStatus = await _apiClient.getTutorialStatus(); 
           
           if (!tutorialStatus) {
-              // Si NO está superado (FALSE), lo lanzamos en el siguiente frame
+              // Si NO está superado, lo lanzamos en el siguiente frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _showTutorialPage();
+                  _showTutorialPage(isInitial: true);
               });
           }
           
@@ -89,14 +89,29 @@ class _HomepageState extends State<HomePage> {
       }
   }
 
-  // Función para lanzar el tutorial en pantalla completa
-  void _showTutorialPage() {
+  // Función para lanzar el tutorial de forma manual (Botón de Ayuda)
+  void _launchTutorialManual() {
       Navigator.of(context).push(
           MaterialPageRoute(
               fullscreenDialog: true,
               builder: (context) => TutorialPage(
-                  // 🚨 FIX CLAVE: Pasamos el cliente API al widget TutorialPage
                   apiClient: _apiClient, 
+                  // 🚨 FIX: isCompulsory: false para que no llame al backend al cerrar
+                  onFinished: () => Navigator.of(context).pop(), 
+                  isCompulsory: false, 
+              ),
+          ),
+      );
+  }
+
+  // Función para lanzar el tutorial de forma obligatoria (usado en initState)
+  void _showTutorialPage({required bool isInitial}) {
+      Navigator.of(context).push(
+          MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (context) => TutorialPage(
+                  apiClient: _apiClient,
+                  isCompulsory: isInitial, // ⬅️ TRUE para el flujo inicial
                   onFinished: () {
                       // Cierra el tutorial y actualiza el estado local
                       Navigator.of(context).pop(); 
@@ -116,9 +131,10 @@ class _HomepageState extends State<HomePage> {
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
       elevation: 1,
-      leading: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12.0),
-        child: Icon(Icons.settings, size: 26),
+      // 🚨 FIX CLAVE: Botón de Ayuda (Interrogante)
+      leading: IconButton(
+        icon: const Icon(Icons.help_outline, size: 26), 
+        onPressed: _launchTutorialManual, // ⬅️ Lanza el tutorial manual
       ),
       actions: [
         Padding(
@@ -139,7 +155,7 @@ class _HomepageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-      // ⚠️ Bloquea la interfaz principal si estamos cargando O si el tutorial no ha sido superado
+      // ⚠️ Bloquea la interfaz principal si está cargando O si el tutorial no ha sido superado
       if (_isLoadingStatus || !_tutorialSuperado) { 
           return const Scaffold(
               body: Center(child: CircularProgressIndicator(color: Color(0xFF6B8E23))),

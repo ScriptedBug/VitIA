@@ -14,7 +14,8 @@ import 'detalle_coleccion_page.dart'; // <--- AÑADE ESTO
 
 class CatalogoPage extends StatefulWidget { // ⬅️ CLASE RENOMBRADA A CATÁLOGO
   final int initialTab; 
-  const CatalogoPage({super.key, this.initialTab = 0}); 
+  final ApiClient? apiClient;
+  const CatalogoPage({super.key, this.initialTab = 0, this.apiClient,}); 
 
   @override
   State<CatalogoPage> createState() => _CatalogoPageState(); // ⬅️ ESTADO RENOMBRADO A CATÁLOGO
@@ -44,17 +45,21 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     _tabController = TabController(length: 2, vsync: this);
     _tabController.index = widget.initialTab;
 
-    // 2. INICIALIZAR Y CARGAR
-    _apiClient = ApiClient(getBaseUrl());
-    _cargarVariedadesBackend();
+    // 1. INYECCIÓN DE DEPENDENCIAS
+    // Si el test nos pasa un cliente falso (mock), usamos ese. Si no, el real.
+    _apiClient = widget.apiClient ?? ApiClient(getBaseUrl());
 
-    if (UserSession.token != null) {
-      _apiClient!.setToken(UserSession.token!);
-      _cargarTodo(); // Cargamos ambas listas si hay usuario
-    } else {
-      _cargarSoloBiblioteca(); // Si no hay usuario, solo biblioteca pública
-
-    }
+    // 2. CORRECCIÓN DEL CICLO DE VIDA (CRÍTICO PARA TESTS)
+    // Usamos addPostFrameCallback para esperar a que la UI se construya antes de cargar.
+    // Esto permite mostrar el SnackBar de error sin que falle el test.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (UserSession.token != null) {
+        _apiClient!.setToken(UserSession.token!);
+        _cargarTodo(); // Carga ambas listas (Biblioteca + Colección)
+      } else {
+        _cargarSoloBiblioteca(); // Carga solo la pública
+      }
+    });
   }
 
   Future<void> _cargarTodo() async {
@@ -73,19 +78,20 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   }
   // 3. AÑADE ESTE MÉTODO
   Future<void> _cargarVariedadesBackend() async {
+    // 1. Aseguramos que se muestre el spinner de carga al empezar
+    setState(() => _isLoading = true); 
+
     try {
       final lista = await _apiClient!.getVariedades();
       
       setState(() {
         _variedades = lista.map((item) {
-           // Mapeo simple de lo que devuelve el backend a tu UI
            return {
              'id': item['id_variedad'],
              'nombre': item['nombre'],
              'descripcion': item['descripcion'],
-             'region': 'España', // Tu backend aun no manda región, ponemos placeholder
+             'region': 'España', 
              'tipo': item['color'] ?? 'Desconocido',
-             // Si hay imágenes, tomamos la primera, si no null
              'imagen': (item['links_imagenes'] != null && (item['links_imagenes'] as List).isNotEmpty)
                  ? item['links_imagenes'][0] 
                  : null,
@@ -95,11 +101,31 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
         }).toList().cast<Map<String, dynamic>>();
         
         _filtradas = _variedades;
-        _isLoading = false;
+        // _isLoading = false; // LO QUITAMOS DE AQUÍ (se hace en finally)
       });
     } catch (e) {
-      print("Error cargando catálogo: $e");
-      setState(() => _isLoading = false);
+      debugPrint("Error cargando catálogo: $e");
+      
+      // --- CORRECCIÓN VISUAL ---
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Error de conexión: No se pudieron cargar las viñas'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Reintentar', 
+              textColor: Colors.white,
+              onPressed: _cargarVariedadesBackend // Botón para probar otra vez
+            ),
+          ),
+        );
+      }
+    } finally {
+      // --- ESTO ASEGURA QUE EL CIRCULITO DEJE DE GIRAR SIEMPRE ---
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -109,9 +135,10 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
       
       setState(() {
         _coleccionUsuario = lista.map((item) {
+           // ... (tu código de mapeo se mantiene igual) ...
            final variedadData = item['variedad'] ?? {};
-           
            return {
+             // ... tus campos ...
              'id': item['id_coleccion'], 
              'nombre': variedadData['nombre'] ?? 'Sin nombre',
              'descripcion': item['notas'] ?? variedadData['descripcion'],
@@ -119,13 +146,9 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
              'tipo': variedadData['color'] ?? 'Personal',
              'imagen': item['path_foto_usuario'], 
              'morfologia': variedadData['morfologia'],
-             
-             // --- CAMBIOS AQUÍ: Pasamos los datos "crudos" ---
-             'fecha_captura': item['fecha_captura'], // Pasamos el String ISO original
-             'latitud': item['latitud'],             // Pasamos el double original
-             'longitud': item['longitud'],           // Pasamos el double original
-             // ------------------------------------------------
-             
+             'fecha_captura': item['fecha_captura'],
+             'latitud': item['latitud'],
+             'longitud': item['longitud'],
              'es_local': false,
            };
         }).toList().cast<Map<String, dynamic>>();
@@ -133,7 +156,13 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
         _filtradasColeccion = _coleccionUsuario;
       });
     } catch (e) {
-      print("Error cargando colección: $e");
+      debugPrint("Error cargando colección: $e");
+      // Feedback visual también aquí
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo actualizar tu colección')),
+        );
+      }
     }
   }
 

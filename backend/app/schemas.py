@@ -182,7 +182,7 @@ class Usuario(UsuarioBase, BaseConfig):
     id_usuario: int
     es_premium: bool
     fecha_registro: datetime
-    
+    tutorial_superado: bool = False
     # --- Relaciones Anidadas ---
     # Al ver el perfil de un usuario, mostramos sus publicaciones
     # y los items de su colección.
