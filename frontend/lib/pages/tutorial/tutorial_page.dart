@@ -3,8 +3,7 @@ import 'package:dio/dio.dart';
 
 // Asegúrate de que estos imports sean correctos
 import '../../core/api_client.dart'; 
-import '../../core/services/api_config.dart';
-import '../../core/services/user_sesion.dart'; 
+// (Manteniendo la estructura de imports que proporcionaste)
 
 class TutorialPage extends StatefulWidget {
     final VoidCallback onFinished; 
@@ -33,9 +32,7 @@ class _TutorialPageState extends State<TutorialPage> {
     // --- COLORES AJUSTADOS A FIGMA ---
     final Color _mainColor = const Color(0xFF8B9E3A); // Verde Musgo
     final Color _activeProgressColor = const Color(0xFF9C27B0); // Magenta/Vino
-    final Color _inactiveColor = const Color(0xFFF4C4C4); // Rosa pálido
-    final Color _lightYellowBackground = const Color(0xFFFFF2D3); // Fondo de burbujas (Ajustado)
-    final Color _darkBackgroundColor = const Color(0xFF1B2414); // Color de la barra inferior (aproximado)
+    final Color _darkBackgroundColor = const Color(0xFF1B2414); // Color de la barra inferior
 
     @override
     void dispose() {
@@ -43,14 +40,14 @@ class _TutorialPageState extends State<TutorialPage> {
         super.dispose();
     }
 
+    /// Lógica para finalizar el tutorial (marcar en API y navegar)
     Future<void> _completeTutorial() async {
         if (_isCompleting) return;
         
         if (widget.isCompulsory) { 
             setState(() => _isCompleting = true);
             try {
-                // Llama al endpoint de la API para marcar como completo
-                await widget.apiClient.markTutorialAsComplete(); 
+                await widget.apiClient.markTutorialAsComplete();
             } on DioException catch (e) {
                 debugPrint("Error al completar el tutorial en el servidor: ${e.message}");
             } finally {
@@ -58,6 +55,7 @@ class _TutorialPageState extends State<TutorialPage> {
             }
         }
         
+        // Navegar a la pantalla principal
         widget.onFinished(); 
     }
     
@@ -65,13 +63,12 @@ class _TutorialPageState extends State<TutorialPage> {
     
     // 1. Tarjeta de Consejos (P3)
     Widget _buildImageTipCard(String assetName) {
-        // La imagen ya contiene el icono, el texto y el fondo amarillo
         return Container(
             width: 140,
             height: 140, 
             margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
             child: Image.asset(
-                'assets/tutorial/$assetName', // Ruta correcta
+                'assets/tutorial/$assetName', // Nombres seguros
                 fit: BoxFit.contain, 
             ),
         );
@@ -79,7 +76,6 @@ class _TutorialPageState extends State<TutorialPage> {
     
     // 2. Tarjeta de Biblioteca (P5)
     Widget _buildFinalCard(String title, String content) {
-        // Las tarjetas de biblioteca son blancas y rectangulares
         return Container(
              width: 140,
              height: 120,
@@ -116,130 +112,188 @@ class _TutorialPageState extends State<TutorialPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                         const SizedBox(height: 50),
-                        // Tipografía serif simulada con fontWeight:bold
                         const Text('Es tu primera vez\npor aquí?', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, height: 1.1)), 
                         const SizedBox(height: 15),
                         const Text('Vitia te ayuda a identificar variedades de viñas usando la cámara.'),
-                        const SizedBox(height: 100),
+                        
+                        const Spacer(flex: 3), 
+                        
                         const Text('¿Quieres aprender cómo funciona?', style: TextStyle(fontWeight: FontWeight.w500)),
                         const SizedBox(height: 15),
+                        
+                        const Spacer(flex: 1), 
                     ],
                 );
 
             case 1: // Pantalla 1: Abre la cámara
-                return Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                        const SizedBox(height: 30),
-                        const Text('Guía de uso 1/5', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 100), // Empuja la burbuja hacia la zona del icono de cámara
-                        // 🖼️ Burbuja P1: La imagen ya tiene la punta hacia abajo
-                        Center(
-                            child: Image.asset(
-                                'assets/tutorial/tarjeta informativa tutorial.png', 
-                                width: 250,
+                return SingleChildScrollView( 
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                            const SizedBox(height: 30),
+                            const Text('¡Empieza aquí!', style: TextStyle(fontWeight: FontWeight.normal)), 
+                            const SizedBox(height: 150), 
+                            // 🖼️ Burbuja P1: (burbuja_p1.png)
+                            Center(
+                                child: Image.asset(
+                                    'assets/tutorial/burbuja_p1.png', // Nombre seguro
+                                    width: 250,
+                                ),
                             ),
-                        ),
-                        const Expanded(child: SizedBox.shrink()), 
-                    ],
+                            const SizedBox(height: 150), 
+                        ],
+                    ),
                 );
                 
             case 2: // Pantalla 2: Preparación
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        const SizedBox(height: 30),
-                        const Text('Guía de uso 2/5', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 20),
-                        const Text('Coloca la hoja o racimo delante del móvil. Cuanta más claridad tenga la imagen, mejor será la detección'),
-                        const SizedBox(height: 30),
-                        Center(
-                            // 🖼️ Ilustración del móvil/mano
-                            child: Image.asset(
-                                'assets/tutorial/ilustración movil.png', 
-                                width: 250, 
-                                height: 350, 
-                                fit: BoxFit.contain,
+                return SingleChildScrollView(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            const SizedBox(height: 30),
+                            const Text('Preparación', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)), 
+                            const SizedBox(height: 10),
+                            const Text('Coloca la hoja o racimo delante del móvil. Cuanta más claridad tenga la imagen, mejor será la detección'),
+                            const SizedBox(height: 30),
+                            Center(
+                                // 🖼️ Ilustración del móvil/mano (ilustracion_movil.png)
+                                child: Image.asset(
+                                    'assets/tutorial/ilustracion_movil.png', // Nombre seguro
+                                    width: 250, 
+                                    height: 350, 
+                                    fit: BoxFit.contain,
+                                ),
                             ),
-                        ),
-                        const SizedBox(height: 20),
-                    ],
+                            const SizedBox(height: 50),
+                        ],
+                    ),
                 );
 
             case 3: // Pantalla 3: Consejos para la Foto
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        const SizedBox(height: 30),
-                        const Text('Guía de uso 3/5', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 20),
-                        const Text('Haz una foto clara y centrada', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 20),
-                        Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            // 🖼️ Usamos las imágenes de las tarjetas completas
-                            children: [
-                                _buildImageTipCard('tarjeta consejo guía 1.png'), 
-                                _buildImageTipCard('tarjeta consejo guía 2.png'), 
-                                _buildImageTipCard('tarjeta consejo guía 3.png'), 
-                                _buildImageTipCard('tarjeta consejo guía 4.png'), 
-                            ],
-                        ),
-                    ],
+                return SingleChildScrollView(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            const SizedBox(height: 30),
+                            const Text('Haz una foto clara y centrada', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), 
+                            const SizedBox(height: 20),
+                            Wrap(
+                                alignment: WrapAlignment.center, 
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                    _buildImageTipCard('tarjeta_consejo_1.png'),
+                                    _buildImageTipCard('tarjeta_consejo_2.png'),
+                                    _buildImageTipCard('tarjeta_consejo_3.png'),
+                                    _buildImageTipCard('tarjeta_consejo_4.png'),
+                                ],
+                            ),
+                            const SizedBox(height: 50),
+                        ],
+                    ),
                 );
                 
             case 4: // Pantalla 4: Detección Instantánea
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        const SizedBox(height: 30),
-                        const Text('Guía de uso 4/5', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 20),
-                        const Text('Detectamos la variedad al instante', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 10),
-                        const Text('Cuando haces una foto, Vitia identifica la variedad y la desbloquea automáticamente en tu biblioteca'),
-                        const SizedBox(height: 30),
-                        Center(
-                            // 🖼️ Tarjeta de Trepadell + Línea punteada (todo en una imagen)
-                            child: Image.asset(
-                                'assets/tutorial/Tutorial Pantalla 4.jpg', 
-                                width: 200, 
-                                height: 350, 
-                                fit: BoxFit.contain,
+                return SingleChildScrollView(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            const SizedBox(height: 30),
+                            const Text('Detectamos la variedad al instante', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)), 
+                            const SizedBox(height: 10),
+                            const Text('Cuando haces una foto, Vitia identifica la variedad y la desbloquea automáticamente en tu biblioteca'),
+                            const SizedBox(height: 40),
+                            Center(
+                                child: Stack(
+                                    alignment: Alignment.topCenter,
+                                    children: [
+                                        // 🖼️ Tarjeta de Trepadell
+                                        Image.asset(
+                                            'assets/tutorial/tarjeta_deteccion_p4.png', // Nombre seguro
+                                            width: 150, 
+                                            height: 250, 
+                                            fit: BoxFit.contain,
+                                        ),
+                                        // 🖼️ Línea punteada
+                                        Padding(
+                                            padding: const EdgeInsets.only(top: 220), 
+                                            child: Image.asset(
+                                                'assets/tutorial/flecha_p4.png', // Nombre seguro
+                                                width: 180, 
+                                                height: 180, 
+                                                fit: BoxFit.contain,
+                                            ),
+                                        ),
+                                    ]
+                                )
                             ),
-                        ),
-                    ],
+                            const SizedBox(height: 50),
+                        ],
+                    ),
                 );
 
             case 5: // Pantalla 5: Final / Biblioteca
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        const SizedBox(height: 30),
-                        const Text('Guía de uso 5/5', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 20),
-                        
-                        // Tarjetas de Biblioteca 
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                                _buildFinalCard("Todas las variedades", "Información completa de cualquier variedad"),
-                                _buildFinalCard("Tus variedades", "Galería de todas las variedades que hayas detectado"),
-                            ],
-                        ),
-                        const SizedBox(height: 30),
-                        
-                        // 🖼️ Burbuja Final con el botón "Comenzar" DENTRO
-                        Center(
-                            child: Image.asset(
-                                'assets/tutorial/tarjeta informativa tutorial 5.png', // Imagen con botón incluido
-                                width: 320, 
-                                fit: BoxFit.contain,
+                return SingleChildScrollView(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            const SizedBox(height: 30),
+                            const Text('Consulta tu biblioteca', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)), 
+                            const SizedBox(height: 20),
+                            
+                            // Tarjetas de Biblioteca 
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                    _buildFinalCard("Todas las variedades", "Información completa de cualquier variedad"),
+                                    _buildFinalCard("Tus variedades", "Galería de todas las variedades que hayas detectado"),
+                                ],
                             ),
-                        ),
-                        const SizedBox(height: 50),
-                    ],
+                            const SizedBox(height: 30),
+                            
+                            // 🖼️ Burbuja Final con el botón "Comenzar" DENTRO - CON INTERACCIÓN
+                            Center(
+                                child: Container(
+                                    width: 320,
+                                    height: 200, 
+                                    child: Stack(
+                                        children: [
+                                            // 1. Imagen de la burbuja (fondo visual)
+                                            Image.asset(
+                                                'assets/tutorial/burbuja_p5.png', // Nombre seguro
+                                                width: 320, 
+                                                fit: BoxFit.contain,
+                                            ),
+                                            // 2. Botón interactivo superpuesto sobre la ilustración
+                                            // Ajustado para cubrir la zona del botón visualmente.
+                                            Positioned(
+                                                right: 15,
+                                                bottom: 10,
+                                                child: SizedBox(
+                                                    width: 110, // Área de clic ampliada
+                                                    height: 50, // Área de clic ampliada
+                                                    child: ElevatedButton(
+                                                        onPressed: _completeTutorial,
+                                                        // Hacemos el botón visualmente transparente pero funcional
+                                                        style: ElevatedButton.styleFrom(
+                                                            backgroundColor: Colors.transparent,
+                                                            foregroundColor: Colors.transparent,
+                                                            shadowColor: Colors.transparent, 
+                                                            padding: EdgeInsets.zero,
+                                                            elevation: 0,
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                                        ),
+                                                        child: const SizedBox.shrink(), // No muestra texto
+                                                    ),
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                ),
+                            ),
+                            const SizedBox(height: 50),
+                        ],
+                    ),
                 );
 
             default:
@@ -252,58 +306,64 @@ class _TutorialPageState extends State<TutorialPage> {
         final isFirstPage = index == 0;
         final isGuidePage = index > 0;
         
-        // Define la ruta del indicador de progreso (Puntos/Uvas)
+        // Define la ruta del indicador de progreso (Uvas)
         String indicatorAsset = '';
         if (isGuidePage) {
-             // El índice de la guía va de 1 a 5
-             // Mapeamos el índice de la página (1-5) a tu nombre de archivo
-             // Nota: Si usas las imágenes 'indicadores pasos uvas tutorial X.png', tendrás que asegurarte que solo
-             // el archivo de la página actual esté activo, o que la imagen ya tenga el progreso dibujado.
-             // Asumiendo que la imagen ya tiene el estado dibujado:
-             indicatorAsset = 'assets/tutorial/indicadores pasos uvas tutorial $index.png'; 
+             indicatorAsset = 'assets/tutorial/indicadores_uvas_$index.png';
         }
 
         return Scaffold(
-            backgroundColor: const Color(0xFFFCFBF6), // Fondo blanco pálido
+            backgroundColor: const Color(0xFFFCFBF6), 
             body: SafeArea(
                 child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                            // 1. Control Superior (Cerrar / Progreso)
+                            // 1. Control Superior (Cerrar / Progreso / Navegación)
                             Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                    // Flecha de retroceso (usamos el color Magenta/Vino del diseño)
+                                    // Flecha de retroceso
                                     if (isGuidePage) 
                                         IconButton(
-                                            icon: Icon(Icons.arrow_back, color: _activeProgressColor), 
-                                            onPressed: () => _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.ease),
+                                            // La flecha es transparente en P1, visible de P2 a P5
+                                            icon: index > 1 ? Icon(Icons.arrow_back, color: _activeProgressColor) : const Icon(Icons.arrow_back, color: Colors.transparent), 
+                                            onPressed: index > 1 ? () => _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.ease) : null,
                                         )
                                     else 
-                                        const SizedBox(width: 48), // Placeholder para alineación
+                                        const SizedBox(width: 48), // Placeholder si no es una página de guía
                                     
-                                    // Puntos de Progreso (Uvas)
+                                    // Título + Indicadores (Solo en páginas de guía)
                                     if (isGuidePage)
-                                        Image.asset(
-                                            indicatorAsset, // Ruta del indicador según la página actual
-                                            height: 20, // Ajustar altura para que se vea bien
-                                            fit: BoxFit.contain,
-                                        ),
-
-                                    // Flecha Adelante y Botón Cerrar (Solo en las guías)
+                                        Column(
+                                            children: [
+                                                // Título Guía de uso X/5
+                                                Text('Guía de uso $index/5', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                                const SizedBox(height: 5),
+                                                // 🍇 Indicadores de Progreso (Uvas)
+                                                Image.asset(
+                                                    indicatorAsset, 
+                                                    height: 15, 
+                                                    fit: BoxFit.contain,
+                                                ),
+                                            ],
+                                        )
+                                    else
+                                        const SizedBox.shrink(),
+                                    
+                                    // Flecha Adelante y Botón Cerrar 
                                     if (isGuidePage)
                                         Row(
                                             children: [
-                                                // Flecha Adelante
+                                                // Flecha Adelante (solo si no es la última)
                                                 if (!isLastPage)
                                                     IconButton(
                                                         icon: Icon(Icons.arrow_forward, color: _activeProgressColor), 
                                                         onPressed: () => _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.ease),
                                                     )
-                                                else // Placeholder para alineación
-                                                    const SizedBox(width: 48), 
+                                                else 
+                                                    const SizedBox(width: 48), // Placeholder para la flecha
                                                 // Botón Cerrar (X)
                                                 IconButton(
                                                     icon: const Icon(Icons.close),
@@ -311,21 +371,15 @@ class _TutorialPageState extends State<TutorialPage> {
                                                 ),
                                             ],
                                         )
-                                    else // En Pantalla 0, el botón cerrar es independiente (solo la X a la derecha)
-                                        const SizedBox.shrink(),
+                                    else if (isFirstPage)
+                                        // Botón Cerrar en P0 (alineado a la derecha)
+                                        IconButton(
+                                            icon: const Icon(Icons.close),
+                                            onPressed: widget.onFinished, 
+                                        )
                                 ],
                             ),
 
-                            // --- Manejo especial para Pantalla 0 (Cerrar a la derecha)
-                            if (isFirstPage) 
-                                Align(
-                                    alignment: Alignment.topRight, // Coloca el botón arriba a la derecha
-                                    child: IconButton(
-                                        icon: const Icon(Icons.close),
-                                        onPressed: widget.onFinished, 
-                                    ),
-                                ),
-                            
                             // 2. CONTENIDO 
                             Expanded(child: _buildPageContent(index)),
 
@@ -339,7 +393,11 @@ class _TutorialPageState extends State<TutorialPage> {
                                                 // Botón Relleno "Ver tutorial"
                                                 ElevatedButton(
                                                     onPressed: () => _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.ease),
-                                                    style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50), backgroundColor: _mainColor),
+                                                    style: ElevatedButton.styleFrom(
+                                                        minimumSize: const Size(double.infinity, 50), 
+                                                        backgroundColor: _mainColor,
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)), 
+                                                    ),
                                                     child: const Text('Ver tutorial', style: TextStyle(color: Colors.white)),
                                                 ),
                                                 const SizedBox(height: 10),
@@ -355,17 +413,10 @@ class _TutorialPageState extends State<TutorialPage> {
                                                 ),
                                             ],
                                         )
-                                    else if (isLastPage)
-                                        // Pantalla Final: El botón "Comenzar" está en la imagen, así que no hay botón aquí.
-                                        const SizedBox.shrink()
                                     else 
-                                        // Pantallas Intermedias: Botón "Siguiente"
-                                        ElevatedButton(
-                                            onPressed: () => _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.ease),
-                                            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50), backgroundColor: _mainColor),
-                                            child: const Text('Siguiente', style: TextStyle(color: Colors.white)),
-                                        ),
-                                    
+                                        // Pantallas de Guía: No tienen botón de navegación inferior.
+                                        const SizedBox.shrink(),
+
                                     // Barra de navegación inferior (simulada)
                                     const SizedBox(height: 20),
                                     Container(
