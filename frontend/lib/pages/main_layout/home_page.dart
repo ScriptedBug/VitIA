@@ -39,13 +39,6 @@ class _HomepageState extends State<HomePage> {
         InicioScreen(
           userName: _userName,
           location: _userLocation,
-          onAvatarTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => PerfilPage(apiClient: _apiClient)),
-            );
-          },
         ),
         const FotoPage(),
         // CAMBIO: Ahora pasamos el callback al catálogo

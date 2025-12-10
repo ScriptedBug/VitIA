@@ -1,24 +1,66 @@
 import 'package:flutter/material.dart';
+import '../../core/services/weather_service.dart';
+import '../../widgets/weather_section.dart';
 
-class InicioScreen extends StatelessWidget {
+class InicioScreen extends StatefulWidget {
+  // Convert to Stateful
   final String userName;
   final String location;
-  final String? profileImage; // Opcional, por si hay foto perfil real
 
   const InicioScreen({
     super.key,
     required this.userName,
     required this.location,
-    this.profileImage,
-    required this.onAvatarTap,
   });
 
-  final VoidCallback onAvatarTap;
+  @override
+  State<InicioScreen> createState() => _InicioScreenState();
+}
+
+class _InicioScreenState extends State<InicioScreen> {
+  final WeatherService _weatherService = WeatherService();
+  Map<String, dynamic>? _weatherData;
+  String? _weatherError;
+  bool _isLoadingWeather = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWeather();
+  }
+
+  Future<void> _fetchWeather() async {
+    if (widget.location.isEmpty) {
+      if (mounted)
+        setState(() {
+          _isLoadingWeather = false;
+        });
+      return;
+    }
+
+    // Limpiar ubicación para la API (quitar ", España" si molesta, o dejarlo)
+    try {
+      final data = await _weatherService.getWeather(widget.location);
+      if (mounted) {
+        setState(() {
+          _weatherData = data;
+          _isLoadingWeather = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _weatherError = "No se pudo cargar el tiempo";
+          _isLoadingWeather = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFBF6),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -32,22 +74,13 @@ class InicioScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '¡Hola, $userName!',
+                      '¡Hola, ${widget.userName}!',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight:
                             FontWeight.w400, // Fuente tipo serif elegante
                         fontFamily: 'Serif',
                         color: Color(0xFF142018),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: onAvatarTap,
-                      child: const CircleAvatar(
-                        radius: 25,
-                        backgroundImage: AssetImage(
-                            'assets/home/avatar_placeholder.png'), // Placeholder
-                        backgroundColor: Colors.grey,
                       ),
                     ),
                   ],
@@ -83,18 +116,35 @@ class InicioScreen extends StatelessWidget {
                         color: Colors.black87),
                     const SizedBox(width: 8),
                     Text(
-                      location.isNotEmpty
-                          ? "$location."
+                      widget.location.isNotEmpty
+                          ? "${widget.location}."
                           : "Sin ubicación definida.",
                       style:
                           const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.edit_outlined,
-                        size: 20, color: Colors.black54),
+                    // Icono de edición eliminado
                   ],
                 ),
               ),
+
+              // 5. SECCIÓN TIEMPO (NUEVO)
+              if (_weatherData != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: WeatherSection(weatherData: _weatherData),
+                )
+              else if (_weatherError != null)
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(_weatherError!,
+                      style: const TextStyle(color: Colors.red)),
+                )
+              else if (!_isLoadingWeather && widget.location.isNotEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text("Información del tiempo no disponible."),
+                ),
 
               const SizedBox(height: 30),
 
