@@ -314,12 +314,12 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
              Positioned(
               left: 0, right: 0,
               top: MediaQuery.of(context).padding.top + 100,
-              bottom: 250, // Slightly lower overlay
+              bottom: 350, // Moved up from 250
               child: const ScannerOverlay(),
             ),
             Positioned(
               left: 0, right: 0,
-              bottom: 120, // Lower controls
+              bottom: 220, // Moved up from 120
               child: _buildCameraControls(),
             ),
           ],
