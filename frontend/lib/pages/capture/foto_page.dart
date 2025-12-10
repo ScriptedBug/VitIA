@@ -8,15 +8,27 @@ import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
 import '../../core/models/prediction_model.dart';
 import '../../core/services/user_sesion.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:intl/intl.dart'; // Standard date formatting if available, or just use raw strings
 
 class GroupedResult {
   final String variety;
   final double confidence;
   final List<XFile> photos;
   final Set<String> selectedPaths;
+  final DateTime date;
+  final String location;
+  final double? latitude;
+  final double? longitude;
 
-  GroupedResult(this.variety, this.confidence, this.photos, {Set<String>? selected}) 
-    : selectedPaths = selected ?? photos.map((e) => e.path).toSet();
+  GroupedResult(this.variety, this.confidence, this.photos, {
+    Set<String>? selected,
+    required this.date,
+    required this.location,
+    this.latitude,
+    this.longitude,
+  }) : selectedPaths = selected ?? photos.map((e) => e.path).toSet();
 }
 
 class FotoPage extends StatefulWidget {
@@ -60,7 +72,23 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       _apiClient.setToken(UserSession.token!);
     }
     _initCamera();
+    _requestLocationPermission();
   }
+
+  Future<void> _requestLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+  }
+
+
 
   Future<void> _initCamera() async {
     try {
@@ -141,6 +169,44 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     });
 
     try {
+      // Get Context Data
+      // Safe Location Fetch
+      Position? position;
+      String locationStr = "Ubicación desconocida";
+      
+      try {
+         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+         if (serviceEnabled) {
+            LocationPermission permission = await Geolocator.checkPermission();
+            if (permission == LocationPermission.denied) {
+              permission = await Geolocator.requestPermission();
+            }
+            
+            if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+               // Get position with timeout
+               position = await Geolocator.getCurrentPosition(timeLimit: const Duration(seconds: 5));
+               
+               // Reverse Geocoding
+               List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+               if (placemarks.isNotEmpty) {
+                  final place = placemarks.first;
+                  locationStr = "${place.locality ?? ''}, ${place.administrativeArea ?? ''}".trim().replaceAll(RegExp(r'^, |,$'), '');
+                  if (locationStr.isEmpty) locationStr = "Ubicación guardada";
+               }
+            }
+         }
+      } catch (e) {
+         debugPrint("Location Error: $e");
+         // Fallback for simulation/testing
+         if (_useSimulatedCamera) {
+            locationStr = "Requena, Valencia (Sim)";
+            // Mock coords
+            // position = Position(longitude: -1.1, latitude: 39.4, timestamp: DateTime.now(), accuracy: 1, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0, altitudeAccuracy: 0, headingAccuracy: 0); 
+         }
+      }
+
+      final DateTime now = DateTime.now();
+
       // 1. Analyze ALL photos
       // Map<VarietyName, List<Pair<Confidence, Photo>>>
       final Map<String, List<MapEntry<double, XFile>>> grouping = {};
@@ -175,7 +241,15 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
         // Calculate average confidence or max
         double avgConf = list.map((e) => e.key).reduce((a, b) => a + b) / list.length;
         List<XFile> photos = list.map((e) => e.value).toList();
-        finalResults.add(GroupedResult(key, avgConf, photos));
+        finalResults.add(GroupedResult(
+          key, 
+          avgConf, 
+          photos,
+          date: now,
+          location: locationStr,
+          latitude: position?.latitude,
+          longitude: position?.longitude
+        ));
       });
       finalResults.sort((a,b) => b.photos.length.compareTo(a.photos.length));
 
@@ -226,7 +300,9 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
           await _apiClient.saveToCollection(
             imageFile: photo,
             nombreVariedad: nameToSave,
-            notas: "Identificado con VitIA (${currentGroup.confidence.toStringAsFixed(1)}%)"
+            notas: "Identificado con VitIA (${currentGroup.confidence.toStringAsFixed(1)}%)",
+            lat: currentGroup.latitude,
+            lon: currentGroup.longitude,
           );
           successCount++;
        }
@@ -622,8 +698,8 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
                                  Row(
                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                    children: [
-                                     const Text("17/04/2025", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                     const Text("Requena, Valencia", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                     Text(DateFormat('dd/MM/yyyy').format(group.date), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                     Text(group.location, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                    ],
                                  ),
                                  const SizedBox(height: 12),
