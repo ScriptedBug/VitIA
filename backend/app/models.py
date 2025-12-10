@@ -1,6 +1,6 @@
 # --- En tu archivo /app/models.py ---
 
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, Float, Table
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, Float, Table, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB  # Específico para PostgreSQL
@@ -17,6 +17,38 @@ publicacion_variedad_assoc = Table(
     Column('id_publicacion', Integer, ForeignKey('Publicaciones.id_publicacion'), primary_key=True),
     Column('id_variedad', Integer, ForeignKey('Variedades.id_variedad'), primary_key=True)
 )
+# 1. TABLA ASOCIACIÓN: FAVORITOS
+favoritos_assoc = Table(
+    'favoritos',
+    Base.metadata,
+    Column('id_usuario', Integer, ForeignKey('Usuarios.id_usuario'), primary_key=True),
+    Column('id_variedad', Integer, ForeignKey('Variedades.id_variedad'), primary_key=True)
+)
+
+# 2. TABLAS DE VOTOS
+# La lógica es: Si existe fila, hay voto. Si no existe fila, es "Nada".
+class VotoPublicacion(Base):
+    __tablename__ = "VotosPublicacion"
+    
+    id_voto = Column(Integer, primary_key=True, index=True)
+    es_like = Column(Boolean, nullable=False) # True=Like, False=Dislike
+    
+    id_usuario = Column(Integer, ForeignKey("Usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
+    id_publicacion = Column(Integer, ForeignKey("Publicaciones.id_publicacion", ondelete="CASCADE"), nullable=False)
+
+    __table_args__ = (UniqueConstraint('id_usuario', 'id_publicacion', name='unique_voto_pub'),)
+
+class VotoComentario(Base):
+    __tablename__ = "VotosComentario"
+    
+    id_voto = Column(Integer, primary_key=True, index=True)
+    es_like = Column(Boolean, nullable=False)
+    
+    id_usuario = Column(Integer, ForeignKey("Usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
+    id_comentario = Column(Integer, ForeignKey("Comentarios.id_comentario", ondelete="CASCADE"), nullable=False)
+
+    __table_args__ = (UniqueConstraint('id_usuario', 'id_comentario', name='unique_voto_com'),)
+
 
 # -----------------------------------------------------
 # Modelo: Usuarios
@@ -32,6 +64,7 @@ class Usuario(Base):
     es_premium = Column(Boolean, default=False)
     ubicacion = Column(String(255), nullable=True)
     tutorial_superado = Column(Boolean, default=False)
+    path_foto_perfil = Column(String(512), nullable=True)
     
     # Usamos timezone=True para guardar con zona horaria (TIMESTAMPTZ)
     fecha_registro = Column(DateTime(timezone=True), server_default=func.now())
@@ -46,6 +79,8 @@ class Usuario(Base):
     
     # Un Usuario puede tener muchos items en su Coleccion.
     coleccion = relationship("Coleccion", back_populates="propietario")
+
+    favoritos = relationship("Variedad", secondary=favoritos_assoc, backref="favoritos_de_usuarios")
 
 
 # -----------------------------------------------------

@@ -161,6 +161,7 @@ class UsuarioBase(BaseModel):
     apellidos: str
     ubicacion: Optional[str] = None
     tutorial_superado: bool = False
+    path_foto_perfil: Optional[str] = None
 
 class UsuarioCreate(UsuarioBase):
     """Esquema para CREAR un usuario (registro)."""
@@ -177,6 +178,7 @@ class UsuarioUpdate(BaseModel):
     email: Optional[EmailStr] = None
     ubicacion: Optional[str] = None
     tutorial_superado: Optional[bool] = None
+    path_foto_perfil: Optional[str] = None
 
 class Usuario(UsuarioBase, BaseConfig):
     """Esquema para LEER la info de un usuario (perfil)."""
@@ -237,3 +239,10 @@ class Comentario(ComentarioBase, BaseConfig):
 # Esto es necesario para que Pydantic resuelva la referencia circular (hijos -> Comentario)
 Comentario.model_rebuild()
 Publicacion.model_rebuild()
+
+# 1. SCHEMA PARA CREAR/ACTUALIZAR VOTO
+class VotoCreate(BaseModel):
+    # True = Like
+    # False = Dislike
+    # None = Quitar voto (Neutro)
+    es_like: Optional[bool] = None

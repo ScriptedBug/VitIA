@@ -2,6 +2,7 @@
 
 from sqlalchemy.orm import Session
 from . import models, schemas
+from typing import List, Optional
 
 # -----------------------------------------------------
 # Funciones CRUD para Variedad (Biblioteca)
@@ -303,3 +304,57 @@ def check_variedad_in_coleccion(db: Session, id_usuario: int, id_variedad: int) 
         models.Coleccion.id_variedad == id_variedad
     ).first()
     return item is not None
+
+# --- LOGICA FAVORITOS ---
+def toggle_favorito(db: Session, id_usuario: int, id_variedad: int):
+    user = get_user(db, id_usuario)
+    variedad = db.query(models.Variedad).get(id_variedad)
+    if not variedad: return None
+        
+    if variedad in user.favoritos:
+        user.favoritos.remove(variedad)
+        return "eliminado de"
+    else:
+        user.favoritos.append(variedad)
+        return "añadido a" # Pequeña corrección en el return string
+
+# --- LOGICA VOTOS (3 ESTADOS) ---
+def gestionar_voto(db: Session, modelo_voto, id_usuario: int, id_objeto_campo, id_objeto_valor, es_like: Optional[bool]):
+    """
+    Gestiona los 3 estados del voto:
+    - input es True/False: Asegura que exista el voto con ese valor.
+    - input es None: Asegura que NO exista el voto (lo borra si hay).
+    """
+    filtro = {
+        "id_usuario": id_usuario,
+        id_objeto_campo: id_objeto_valor
+    }
+    # Buscamos si ya hay un voto
+    voto_existente = db.query(modelo_voto).filter_by(**filtro).first()
+    
+    # CASO A: El usuario quiere quitar su voto (Neutro)
+    if es_like is None:
+        if voto_existente:
+            db.delete(voto_existente)
+            db.commit()
+        return "voto_eliminado"
+
+    # CASO B: El usuario quiere dar Like o Dislike
+    if voto_existente:
+        # Si ya existe, actualizamos el valor (aunque sea el mismo, no pasa nada)
+        voto_existente.es_like = es_like
+        db.commit()
+        return "voto_actualizado"
+    else:
+        # Si no existe, creamos uno nuevo
+        nuevo_voto = modelo_voto(es_like=es_like, **filtro)
+        db.add(nuevo_voto)
+        db.commit()
+        return "voto_creado"
+
+# Wrappers
+def votar_publicacion(db: Session, id_usuario: int, id_publicacion: int, es_like: Optional[bool]):
+    return gestionar_voto(db, models.VotoPublicacion, id_usuario, "id_publicacion", id_publicacion, es_like)
+
+def votar_comentario(db: Session, id_usuario: int, id_comentario: int, es_like: Optional[bool]):
+    return gestionar_voto(db, models.VotoComentario, id_usuario, "id_comentario", id_comentario, es_like)

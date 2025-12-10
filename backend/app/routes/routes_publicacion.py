@@ -169,3 +169,19 @@ def unlike_publicacion_endpoint(
     if not publicacion:
         raise HTTPException(status_code=404, detail="Publicación no encontrada")
     return publicacion
+
+# --- VOTOS ---
+@router.post("/publicaciones/{id_publicacion}/voto", summary="Votar Publicación")
+def votar_publicacion_endpoint(
+    id_publicacion: int,
+    voto: schemas.VotoCreate, # Recibe { "es_like": true/false/null }
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    """
+    - **es_like: true** -> Like
+    - **es_like: false** -> Dislike
+    - **es_like: null** -> Borrar voto (Neutro)
+    """
+    estado = crud.votar_publicacion(db, current_user.id_usuario, id_publicacion, voto.es_like)
+    return {"msg": estado}

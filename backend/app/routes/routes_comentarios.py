@@ -61,3 +61,13 @@ def delete_comentario_endpoint(
     if db_comentario is None:
         raise HTTPException(status_code=404, detail="Comentario no encontrado o no autorizado")
     return {"msg": "Comentario eliminado"}
+
+@router.post("/comentarios/{id_comentario}/voto", summary="Votar Comentario")
+def votar_comentario_endpoint(
+    id_comentario: int,
+    voto: schemas.VotoCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    estado = crud.votar_comentario(db, current_user.id_usuario, id_comentario, voto.es_like)
+    return {"msg": estado}

@@ -146,3 +146,22 @@ def check_variedad_endpoint(
         id_variedad=id_variedad
     )
     return {"en_coleccion": tiene_variedad}
+
+# --- FAVORITOS ---
+@router.post("/variedades/{id_variedad}/favorito", summary="Dar/Quitar favorito")
+def toggle_favorito_endpoint(
+    id_variedad: int,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    resultado = crud.toggle_favorito(db, current_user.id_usuario, id_variedad)
+    if not resultado:
+        raise HTTPException(status_code=404, detail="Variedad no encontrada")
+    return {"msg": f"Variedad {resultado} favoritos"}
+
+@router.get("/users/me/favoritos", response_model=List[schemas.Variedad], summary="Ver mis favoritos")
+def get_mis_favoritos(
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    return crud.get_user_favoritos(db, current_user.id_usuario)
