@@ -173,6 +173,17 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     }
   }
 
+  // 5. Obtener comentarios de una publicación
+  Future<List<dynamic>> getComentariosPublicacion(int idPublicacion) async {
+    try {
+      final response = await _dio.get('/comentarios/publicacion/$idPublicacion');
+      return response.data as List<dynamic>;
+    } catch (e) {
+      print("Error al obtener comentarios: $e");
+      return [];
+    }
+  }
+
   // Función para descargar tus fotos
   Future<List<ColeccionModel>> getCollection() async {
     try {
