@@ -1,4 +1,4 @@
-// lib/pages/auth/login_form_page.dart 
+// lib/pages/auth/login_form_page.dart
 
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -18,12 +18,11 @@ class LoginFormPage extends StatefulWidget {
 class _LoginFormPageState extends State<LoginFormPage> {
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
-  
-  // Color principal (Vino VitIA: #A01B4C)
-  final Color _authMainColor = const Color(0xFFA01B4C); 
-  // Blanco cálido VitIA: #FFFFEFB
-  final Color _authFieldColor = const Color(0xFFFFFFEB); 
 
+  // Color principal (Vino VitIA: #A01B4C)
+  final Color _authMainColor = const Color(0xFFA01B4C);
+  // Blanco cálido VitIA: #FFFFEFB
+  final Color _authFieldColor = const Color(0xFFFFFFEB);
 
   Future<void> login() async {
     final baseUrl = getBaseUrl();
@@ -50,7 +49,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Inicio de sesión exitoso")),
         );
-        
+
         // Vuelve a HomePage y limpia el stack
         Navigator.pushAndRemoveUntil(
           context,
@@ -72,23 +71,23 @@ class _LoginFormPageState extends State<LoginFormPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error de conexión al servidor: ${e.runtimeType}")),
+        SnackBar(
+            content: Text("Error de conexión al servidor: ${e.runtimeType}")),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _authMainColor, // Fondo color Vino VitIA
       appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-          ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -101,47 +100,65 @@ class _LoginFormPageState extends State<LoginFormPage> {
                 const Text(
                   "Iniciar sesión",
                   style: TextStyle(
-                      fontSize: 36, 
-                      fontWeight: FontWeight.bold, 
-                      color: Colors.white, 
-                      fontFamily: 'Lora'), 
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'Lora'),
                 ),
                 const SizedBox(height: 50),
-                
+
                 // --- Campo de Correo electrónico ---
                 TextField(
                   controller: emailCtrl,
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
-                      labelText: "Correo electrónico", 
-                      filled: true,
-                      fillColor: _authFieldColor, 
-                      // Bordes estilizados
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide(color: _authMainColor, width: 2)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide(color: _authMainColor, width: 2)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide(color: _authFieldColor, width: 2)),
-                      labelStyle: TextStyle(color: _authMainColor),
+                    hintText: "Correo electrónico",
+                    filled: true,
+                    fillColor: _authFieldColor,
+                    // Bordes estilizados
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authMainColor, width: 2)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authMainColor, width: 2)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authFieldColor, width: 2)),
+                    labelStyle: TextStyle(color: _authMainColor),
                   ),
                 ),
                 const SizedBox(height: 15),
-                
+
                 // --- Campo de Contraseña ---
                 TextField(
                   controller: passwordCtrl,
                   obscureText: true,
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
-                      labelText: "Contraseña", 
-                      filled: true,
-                      fillColor: _authFieldColor, 
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide(color: _authMainColor, width: 2)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide(color: _authMainColor, width: 2)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(25), borderSide: BorderSide(color: _authFieldColor, width: 2)),
-                      labelStyle: TextStyle(color: _authMainColor),
+                    hintText: "Contraseña",
+                    filled: true,
+                    fillColor: _authFieldColor,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authMainColor, width: 2)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authMainColor, width: 2)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authFieldColor, width: 2)),
+                    labelStyle: TextStyle(color: _authMainColor),
                   ),
                 ),
                 const SizedBox(height: 30),
-                
+
                 // --- Botón Continuar (Relleno Blanco) ---
                 Container(
                   width: double.infinity,
@@ -149,16 +166,19 @@ class _LoginFormPageState extends State<LoginFormPage> {
                   child: ElevatedButton(
                     onPressed: login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _authFieldColor, 
-                      foregroundColor: _authMainColor, 
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                      backgroundColor: _authFieldColor,
+                      foregroundColor: _authMainColor,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25)),
                     ),
-                    child: const Text("Continuar", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: const Text("Continuar",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // --- Botón de Registro (Texto simple) ---
                 TextButton(
                   onPressed: () {
@@ -170,7 +190,9 @@ class _LoginFormPageState extends State<LoginFormPage> {
                   },
                   child: const Text(
                     "No tienes cuenta? Regístrate",
-                    style: TextStyle(color: Colors.white, decoration: TextDecoration.underline),
+                    style: TextStyle(
+                        color: Colors.white,
+                        decoration: TextDecoration.underline),
                   ),
                 ),
               ],
