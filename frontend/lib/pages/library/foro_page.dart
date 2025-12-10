@@ -444,8 +444,6 @@ class _PopularCard extends StatelessWidget {
                 Text("${post['likes']}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
                 const Icon(Icons.favorite_border, size: 16, color: Colors.grey),
-                const Spacer(),
-                const Icon(Icons.share_outlined, size: 16, color: Colors.grey),
               ],
             )
           ],
@@ -539,8 +537,6 @@ class _RecentCard extends StatelessWidget {
                 Text("${post['comments']}", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
                 const Icon(Icons.chat_bubble_outline, size: 20, color: Colors.grey),
-                 const SizedBox(width: 16),
-                const Icon(Icons.file_upload_outlined, size: 20, color: Colors.grey), // Share icon
               ],
             )
           ],

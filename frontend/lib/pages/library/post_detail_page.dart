@@ -120,8 +120,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   const Icon(Icons.chat_bubble_outline, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text("${_comentarios.length}", style: const TextStyle(fontWeight: FontWeight.bold)), // Usamos el count real de los cargados o del feed
-                  const Spacer(),
-                  const Icon(Icons.share_outlined, color: Colors.grey),
                 ],
               ),
             ),
