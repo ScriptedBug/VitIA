@@ -149,6 +149,7 @@ class Publicacion(PublicacionBase, BaseConfig):
     autor: AutorPublicacion
     likes: int
     variedades: List[Variedad] = []
+    comentarios: List['Comentario'] = []
 # -----------------------------------------------------
 # Esquemas: Usuario
 # -----------------------------------------------------
@@ -235,3 +236,4 @@ class Comentario(ComentarioBase, BaseConfig):
 
 # Esto es necesario para que Pydantic resuelva la referencia circular (hijos -> Comentario)
 Comentario.model_rebuild()
+Publicacion.model_rebuild()

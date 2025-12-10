@@ -226,6 +226,24 @@ def get_publicaciones(db: Session, skip: int = 0, limit: int = 100):
              .limit(limit)\
              .all()
 
+def like_publicacion(db: Session, id_publicacion: int):
+    """Incrementa en 1 los likes de una publicación."""
+    db_publicacion = get_publicacion(db, id_publicacion)
+    if db_publicacion:
+        db_publicacion.likes += 1
+        db.commit()
+        db.refresh(db_publicacion)
+    return db_publicacion
+
+def unlike_publicacion(db: Session, id_publicacion: int):
+    """Decrementa en 1 los likes de una publicación (mínimo 0)."""
+    db_publicacion = get_publicacion(db, id_publicacion)
+    if db_publicacion and db_publicacion.likes > 0:
+        db_publicacion.likes -= 1
+        db.commit()
+        db.refresh(db_publicacion)
+    return db_publicacion
+
 def get_user_publicaciones(db: Session, id_usuario: int, skip: int = 0, limit: int = 100):
     """Obtiene una lista paginada de las publicaciones de un usuario específico."""
     return db.query(models.Publicacion)\

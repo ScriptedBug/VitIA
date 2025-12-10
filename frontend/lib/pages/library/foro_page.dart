@@ -81,8 +81,8 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
         'user': nombreUsuario,
         'time': _formatearFecha(item['fecha_publicacion'] ?? item['fecha_creacion']),
         'image': imagenUrl,
-        'likes': 10 + (item['id_publicacion'] as int) % 20, // Dummy data for UI
-        'comments': (item['id_publicacion'] as int) % 5,    // Dummy data for UI
+        'likes': item['likes'] ?? 0,
+        'comments': (item['comentarios'] as List?)?.length ?? 0,
       };
     }).toList().cast<Map<String, dynamic>>();
   }
@@ -384,9 +384,57 @@ class _NavIcon extends StatelessWidget {
 }
 
 // TARJETA POPULARES (Diseño Horizontal)
-class _PopularCard extends StatelessWidget {
+class _PopularCard extends StatefulWidget {
   final Map<String, dynamic> post;
   const _PopularCard({required this.post});
+
+  @override
+  State<_PopularCard> createState() => _PopularCardState();
+}
+
+class _PopularCardState extends State<_PopularCard> {
+  late int _likes;
+  bool _isLiked = false;
+  late ApiClient _apiClient;
+
+  @override
+  void initState() {
+    super.initState();
+    _likes = widget.post['likes'];
+    _apiClient = ApiClient(getBaseUrl());
+    if (UserSession.token != null) _apiClient.setToken(UserSession.token!);
+  }
+
+  Future<void> _darLike() async {
+    setState(() {
+      if (_isLiked) {
+        _likes--;
+        _isLiked = false;
+      } else {
+        _likes++;
+        _isLiked = true;
+      }
+    });
+    try {
+      if (_isLiked) {
+        await _apiClient.likePublicacion(widget.post['id']);
+      } else {
+        await _apiClient.unlikePublicacion(widget.post['id']);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          if (_isLiked) {
+            _likes--;
+            _isLiked = false;
+          } else {
+            _likes++;
+            _isLiked = true;
+          }
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +442,7 @@ class _PopularCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
+          MaterialPageRoute(builder: (context) => PostDetailPage(post: widget.post)),
         );
       },
       child: Container(
@@ -422,9 +470,9 @@ class _PopularCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(post['user'], maxLines: 1, overflow: TextOverflow.ellipsis,
+                      Text(widget.post['user'], maxLines: 1, overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text(post['time'], style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                      Text(widget.post['time'], style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                     ],
                   ),
                 )
@@ -432,7 +480,7 @@ class _PopularCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: Text(post['text'], 
+              child: Text(widget.post['text'], 
                 maxLines: 4, 
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: Colors.grey.shade800, fontSize: 13, height: 1.4),
@@ -441,9 +489,24 @@ class _PopularCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Text("${post['likes']}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                GestureDetector(
+                  onTap: _darLike,
+                  child: Row(
+                    children: [
+                      Text("$_likes", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _isLiked ? Icons.favorite : Icons.favorite_border, 
+                        size: 16, 
+                        color: _isLiked ? Colors.red : Colors.grey
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text("${widget.post['comments']}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
-                const Icon(Icons.favorite_border, size: 16, color: Colors.grey),
+                const Icon(Icons.chat_bubble_outline, size: 16, color: Colors.grey),
               ],
             )
           ],
@@ -454,9 +517,57 @@ class _PopularCard extends StatelessWidget {
 }
 
 // TARJETA RECIENTES (Diseño Vertical con imagen opcional)
-class _RecentCard extends StatelessWidget {
+class _RecentCard extends StatefulWidget {
   final Map<String, dynamic> post;
   const _RecentCard({required this.post});
+
+  @override
+  State<_RecentCard> createState() => _RecentCardState();
+}
+
+class _RecentCardState extends State<_RecentCard> {
+  late int _likes;
+  bool _isLiked = false;
+  late ApiClient _apiClient;
+
+  @override
+  void initState() {
+    super.initState();
+    _likes = widget.post['likes'];
+    _apiClient = ApiClient(getBaseUrl());
+    if (UserSession.token != null) _apiClient.setToken(UserSession.token!);
+  }
+
+  Future<void> _darLike() async {
+    setState(() {
+      if (_isLiked) {
+        _likes--;
+        _isLiked = false;
+      } else {
+        _likes++;
+        _isLiked = true;
+      }
+    });
+    try {
+      if (_isLiked) {
+        await _apiClient.likePublicacion(widget.post['id']);
+      } else {
+        await _apiClient.unlikePublicacion(widget.post['id']);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          if (_isLiked) {
+            _likes--;
+            _isLiked = false;
+          } else {
+            _likes++;
+            _isLiked = true;
+          }
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -464,7 +575,7 @@ class _RecentCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
+          MaterialPageRoute(builder: (context) => PostDetailPage(post: widget.post)),
         );
       },
       child: Container(
@@ -492,8 +603,8 @@ class _RecentCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(post['user'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      Text(post['time'], style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                      Text(widget.post['user'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text(widget.post['time'], style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                     ],
                   ),
                 )
@@ -501,23 +612,23 @@ class _RecentCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             
-            if (post['titulo'] != '')
+            if (widget.post['titulo'] != '')
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: Text(post['titulo'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                child: Text(widget.post['titulo'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ),
 
-            Text(post['text'], style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
+            Text(widget.post['text'], style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
             const SizedBox(height: 12),
 
             // Imagen opcional
-            if (post['image'] != null)
+            if (widget.post['image'] != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
-                    post['image'],
+                    widget.post['image'],
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -530,11 +641,22 @@ class _RecentCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text("${post['likes']}", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                const SizedBox(width: 4),
-                const Icon(Icons.favorite_border, size: 20, color: Colors.grey),
+                GestureDetector(
+                  onTap: _darLike,
+                  child: Row(
+                    children: [
+                      Text("$_likes", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _isLiked ? Icons.favorite : Icons.favorite_border, 
+                        size: 20, 
+                        color: _isLiked ? Colors.red : Colors.grey
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Text("${post['comments']}", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                Text("${widget.post['comments']}", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
                 const Icon(Icons.chat_bubble_outline, size: 20, color: Colors.grey),
               ],

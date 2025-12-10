@@ -112,3 +112,36 @@ def delete_publicacion_endpoint(
     
     # 4. Eliminar la publicación
     return crud.delete_publicacion(db=db, db_publicacion=db_publicacion)
+
+@router.post("/{id_publicacion}/like",
+    response_model=schemas.Publicacion,
+    summary="Dar like a una publicación"
+)
+def like_publicacion_endpoint(
+    id_publicacion: int,
+    db: Session = Depends(get_db),
+    # Opcional: current_user: models.Usuario = Depends(get_current_user) si quisieras limitar a usuarios logueados
+):
+    """
+    Incrementa el contador de likes de la publicación.
+    """
+    publicacion = crud.like_publicacion(db=db, id_publicacion=id_publicacion)
+    if not publicacion:
+        raise HTTPException(status_code=404, detail="Publicación no encontrada")
+    return publicacion
+
+@router.post("/{id_publicacion}/unlike",
+    response_model=schemas.Publicacion,
+    summary="Quitar like a una publicación"
+)
+def unlike_publicacion_endpoint(
+    id_publicacion: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Decrementa el contador de likes de la publicación.
+    """
+    publicacion = crud.unlike_publicacion(db=db, id_publicacion=id_publicacion)
+    if not publicacion:
+        raise HTTPException(status_code=404, detail="Publicación no encontrada")
+    return publicacion

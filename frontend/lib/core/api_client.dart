@@ -184,6 +184,39 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     }
   }
 
+  // 6. Dar Like
+  Future<void> likePublicacion(int idPublicacion) async {
+    try {
+      await _dio.post('/publicaciones/$idPublicacion/like');
+    } catch (e) {
+      print("Error al dar like: $e");
+      rethrow;
+    }
+  }
+
+  // 6.b Quitar Like
+  Future<void> unlikePublicacion(int idPublicacion) async {
+    try {
+      await _dio.post('/publicaciones/$idPublicacion/unlike');
+    } catch (e) {
+      print("Error al quitar like: $e");
+      rethrow;
+    }
+  }
+
+  // 7. Crear comentario
+  Future<void> createComentario(int idPublicacion, String texto) async {
+    try {
+      await _dio.post('/comentarios/', data: {
+        "texto": texto,
+        "id_publicacion": idPublicacion,
+      });
+    } catch (e) {
+      print("Error al crear comentario: $e");
+      rethrow;
+    }
+  }
+
   // Función para descargar tus fotos
   Future<List<ColeccionModel>> getCollection() async {
     try {
