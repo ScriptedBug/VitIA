@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'detalle_coleccion_page.dart'; // Import para navegación
 
 class UserVarietyDetailPage extends StatefulWidget {
   final Map<String, dynamic> varietyInfo;
@@ -16,7 +17,14 @@ class UserVarietyDetailPage extends StatefulWidget {
 }
 
 class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
-  bool _isGridView = true; // Default view
+  bool _isVerticalListView = true; // Default to "Multiple" (Vertical List) as per user req implied? 
+  // User said "ordenar hacia la derecha" (Individual) and "vision multiple como la individual ahora" (Vertical List).
+  // Let's set default to whatever makes sense. User said "ahora funciona mejor" so maybe keep current default but swap content?
+  // User: "la vista individual ser solo una ... horizontal"
+  // User: "vision multiple ... ver como se ve la vista individual ahora" (Vertical List)
+  
+  // Let's use `_isHorizontalView` to track.
+  bool _isHorizontalView = false; // Default: Multiple (Vertical)
 
   @override
   Widget build(BuildContext context) {
@@ -144,21 +152,22 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                     ),
                     Row(
                       children: [
+                        // Icono 1: Vista Individual (Cuadrado / Carousel Horizontal)
                         IconButton(
-                          icon: Icon(Icons.crop_square, color: _isGridView ? Colors.black : Colors.grey),
-                          onPressed: () => setState(() => _isGridView = true),
+                          icon: Icon(Icons.crop_square, color: _isHorizontalView ? Colors.black : Colors.grey),
+                          onPressed: () => setState(() => _isHorizontalView = true),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
+                          tooltip: "Vista Individual",
                         ),
                         const SizedBox(width: 16),
+                        // Icono 2: Vista Múltiple (Lista Vertical / Grid)
                         IconButton(
-                          icon: Icon(Icons.grid_view, color: !_isGridView ? Colors.black : Colors.grey), // Using grid icon for "cards" conceptually or list
-                           // Actually the design shows "square" (single photo) vs "grid" (multiple). 
-                           // Let's interpret: Left = Large Cards (List), Right = Grid (Small).
-                           // Icon choice: Left: `check_box_outline_blank` (Square), Right: `grid_view`
-                          onPressed: () => setState(() => _isGridView = false),
+                          icon: Icon(Icons.grid_view, color: !_isHorizontalView ? Colors.black : Colors.grey), 
+                          onPressed: () => setState(() => _isHorizontalView = false),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
+                          tooltip: "Vista Múltiple",
                         ),
                       ],
                     ),
@@ -170,9 +179,9 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
             // 5. Content (Grid or List)
-            _isGridView 
-            ? _buildGridView()
-            : _buildListView(), // "List" here actually means the large card view
+            _isHorizontalView 
+            ? _buildHorizontalView()
+            : _buildVerticalListView(),
 
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
@@ -182,23 +191,37 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
     );
   }
 
-  Widget _buildGridView() {
+  // Vista Individual: Carousel Horizontal
+  Widget _buildHorizontalView() {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 400, // Altura suficiente para la carta
+        child: PageView.builder(
+          controller: PageController(viewportFraction: 0.85),
+          itemCount: widget.captures.length,
+          itemBuilder: (context, index) {
+            final item = widget.captures[index];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: _buildCardItem(item),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Vista Múltiple: Lista Vertical (Lo que antes era "Individual" o List)
+  Widget _buildVerticalListView() {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.0, 
-        ),
+      sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final item = widget.captures[index];
-            final imgPath = item['imagen'];
-             return ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: _buildImage(imgPath),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: _buildCardItem(item),
             );
           },
           childCount: widget.captures.length,
@@ -207,71 +230,48 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
     );
   }
 
-  Widget _buildListView() {
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final item = widget.captures[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade200),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
-                ],
+  Widget _buildCardItem(Map<String, dynamic> item) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context, 
+          MaterialPageRoute(builder: (_) => DetalleColeccionPage(coleccionItem: item))
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: SizedBox(
+                height: 250, // Imagen grandecita
+                width: double.infinity,
+                child: _buildImage(item['imagen']),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: SizedBox(
-                      height: 200,
-                      width: double.infinity,
-                      child: _buildImage(item['imagen']),
-                    ),
+                  Text(
+                    item['fecha_captura'] ?? 'Fecha desconocida',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              item['fecha_captura'] ?? 'Fecha desconocida',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            Text(
-                              item['region'] ?? 'Ubicación desconocida', // Using region from item (should be specific location) or fallback
-                              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        if (item['descripcion'] != null && item['descripcion'].isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            "Notas:",
-                             style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-                          ),
-                           Text(
-                            item['descripcion'],
-                            style: const TextStyle(color: Colors.black87, fontSize: 14),
-                          ),
-                        ]
-                      ],
-                    ),
-                  )
+                  // Solo FECHA solicitado por usuario.
                 ],
               ),
-            );
-          },
-          childCount: widget.captures.length,
+            )
+          ],
         ),
       ),
     );
