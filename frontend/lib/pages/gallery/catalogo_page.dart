@@ -9,7 +9,8 @@ import '../../core/services/api_config.dart';
 import 'detalle_variedad_page.dart'; 
 import '../../pages/capture/foto_page.dart';
 import '../../pages/main_layout/home_page.dart';
-import 'detalle_coleccion_page.dart'; // <--- AÑADE ESTO
+import 'detalle_coleccion_page.dart'; 
+import 'user_variety_detail_page.dart'; // <--- NUEVA PÁGINA
 
 
 class CatalogoPage extends StatefulWidget { // ⬅️ CLASE RENOMBRADA A CATÁLOGO
@@ -34,7 +35,13 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   List<Map<String, dynamic>> _coleccionUsuario = [];
 
   List<Map<String, dynamic>> _filtradas = [];
+  
+  // Modificado: Ahora _coleccionUsuario y _filtradasColeccion serán una lista de ÚNICOS (representantes)
+  // para mostrar en la lista agrupada.
   List<Map<String, dynamic>> _filtradasColeccion = [];
+  
+  // Nuevo: Mapa para guardar todos los items agrupados por nombre de variedad
+  Map<String, List<Map<String, dynamic>>> _mapaVariedadesUsuario = {};
 
   bool _isLoading = true;
   ApiClient? _apiClient; // Usa ? para evitar problemas de late si algo falla
@@ -133,12 +140,9 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     try {
       final lista = await _apiClient!.getUserCollection();
       
-      setState(() {
-        _coleccionUsuario = lista.map((item) {
-           // ... (tu código de mapeo se mantiene igual) ...
+      final List<Map<String, dynamic>> todosLosItems = lista.map((item) {
            final variedadData = item['variedad'] ?? {};
            return {
-             // ... tus campos ...
              'id': item['id_coleccion'], 
              'nombre': variedadData['nombre'] ?? 'Sin nombre',
              'descripcion': item['notas'] ?? variedadData['descripcion'],
@@ -150,9 +154,30 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
              'latitud': item['latitud'],
              'longitud': item['longitud'],
              'es_local': false,
+             'variedad_original': variedadData, // Guardamos info extra
            };
-        }).toList().cast<Map<String, dynamic>>();
-        
+      }).toList().cast<Map<String, dynamic>>();
+
+      // 1. Agrupar por nombre
+      final Map<String, List<Map<String, dynamic>>> agrupado = {};
+      for (var item in todosLosItems) {
+        final nombre = item['nombre'];
+        if (!agrupado.containsKey(nombre)) {
+          agrupado[nombre] = [];
+        }
+        agrupado[nombre]!.add(item);
+      }
+
+      // 2. Crear lista de representantes (uno por cada clave del mapa)
+      final List<Map<String, dynamic>> representantes = [];
+      agrupado.forEach((key, valor) {
+        // Usamos el primero como representante visual
+        representantes.add(valor.first);
+      });
+
+      setState(() {
+        _coleccionUsuario = representantes; // Esto ahora es la lista de GRUPOS
+        _mapaVariedadesUsuario = agrupado;
         _filtradasColeccion = _coleccionUsuario;
       });
     } catch (e) {
@@ -522,6 +547,7 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
               onChanged: _filtrar,
               decoration: InputDecoration(
                 hintText: 'Buscar...',
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
@@ -533,13 +559,196 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.sort, color: Colors.black54),
-            onPressed: () {
-              // Lógica para abrir filtros
-            },
+           Container(
+            padding: const EdgeInsets.all(10), // Padding para que el icono no toque los bordes
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100, // Color de fondo gris claro
+              shape: BoxShape.circle, // Forma circular
+            ),
+            child: InkWell( // InkWell para el efecto de splash al pulsar (opcional)
+              onTap: () {
+                 // Lógica para abrir filtros
+              },
+              customBorder: const CircleBorder(), // Asegura que el splash sea circular
+              child: const Icon(
+                Icons.sort,
+                color: Colors.black54,
+                size: 24, // Tamaño del icono
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  // --- NUEVOS WIDGETS PARA FAVORITOS Y HEADER ---
+
+  Widget _buildFavoritosSection() {
+    // Datos mockeados para la visualización
+    final favoritos = [
+      {'nombre': 'Merseguera', 'imagen': 'assets/icons/Propiedad2=hoja.png'},
+      {'nombre': 'Trepadell', 'imagen': 'assets/icons/Propiedad2=racimo.png'},
+    ];
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151B18), // Dark green/black background
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.favorite_border, color: Colors.white70, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    "Favoritos",
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              Text(
+                "${favoritos.length}",
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 180, // Altura fija para el scroll horizontal
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: favoritos.length + 1, // +1 para el visual de "corte"
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                if (index == favoritos.length) {
+                   // Elemento extra p/ efecto visual
+                   return const SizedBox(width: 20); 
+                }
+                return _buildFavoritoCard(favoritos[index]);
+              },
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFavoritoCard(Map<String, dynamic> item) {
+    return Container(
+      width: 140,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Align(
+            alignment: Alignment.topRight,
+            child: Icon(Icons.favorite, color: Colors.black, size: 18),
+          ),
+          Image.asset(
+            item['imagen']!,
+            height: 80,
+            fit: BoxFit.contain,
+            errorBuilder: (_,__,___) => const Icon(Icons.grass, size: 50),
+          ),
+          Text(
+            item['nombre']!,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget específico para el diseño de tarjetas de "Tus Variedades" (Agrupadas)
+  Widget _buildCollectionGroupCard(Map<String, dynamic> item) {
+    // Buscamos cuántas tienes
+    final nombre = item['nombre'];
+    final cantidad = _mapaVariedadesUsuario[nombre]?.length ?? 0;
+    final bool isBlanca = item['tipo'] == 'Blanca';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Container( // Usamos Container para borde personalizado si se quiere
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            // Navegar a la NUEVA página de detalle de usuario
+            final listaCapturas = _mapaVariedadesUsuario[nombre] ?? [];
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UserVarietyDetailPage(
+                  varietyInfo: item, 
+                  captures: listaCapturas
+                ),
+              ),
+            ).then((value) {
+               // Al volver, refrescar por si borró algo
+               _cargarColeccionBackend(); 
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      item['region'] ?? "Comunidad Valenciana", // Placeholder si es null
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                    ),
+                    const Icon(Icons.favorite, size: 20, color: Colors.black)
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  nombre,
+                  style: const TextStyle(
+                    fontFamily: 'Serif',
+                    fontSize: 28, 
+                    fontWeight: FontWeight.w400, // Letra estilo display
+                    color: Color(0xFF1E2623),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isBlanca ? const Color(0xFF8B8000).withOpacity(0.8) : const Color(0xFF800020).withOpacity(0.8), // Gold/Burgundy
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    item['tipo'], // "Blanca" / "Tinta"
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                if (cantidad > 1) ...[
+                   const SizedBox(height: 10),
+                   Text("$cantidad capturas", style: const TextStyle(color: Colors.grey, fontSize: 12)) 
+                ]
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -548,116 +757,208 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   
   @override
   Widget build(BuildContext context) {
+
+    // Un header personalizado en lugar de AppBar
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Catálogo de Variedades'), // Título de la sección
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Lógica adicional si se requiere un botón de búsqueda en la App Bar
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            onPressed: _abrirCamara, // Método de cámara
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Theme.of(context).primaryColor,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: const [
-            Tab(text: 'Biblioteca'), // Índice 0
-            Tab(text: 'Colección'),  // Índice 1
+      backgroundColor: Colors.white, // Fondo general
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 1. HEADER PERSONALIZADO
+            const SizedBox(height: 10),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                 // Decoración negra curvada superior (estilo "Isla" o Header)
+                 // Como en la imagen parece un texto simple, lo dejamos simple.
+                child: const Text(
+                  "VitIA",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 16,
+                    letterSpacing: 1.0
+                  ),
+                ),
+              ),
+            ),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Biblioteca",
+                    style: TextStyle(
+                      fontFamily: 'Serif', // O usa GoogleFonts.dmSerifDisplay() si tienes el paquete
+                      fontSize: 32,
+                      fontWeight: FontWeight.w400, // Letra más fina/elegante
+                      color: Color(0xFF1E2623),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.search, size: 28),
+                    onPressed: () {
+                      // Acción de búsqueda global si se desea
+                    },
+                  )
+                ],
+              ),
+            ),
+
+            // 2. TABS PERSONALIZADOS (Pills)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              height: 45,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(color: Colors.black12),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
+                  ],
+                ),
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                splashBorderRadius: BorderRadius.circular(25),
+                padding: const EdgeInsets.all(4),
+                tabs: const [
+                  Tab(text: "Todas"),
+                  Tab(text: "Tus variedades"),
+                ],
+              ),
+            ),
+
+            // 3. CONTENIDO (TabBarView con Scroll único para la primera pestaña)
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // --- PESTAÑA 1: TODAS ---
+                  CustomScrollView(
+                    slivers: [
+                      // Sección Favoritos (scrollea con la página)
+                      SliverToBoxAdapter(
+                        child: _buildFavoritosSection(),
+                      ),
+                      
+                      // Buscador y Título "Todas las variedades"
+                      SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            //_buildSearchBarAndFilters(), // Quizás ya no hace falta si el header tiene search, pero lo dejo por si acaso
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Todas las variedades',
+                                    style: TextStyle(fontSize: 18, color: Colors.grey.shade800, fontWeight: FontWeight.normal),
+                                  ),
+                                  const Icon(Icons.filter_list, size: 20),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Lista de Variedades
+                      _filtradas.isEmpty
+                          ? SliverFillRemaining(
+                              child: Center(
+                                child: _isLoading 
+                                  ? const CircularProgressIndicator()
+                                  : const Text("No se encontraron variedades"),
+                              ),
+                            )
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  return _buildVarietyCard(_filtradas[index]);
+                                },
+                                childCount: _filtradas.length,
+                              ),
+                            ),
+                      
+                       // Espacio final
+                      const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                    ],
+                  ),
+
+                  // --- PESTAÑA 2: COLECCIÓN (Igual que antes) ---
+                  UserSession.token == null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text("Inicia sesión para ver tu colección"),
+                              const SizedBox(height:10),
+                              ElevatedButton(
+                                onPressed: () {}, // Navegar login
+                                child: const Text("Ir a Login")
+                              )
+                            ],
+                          ),
+                        )
+                      : Column(
+                          children: [
+                             _buildSearchBarAndFilters(), // Buscador específico de colección
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text("Mis Capturas (${_filtradasColeccion.length})", 
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                              ),
+                            ),
+                            Expanded(
+                              child: _filtradasColeccion.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
+                                        const SizedBox(height: 10),
+                                        const Text('Tu colección está vacía.'),
+                                        TextButton(
+                                          onPressed: _abrirCamara,
+                                          child: const Text('¡Escanea tu primera variedad!'),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: _filtradasColeccion.length,
+                                    itemBuilder: (context, index) {
+                                      // Usamos el NUEVO diseño de tarjeta agrupada
+                                      return _buildCollectionGroupCard(_filtradasColeccion[index]);
+                                    },
+                                  ),
+                            ),
+                          ],
+                        ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Pestaña 1: BIBLIOTECA GLOBAL
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSearchBarAndFilters(),
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Todas las variedades (${_filtradas.length})',
-                      style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.filter_list, size: 20),
-                      onPressed: () {}, // Icono de filtro flotante
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _filtradas.length,
-                  itemBuilder: (context, index) {
-                    return _buildVarietyCard(_filtradas[index]);
-                  },
-                ),
-              ),
-            ],
-          ),
-
-          // Pestaña 2: MI COLECCIÓN PERSONAL
-          UserSession.token == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Inicia sesión para ver tu colección"),
-                      ElevatedButton(
-                        onPressed: () {
-                           // Navegar a Login si no hay token (opcional)
-                        }, 
-                        child: const Text("Ir a Login")
-                      )
-                    ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text("Mis Capturas (${_filtradasColeccion.length})", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                    ),
-                    Expanded(
-                      child: _filtradasColeccion.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
-                                const SizedBox(height: 10),
-                                const Text('Tu colección está vacía.'),
-                                TextButton(
-                                  onPressed: _abrirCamara,
-                                  child: const Text('¡Escanea tu primera variedad!'),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _filtradasColeccion.length,
-                            itemBuilder: (context, index) => _buildVarietyCard(_filtradasColeccion[index], isColeccion: true),
-                          ),
-                    ),
-                  ],
-                ),
-        ],
+      // Mantenemos el FAB si se quiere botón flotante, o lo quitamos si basta con el botón de la AppBar (que ya no está).
+      // Añadimos botón flotante para cámara por si acaso
+      floatingActionButton: FloatingActionButton(
+        onPressed: _abrirCamara,
+        backgroundColor: const Color(0xFF151B18),
+        child: const Icon(Icons.camera_alt, color: Colors.white),
       ),
     );
   }
