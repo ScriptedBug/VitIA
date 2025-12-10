@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:ui';
 import 'detalle_coleccion_page.dart'; // Import para navegación
 
 class UserVarietyDetailPage extends StatefulWidget {
   final Map<String, dynamic> varietyInfo;
   final List<Map<String, dynamic>> captures;
+  final VoidCallback? onBack; // Callback para volver atrás
 
   const UserVarietyDetailPage({
     super.key,
     required this.varietyInfo,
     required this.captures,
+    this.onBack,
   });
 
   @override
@@ -17,276 +20,354 @@ class UserVarietyDetailPage extends StatefulWidget {
 }
 
 class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
-  bool _isVerticalListView = true; // Default to "Multiple" (Vertical List) as per user req implied? 
-  // User said "ordenar hacia la derecha" (Individual) and "vision multiple como la individual ahora" (Vertical List).
-  // Let's set default to whatever makes sense. User said "ahora funciona mejor" so maybe keep current default but swap content?
-  // User: "la vista individual ser solo una ... horizontal"
-  // User: "vision multiple ... ver como se ve la vista individual ahora" (Vertical List)
+  // NAV: Selección interna
+  Map<String, dynamic>? _selectedCapture;
   
-  // Let's use `_isHorizontalView` to track.
-  bool _isHorizontalView = false; // Default: Multiple (Vertical)
+  // VIEW MODE: true = Individual (Horizontal), false = Multiple (Vertical)
+  // Default to Multiple/Grid per design choice usually, but let's stick to user preference if any.
+  bool _isHorizontalView = false; 
 
   @override
   Widget build(BuildContext context) {
-    // Assuming varietyInfo contains name, region, etc.
-    // If captures is not empty, we can try to get a better image from captures if the main one is generic.
+    // 1. NESTED NAV: Detail View
+    if (_selectedCapture != null) {
+      return PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+           if (didPop) return;
+           setState(() => _selectedCapture = null);
+        },
+        child: DetalleColeccionPage(
+          coleccionItem: _selectedCapture!,
+          onClose: (refresh) {
+             setState(() => _selectedCapture = null);
+             if (refresh && widget.onBack != null) {
+                widget.onBack!(); 
+             }
+          },
+        ),
+      );
+    }
+
+    // MAIN IMAGE RESOLUTION
     final String mainImage = widget.varietyInfo['imagen'] ?? 
                             (widget.captures.isNotEmpty ? widget.captures[0]['imagen'] : null) ?? 
                             'assets/images/placeholder.png'; // Fallback
-    
-    // Determine if main image is asset or network/file
-    final bool isAsset = mainImage.startsWith('assets/');
+
+     // THEME COLOR
+    final bool isBlanca = (widget.varietyInfo['tipo'] == 'Blanca');
+    final colorTema = isBlanca ? Colors.lime.shade700 : Colors.purple.shade900;
 
     return Scaffold(
-      backgroundColor: Colors.white, // As per design
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-             // 1. Header with Back Button and "Biblioteca" breadcrumb style
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                        child: const Text(
-                          "VitIA",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1.0),
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      "Biblioteca",
-                      style: TextStyle(
-                        fontFamily: 'Serif', 
-                        fontSize: 32,
-                        fontWeight: FontWeight.w400, 
-                        color: Color(0xFF1E2623),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Text("Tus variedades", style: TextStyle(color: Colors.grey.shade600)),
-                        ),
-                        Text(" > ${widget.varietyInfo['nombre']}", style: const TextStyle(color: Colors.black)),
-                      ],
-                    ),
-                  ],
-                ),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // 1. BACKGROUND (Full Screen)
+          Positioned.fill(
+             child: Container(
+               color: Colors.black, 
+               child: _buildMainImage(mainImage),
+             ),
+          ),
+          
+          // 2. BACK BUTTON (Floating)
+          Positioned(
+            top: 40,
+            left: 20,
+            child: CircleAvatar(
+              backgroundColor: Colors.black45,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                   if (widget.onBack != null) {
+                     widget.onBack!();
+                   } else {
+                     Navigator.pop(context);
+                   }
+                },
               ),
             ),
+          ),
+          
+          // 3. DRAGGABLE SHEET
+          DraggableScrollableSheet(
+            initialChildSize: 0.5,
+            minChildSize: 0.3,
+            maxChildSize: 0.95,
+             builder: (context, scrollController) {
+               return Container(
+                 decoration: const BoxDecoration(
+                   color: Colors.white,
+                   borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                   boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5)],
+                 ),
+                 child: CustomScrollView(
+                   controller: scrollController,
+                   slivers: [
+                     // HEADER SECTION
+                     SliverToBoxAdapter(
+                       child: Padding(
+                         padding: const EdgeInsets.all(24.0),
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             // Drag Handle
+                             Center(
+                                child: Container(
+                                  width: 40,
+                                  height: 5,
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
 
-            // 2. Huge Image
-            SliverToBoxAdapter(
-              child: Container(
-                height: 250,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.black12,
-                ),
-                child: isAsset
-                  ? Image.asset(mainImage, fit: BoxFit.cover)
-                  : (mainImage.startsWith('http') 
-                      ? Image.network(mainImage, fit: BoxFit.cover)
-                      : Image.file(File(mainImage), fit: BoxFit.cover)),
-              ),
-            ),
-
-            // 3. Title and Info
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.varietyInfo['nombre'],
-                            style: const TextStyle(
-                              fontFamily: 'Serif',
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
+                             // Title & Region
+                             Text(
+                                widget.varietyInfo['nombre'] ?? 'Sin Nombre',
+                                style: const TextStyle(
+                                  fontSize: 32, 
+                                  fontFamily: 'Serif',
+                                  fontWeight: FontWeight.bold, 
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: colorTema.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: colorTema)
+                                    ),
+                                    child: Text(
+                                      (widget.varietyInfo['tipo'] ?? 'Personal').toUpperCase(),
+                                      style: TextStyle(color: colorTema, fontWeight: FontWeight.bold, fontSize: 10),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    widget.varietyInfo['region'] ?? 'Región Desconocida',
+                                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                                  ),
+                                ],
+                              ),
+                           ],
+                         ),
+                       ),
+                     ),
+                     
+                     // ACTION BAR (Toggles)
+                     SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Mis fotos (${widget.captures.length})",
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.view_carousel, color: _isHorizontalView ? Colors.black : Colors.grey),
+                                    onPressed: () => setState(() => _isHorizontalView = true),
+                                    tooltip: "Vista Individual",
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.grid_view, color: !_isHorizontalView ? Colors.black : Colors.grey),
+                                    onPressed: () => setState(() => _isHorizontalView = false),
+                                    tooltip: "Vista Múltiple",
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.varietyInfo['region'] ?? 'Región Desconocida',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.favorite_border, size: 28),
-                      onPressed: () {}, // Favorite logic placeholder
-                    )
-                  ],
-                ),
-              ),
-            ),
-
-            // 4. "Mis fotos" Header and Toggles
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Mis fotos",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Row(
-                      children: [
-                        // Icono 1: Vista Individual (Cuadrado / Carousel Horizontal)
-                        IconButton(
-                          icon: Icon(Icons.crop_square, color: _isHorizontalView ? Colors.black : Colors.grey),
-                          onPressed: () => setState(() => _isHorizontalView = true),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: "Vista Individual",
                         ),
-                        const SizedBox(width: 16),
-                        // Icono 2: Vista Múltiple (Lista Vertical / Grid)
-                        IconButton(
-                          icon: Icon(Icons.grid_view, color: !_isHorizontalView ? Colors.black : Colors.grey), 
-                          onPressed: () => setState(() => _isHorizontalView = false),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: "Vista Múltiple",
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                     ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-            // 5. Content (Grid or List)
-            _isHorizontalView 
-            ? _buildHorizontalView()
-            : _buildVerticalListView(),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
-          ],
-        ),
-      ),
-      // Optional: Add floating action button for quick actions like "Add Photo" to this variety
-    );
-  }
-
-  // Vista Individual: Carousel Horizontal
-  Widget _buildHorizontalView() {
-    return SliverToBoxAdapter(
-      child: SizedBox(
-        height: 400, // Altura suficiente para la carta
-        child: PageView.builder(
-          controller: PageController(viewportFraction: 0.85),
-          itemCount: widget.captures.length,
-          itemBuilder: (context, index) {
-            final item = widget.captures[index];
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: _buildCardItem(item),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  // Vista Múltiple: Lista Vertical (Lo que antes era "Individual" o List)
-  Widget _buildVerticalListView() {
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final item = widget.captures[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: _buildCardItem(item),
-            );
-          },
-          childCount: widget.captures.length,
-        ),
+                     // CONTENT
+                     _isHorizontalView 
+                       ? SliverToBoxAdapter(
+                           child: SizedBox(
+                             height: 450, // Más grande
+                             child: PageView.builder(
+                               controller: PageController(viewportFraction: 0.85),
+                               itemCount: widget.captures.length,
+                               itemBuilder: (context, index) {
+                                 final item = widget.captures[index];
+                                 return Padding(
+                                   padding: const EdgeInsets.symmetric(horizontal: 10),
+                                   child: _buildCardItem(item, isHorizontal: true), // Flag específico
+                                 );
+                               },
+                             ),
+                           ),
+                         )
+                       : SliverPadding(
+                           padding: const EdgeInsets.symmetric(horizontal: 16),
+                           sliver: SliverGrid(
+                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                               crossAxisCount: 2,
+                               childAspectRatio: 0.8, 
+                               crossAxisSpacing: 16,
+                               mainAxisSpacing: 16,
+                             ),
+                             delegate: SliverChildBuilderDelegate(
+                               (context, index) {
+                                  final item = widget.captures[index];
+                                  return _buildCardItem(item, isHorizontal: false); // Flag específico
+                               },
+                               childCount: widget.captures.length,
+                             ),
+                           ),
+                         ),
+                         
+                      const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                   ],
+                 ),
+               );
+             },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCardItem(Map<String, dynamic> item) {
+  Widget _buildCardItem(Map<String, dynamic> item, {required bool isHorizontal}) {
+    // Prep Date
+    String fecha = "Fecha desc.";
+    if (item['fecha_captura'] != null) {
+       try {
+         final d = DateTime.parse(item['fecha_captura'].toString());
+         fecha = "${d.day}/${d.month}/${d.year}";
+       } catch (_) {}
+    }
+    
+    // Theme color for badge
+    final bool isBlanca = (widget.varietyInfo['tipo'] == 'Blanca');
+    final colorTema = isBlanca ? Colors.lime.shade700 : Colors.purple.shade900;
+
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context, 
-          MaterialPageRoute(builder: (_) => DetalleColeccionPage(coleccionItem: item))
-        );
+        setState(() {
+          _selectedCapture = item;
+        });
       },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(15),
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: SizedBox(
-                height: 250, // Imagen grandecita
-                width: double.infinity,
-                child: _buildImage(item['imagen']),
+            Expanded(
+              child: ClipRRect(
+                // Si es Horizontal View, redondeamos solo arriba. Si es Grid, redondeamos TODO porque es solo imagen.
+                borderRadius: isHorizontal 
+                    ? const BorderRadius.vertical(top: Radius.circular(15))
+                    : BorderRadius.circular(15), 
+                child: _buildImage(item['imagen'], fit: BoxFit.cover),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item['fecha_captura'] ?? 'Fecha desconocida',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  // Solo FECHA solicitado por usuario.
-                ],
-              ),
-            )
+            
+            // SOLO MOSTRAR INFO SI ES LA VISTA HORIZONTAL
+            if (isHorizontal)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Badge Izquierda (Tipo)
+                    Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: colorTema),
+                        ),
+                        child: Text(
+                          (widget.varietyInfo['tipo'] ?? 'PERSONAL').toUpperCase(),
+                          style: TextStyle(color: colorTema, fontWeight: FontWeight.bold, fontSize: 10),
+                        ),
+                    ),
+
+                    // Fecha Derecha
+                    Row(
+                      children: [
+                         const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey),
+                         const SizedBox(width: 4),
+                         Text(
+                           "Capturado: $fecha",
+                           style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                         ),
+                      ],
+                    )
+                  ],
+                ),
+              )
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImage(String? path) {
+  Widget _buildImage(String? path, {BoxFit fit = BoxFit.cover}) {
     if (path == null) {
       return Container(color: Colors.grey.shade300, child: const Icon(Icons.image_not_supported));
     }
+    ImageProvider img;
     if (path.startsWith('http')) {
-      return Image.network(path, fit: BoxFit.cover);
+      img = NetworkImage(path);
     } else if (path.startsWith('assets/')) {
-      return Image.asset(path, fit: BoxFit.cover);
+      img = AssetImage(path);
     } else {
-      return Image.file(File(path), fit: BoxFit.cover);
+      img = FileImage(File(path));
     }
+    return Image(image: img, fit: fit, errorBuilder: (c,e,s) => Container(color: Colors.grey.shade200));
+  }
+  
+  // Method for the hero background image (Blurred + Contain)
+  Widget _buildMainImage(String path) {
+    ImageProvider img;
+    if (path.startsWith('http')) {
+      img = NetworkImage(path);
+    } else if (path.startsWith('assets/')) {
+      img = AssetImage(path);
+    } else {
+      img = FileImage(File(path));
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Blur BG
+        Image(image: img, fit: BoxFit.cover),
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(color: Colors.black.withOpacity(0.3)),
+        ),
+        // 2. Main Image
+        Align(
+          alignment: Alignment.topCenter,
+          child: Image(
+            image: img, 
+            fit: BoxFit.contain,
+            alignment: Alignment.topCenter,
+          ),
+        ),
+      ],
+    );
   }
 }

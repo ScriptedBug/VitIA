@@ -45,6 +45,10 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   // Nuevo: Mapa para guardar todos los items agrupados por nombre de variedad
   Map<String, List<Map<String, dynamic>>> _mapaVariedadesUsuario = {};
 
+  // CONTROL DE NAVEGACIÓN INTERNA (Para mantener BottomNavBar)
+  Map<String, dynamic>? _variedadSeleccionada;
+  Map<String, dynamic>? _grupoColeccionSeleccionado;
+
   bool _isLoading = true;
   ApiClient? _apiClient; // Usa ? para evitar problemas de late si algo falla
 
@@ -479,13 +483,10 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                 _cargarColeccionBackend(); 
               }
             } else {
-              // SI ES BIBLIOTECA -> Navega a la página original con morfología
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DetalleVariedadPage(variedad: variedad),
-                ),
-              );
+              // SI ES BIBLIOTECA -> Navegación interna (Master-Detail)
+              setState(() {
+                _variedadSeleccionada = variedad;
+              });
             }
           },
           borderRadius: BorderRadius.circular(15),
@@ -695,19 +696,9 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            // Navegar a la NUEVA página de detalle de usuario
-            final listaCapturas = _mapaVariedadesUsuario[nombre] ?? [];
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UserVarietyDetailPage(
-                  varietyInfo: item, 
-                  captures: listaCapturas
-                ),
-              ),
-            ).then((value) {
-               // Al volver, refrescar por si borró algo
-               _cargarColeccionBackend(); 
+            // Navegación interna (Master-Detail)
+            setState(() {
+              _grupoColeccionSeleccionado = item;
             });
           },
           child: Padding(
@@ -763,6 +754,46 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   
   @override
   Widget build(BuildContext context) {
+    // 1. SI HAY UNA VARIEDAD SELECCIONADA, MOSTRAMOS SU DETALLE (Dentro del Scaffold padre)
+    if (_variedadSeleccionada != null) {
+      // Usamos un WillPopScope (o PopScope) para manejar el botón físico de atrás de Android
+      return PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+           if (didPop) return;
+           setState(() => _variedadSeleccionada = null);
+        },
+        child: DetalleVariedadPage(
+          variedad: _variedadSeleccionada!,
+          onBack: () {
+             setState(() => _variedadSeleccionada = null);
+          },
+        ),
+      );
+    }
+    
+    // 2. SI HAY UN GRUPO DE COLECCIÓN SELECCIONADO
+    if (_grupoColeccionSeleccionado != null) {
+      final nombre = _grupoColeccionSeleccionado!['nombre'];
+      final listaCapturas = _mapaVariedadesUsuario[nombre] ?? [];
+      
+      return PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+           if (didPop) return;
+           setState(() => _grupoColeccionSeleccionado = null);
+           _cargarColeccionBackend(); // Refrescar al volver
+        },
+        child: UserVarietyDetailPage(
+          varietyInfo: _grupoColeccionSeleccionado!,
+          captures: listaCapturas,
+          onBack: () {
+             setState(() => _grupoColeccionSeleccionado = null);
+             _cargarColeccionBackend();
+          },
+        ),
+      );
+    }
 
     // Un header personalizado en lugar de AppBar
     return Scaffold(

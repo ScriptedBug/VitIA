@@ -6,8 +6,9 @@ import 'dart:ui';
 
 class DetalleVariedadPage extends StatelessWidget {
   final Map<String, dynamic> variedad;
+  final VoidCallback? onBack; // Nuevo callback para navegación interna
 
-  const DetalleVariedadPage({super.key, required this.variedad});
+  const DetalleVariedadPage({super.key, required this.variedad, this.onBack});
 
   // Función ROBUSTA para abrir URLs
   Future<void> _launchURL(String urlString) async {
@@ -86,7 +87,13 @@ class DetalleVariedadPage extends StatelessWidget {
               backgroundColor: Colors.black45,
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                   if (onBack != null) {
+                     onBack!();
+                   } else {
+                     Navigator.pop(context);
+                   }
+                },
               ),
             ),
           ),
