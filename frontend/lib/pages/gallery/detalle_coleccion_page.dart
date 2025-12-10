@@ -9,9 +9,11 @@ import '../../core/services/user_sesion.dart';
 
 class DetalleColeccionPage extends StatefulWidget {
   final Map<String, dynamic> coleccionItem;
-  final Function(bool changesMade)? onClose; // Callback para cerrar (y notificar cambios)
+  final Function(bool changesMade)?
+      onClose; // Callback para cerrar (y notificar cambios)
 
-  const DetalleColeccionPage({super.key, required this.coleccionItem, this.onClose});
+  const DetalleColeccionPage(
+      {super.key, required this.coleccionItem, this.onClose});
 
   @override
   State<DetalleColeccionPage> createState() => _DetalleColeccionPageState();
@@ -20,7 +22,7 @@ class DetalleColeccionPage extends StatefulWidget {
 class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
   late Map<String, dynamic> _itemActual;
   late ApiClient _apiClient;
-  
+
   bool _isUpdating = false;
   late TextEditingController _notasController;
   LatLng? _ubicacionActual;
@@ -73,14 +75,22 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cambios guardados"), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text("Cambios guardados"),
+              backgroundColor: Colors.green),
         );
-        Navigator.pop(context, true); 
+
+        if (widget.onClose != null) {
+          widget.onClose!(true);
+        } else {
+          Navigator.pop(context, true);
+        }
       }
     } catch (e) {
       setState(() => _isUpdating = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
       }
     }
   }
@@ -91,9 +101,12 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Eliminar captura"),
-        content: const Text("¿Estás seguro de que quieres borrar esta variedad de tu colección? Esta acción no se puede deshacer."),
+        content: const Text(
+            "¿Estás seguro de que quieres borrar esta variedad de tu colección? Esta acción no se puede deshacer."),
         actions: [
-          TextButton(child: const Text("Cancelar"), onPressed: () => Navigator.pop(ctx, false)),
+          TextButton(
+              child: const Text("Cancelar"),
+              onPressed: () => Navigator.pop(ctx, false)),
           TextButton(
             child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
             onPressed: () => Navigator.pop(ctx, true),
@@ -107,9 +120,9 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
         await _apiClient.deleteCollectionItem(_itemActual['id']);
         if (mounted) {
           if (widget.onClose != null) {
-             widget.onClose!(true);
+            widget.onClose!(true);
           } else {
-             Navigator.pop(context, true); 
+            Navigator.pop(context, true);
           }
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Eliminado correctamente")),
@@ -117,7 +130,8 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error al eliminar: $e")));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text("Error al eliminar: $e")));
         }
       }
     }
@@ -128,7 +142,7 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
     // Check type to determine theme color (default purple)
     final bool isBlanca = (_itemActual['tipo'] == 'Blanca');
     final colorTema = isBlanca ? Colors.lime.shade700 : Colors.purple.shade900;
-    
+
     // Preparar Fecha
     String fechaTexto = "Fecha desconocida";
     if (_itemActual['fecha_captura'] != null) {
@@ -144,10 +158,10 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
         children: [
           // 1. IMAGEN DE FONDO FULL SCREEN (Con Blur y Stack logic)
           Positioned.fill(
-             child: Container(
-               color: Colors.black, 
-               child: _buildImagen(_itemActual),
-             ),
+            child: Container(
+              color: Colors.black,
+              child: _buildImagen(_itemActual),
+            ),
           ),
 
           // 2. BOTONES FLOTANTES SUPERIORES (Atrás, Guardar, Eliminar)
@@ -160,11 +174,11 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () {
-                   if (widget.onClose != null) {
-                     widget.onClose!(false);
-                   } else {
-                     Navigator.pop(context);
-                   }
+                  if (widget.onClose != null) {
+                    widget.onClose!(false);
+                  } else {
+                    Navigator.pop(context);
+                  }
                 },
               ),
             ),
@@ -186,11 +200,16 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                 ),
                 const SizedBox(width: 10),
                 CircleAvatar(
-                  backgroundColor: colorTema.withOpacity(0.8), // Destacar guardar
+                  backgroundColor:
+                      colorTema.withOpacity(0.8), // Destacar guardar
                   child: IconButton(
-                    icon: _isUpdating 
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.save, color: Colors.white),
+                    icon: _isUpdating
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.save, color: Colors.white),
                     onPressed: _isUpdating ? null : _guardarCambios,
                     tooltip: "Guardar cambios",
                   ),
@@ -198,7 +217,6 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
               ],
             ),
           ),
-
 
           // 3. SHEET DESLIZABLE (Contenido)
           DraggableScrollableSheet(
@@ -210,7 +228,10 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5)],
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black26, blurRadius: 20, spreadRadius: 5)
+                  ],
                 ),
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -218,7 +239,7 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                       // Barra de "agarrar"
+                      // Barra de "agarrar"
                       Center(
                         child: Container(
                           width: 40,
@@ -235,11 +256,11 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           Text(
+                          Text(
                             _itemActual['nombre'] ?? 'Sin Nombre',
                             style: const TextStyle(
-                              fontSize: 28, 
-                              fontWeight: FontWeight.bold, 
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
@@ -247,26 +268,35 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: colorTema.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(color: colorTema),
                                 ),
                                 child: Text(
-                                  (_itemActual['tipo'] ?? 'Personal').toUpperCase(),
-                                  style: TextStyle(color: colorTema, fontWeight: FontWeight.bold, fontSize: 12),
+                                  (_itemActual['tipo'] ?? 'Personal')
+                                      .toUpperCase(),
+                                  style: TextStyle(
+                                      color: colorTema,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
                                 ),
                               ),
                               const Spacer(),
-                              Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
+                              Icon(Icons.calendar_today,
+                                  size: 16, color: Colors.grey.shade600),
                               const SizedBox(width: 6),
-                              Text("Capturado: $fechaTexto", style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                              Text("Capturado: $fechaTexto",
+                                  style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 30),
 
                       // SECCIÓN NOTAS / DESCRIPCIÓN
@@ -282,9 +312,8 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                           filled: true,
                           fillColor: Colors.grey.shade50,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide.none
-                          ),
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide.none),
                           contentPadding: const EdgeInsets.all(16),
                         ),
                       ),
@@ -296,14 +325,17 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildSectionTitle("Ubicación"),
-                           if (_ubicacionActual != null)
+                          if (_ubicacionActual != null)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8)),
                               child: Text(
-                                "${_ubicacionActual!.latitude.toStringAsFixed(4)}, ${_ubicacionActual!.longitude.toStringAsFixed(4)}", 
-                                style: const TextStyle(color: Colors.grey, fontSize: 12)
-                              ),
+                                  "${_ubicacionActual!.latitude.toStringAsFixed(4)}, ${_ubicacionActual!.longitude.toStringAsFixed(4)}",
+                                  style: const TextStyle(
+                                      color: Colors.grey, fontSize: 12)),
                             ),
                         ],
                       ),
@@ -311,12 +343,14 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                       Container(
                         height: 250,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-                          ]
-                        ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade200),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4))
+                            ]),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Stack(
@@ -324,13 +358,16 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                               FlutterMap(
                                 mapController: _mapController,
                                 options: MapOptions(
-                                  initialCenter: _ubicacionActual ?? const LatLng(40.4168, -3.7038), 
+                                  initialCenter: _ubicacionActual ??
+                                      const LatLng(40.4168, -3.7038),
                                   initialZoom: 13.0,
-                                  onTap: (_, point) => setState(() => _ubicacionActual = point),
+                                  onTap: (_, point) =>
+                                      setState(() => _ubicacionActual = point),
                                 ),
                                 children: [
                                   TileLayer(
-                                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    urlTemplate:
+                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                     userAgentPackageName: 'com.vinas.app',
                                   ),
                                   if (_ubicacionActual != null)
@@ -338,8 +375,10 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                                       markers: [
                                         Marker(
                                           point: _ubicacionActual!,
-                                          width: 40, height: 40,
-                                          child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                                          width: 40,
+                                          height: 40,
+                                          child: const Icon(Icons.location_on,
+                                              color: Colors.red, size: 40),
                                         ),
                                       ],
                                     ),
@@ -347,18 +386,26 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
                               ),
                               // Tip overlay
                               Positioned(
-                                bottom: 10, left: 10, right: 10,
+                                bottom: 10,
+                                left: 10,
+                                right: 10,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(20)),
-                                  child: const Text("Toca el mapa para corregir la posición", textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.8),
+                                      borderRadius: BorderRadius.circular(20)),
+                                  child: const Text(
+                                      "Toca el mapa para corregir la posición",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 12)),
                                 ),
                               )
                             ],
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 100), // Padding inferior extra
                     ],
                   ),
@@ -374,26 +421,29 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+      style: const TextStyle(
+          fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
     );
   }
 
   Widget _buildImagen(Map<String, dynamic> item) {
     final String? path = item['imagen'];
-    if (path == null) return const Center(child: Icon(Icons.image_not_supported, color: Colors.grey, size: 50));
-    
+    if (path == null)
+      return const Center(
+          child: Icon(Icons.image_not_supported, color: Colors.grey, size: 50));
+
     ImageProvider imgProvider;
     bool isLocal = true;
-    
+
     // Check if it's a URL or local path
     if (path.startsWith('http')) {
-        imgProvider = NetworkImage(path);
-        isLocal = false;
+      imgProvider = NetworkImage(path);
+      isLocal = false;
     } else if (path.startsWith('assets/')) {
-        imgProvider = AssetImage(path);
-        isLocal = false;
+      imgProvider = AssetImage(path);
+      isLocal = false;
     } else {
-        imgProvider = FileImage(File(path));
+      imgProvider = FileImage(File(path));
     }
 
     // STACK: Fondo Blurreer + Imagen Contain (Igual que en DetalleVariedadPage)
@@ -404,23 +454,24 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
         Image(
           image: imgProvider,
           fit: BoxFit.cover,
-          errorBuilder: (c,e,s) => Container(color: Colors.black),
+          errorBuilder: (c, e, s) => Container(color: Colors.black),
         ),
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
-            color: Colors.black.withOpacity(0.3), 
+            color: Colors.black.withOpacity(0.3),
           ),
         ),
-        
+
         // 2. Imagen nítida
         Align(
           alignment: Alignment.topCenter,
           child: Image(
-             image: imgProvider,
-             fit: BoxFit.contain, // ADJUSTED: Fit contain to see full image
-             alignment: Alignment.topCenter,
-             errorBuilder: (c,e,s) => const Center(child: Icon(Icons.broken_image, color: Colors.white)),
+            image: imgProvider,
+            fit: BoxFit.contain, // ADJUSTED: Fit contain to see full image
+            alignment: Alignment.topCenter,
+            errorBuilder: (c, e, s) => const Center(
+                child: Icon(Icons.broken_image, color: Colors.white)),
           ),
         ),
       ],

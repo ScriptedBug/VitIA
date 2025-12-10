@@ -6,42 +6,46 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/services/user_sesion.dart';
 import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
-import 'detalle_variedad_page.dart'; 
+import 'detalle_variedad_page.dart';
 import '../../pages/capture/foto_page.dart';
 import '../../pages/main_layout/home_page.dart';
-import 'detalle_coleccion_page.dart'; 
+import 'detalle_coleccion_page.dart';
 import 'user_variety_detail_page.dart'; // <--- NUEVA PÁGINA
 
-
-class CatalogoPage extends StatefulWidget { // ⬅️ CLASE RENOMBRADA A CATÁLOGO
-  final int initialTab; 
+class CatalogoPage extends StatefulWidget {
+  // ⬅️ CLASE RENOMBRADA A CATÁLOGO
+  final int initialTab;
   final ApiClient? apiClient;
   final VoidCallback? onCameraTap; // CAMBIO: Callback para navegación externa
 
-  const CatalogoPage({super.key, this.initialTab = 0, this.apiClient, this.onCameraTap}); 
+  const CatalogoPage(
+      {super.key, this.initialTab = 0, this.apiClient, this.onCameraTap});
 
   @override
-  State<CatalogoPage> createState() => _CatalogoPageState(); // ⬅️ ESTADO RENOMBRADO A CATÁLOGO
+  State<CatalogoPage> createState() =>
+      _CatalogoPageState(); // ⬅️ ESTADO RENOMBRADO A CATÁLOGO
 }
 
-class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderStateMixin { // ⬅️ ESTADO RENOMBRADO A CATÁLOGO
-  
+class _CatalogoPageState extends State<CatalogoPage>
+    with SingleTickerProviderStateMixin {
+  // ⬅️ ESTADO RENOMBRADO A CATÁLOGO
+
   // --- VARIABLES DE ESTADO Y CONTROL ---
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  
+
   // Variables del estado original (mantidas para la lógica)
   bool _modoOscuro = false;
   // 1. AÑADE ESTAS VARIABLES
-  List<Map<String, dynamic>> _variedades = []; 
+  List<Map<String, dynamic>> _variedades = [];
   List<Map<String, dynamic>> _coleccionUsuario = [];
 
   List<Map<String, dynamic>> _filtradas = [];
-  
+
   // Modificado: Ahora _coleccionUsuario y _filtradasColeccion serán una lista de ÚNICOS (representantes)
   // para mostrar en la lista agrupada.
   List<Map<String, dynamic>> _filtradasColeccion = [];
-  
+
   // Nuevo: Mapa para guardar todos los items agrupados por nombre de variedad
   Map<String, List<Map<String, dynamic>>> _mapaVariedadesUsuario = {};
 
@@ -89,48 +93,55 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     await _cargarVariedadesBackend();
     setState(() => _isLoading = false);
   }
+
   // 3. AÑADE ESTE MÉTODO
   Future<void> _cargarVariedadesBackend() async {
     // 1. Aseguramos que se muestre el spinner de carga al empezar
-    setState(() => _isLoading = true); 
+    setState(() => _isLoading = true);
 
     try {
       final lista = await _apiClient!.getVariedades();
-      
+
       setState(() {
-        _variedades = lista.map((item) {
-           return {
-             'id': item['id_variedad'],
-             'nombre': item['nombre'],
-             'descripcion': item['descripcion'],
-             'region': 'España', 
-             'tipo': item['color'] ?? 'Desconocido',
-             'imagen': (item['links_imagenes'] != null && (item['links_imagenes'] as List).isNotEmpty)
-                 ? item['links_imagenes'][0] 
-                 : null,
-              'morfologia': item['morfologia'], 
-              'info_extra': item['info_extra'],
-           };
-        }).toList().cast<Map<String, dynamic>>();
-        
+        _variedades = lista
+            .map((item) {
+              return {
+                'id': item['id_variedad'],
+                'nombre': item['nombre'],
+                'descripcion': item['descripcion'],
+                'region': 'España',
+                'tipo': item['color'] ?? 'Desconocido',
+                'imagen': (item['links_imagenes'] != null &&
+                        (item['links_imagenes'] as List).isNotEmpty)
+                    ? item['links_imagenes'][0]
+                    : null,
+                'morfologia': item['morfologia'],
+                'info_extra': item['info_extra'],
+              };
+            })
+            .toList()
+            .cast<Map<String, dynamic>>();
+
         _filtradas = _variedades;
         // _isLoading = false; // LO QUITAMOS DE AQUÍ (se hace en finally)
       });
     } catch (e) {
       debugPrint("Error cargando catálogo: $e");
-      
+
       // --- CORRECCIÓN VISUAL ---
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Error de conexión: No se pudieron cargar las viñas'),
+            content: const Text(
+                'Error de conexión: No se pudieron cargar las viñas'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
-              label: 'Reintentar', 
-              textColor: Colors.white,
-              onPressed: _cargarVariedadesBackend // Botón para probar otra vez
-            ),
+                label: 'Reintentar',
+                textColor: Colors.white,
+                onPressed:
+                    _cargarVariedadesBackend // Botón para probar otra vez
+                ),
           ),
         );
       }
@@ -145,24 +156,27 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
   Future<void> _cargarColeccionBackend() async {
     try {
       final lista = await _apiClient!.getUserCollection();
-      
-      final List<Map<String, dynamic>> todosLosItems = lista.map((item) {
-           final variedadData = item['variedad'] ?? {};
-           return {
-             'id': item['id_coleccion'], 
-             'nombre': variedadData['nombre'] ?? 'Sin nombre',
-             'descripcion': item['notas'] ?? variedadData['descripcion'],
-             'region': 'Mi Bodega', 
-             'tipo': variedadData['color'] ?? 'Personal',
-             'imagen': item['path_foto_usuario'], 
-             'morfologia': variedadData['morfologia'],
-             'fecha_captura': item['fecha_captura'],
-             'latitud': item['latitud'],
-             'longitud': item['longitud'],
-             'es_local': false,
-             'variedad_original': variedadData, // Guardamos info extra
-           };
-      }).toList().cast<Map<String, dynamic>>();
+
+      final List<Map<String, dynamic>> todosLosItems = lista
+          .map((item) {
+            final variedadData = item['variedad'] ?? {};
+            return {
+              'id': item['id_coleccion'],
+              'nombre': variedadData['nombre'] ?? 'Sin nombre',
+              'descripcion': item['notas'] ?? variedadData['descripcion'],
+              'region': 'Mi Bodega',
+              'tipo': variedadData['color'] ?? 'Personal',
+              'imagen': item['path_foto_usuario'],
+              'morfologia': variedadData['morfologia'],
+              'fecha_captura': item['fecha_captura'],
+              'latitud': item['latitud'],
+              'longitud': item['longitud'],
+              'es_local': false,
+              'variedad_original': variedadData, // Guardamos info extra
+            };
+          })
+          .toList()
+          .cast<Map<String, dynamic>>();
 
       // 1. Agrupar por nombre
       final Map<String, List<Map<String, dynamic>>> agrupado = {};
@@ -190,7 +204,7 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
       debugPrint("Error cargando colección: $e");
       // Feedback visual también aquí
       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No se pudo actualizar tu colección')),
         );
       }
@@ -211,17 +225,18 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
       // Filtramos la lista activa según la pestaña
       if (_tabController.index == 0) {
         _filtradas = _variedades
-            .where((v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
+            .where(
+                (v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
             .toList();
       } else {
         _filtradasColeccion = _coleccionUsuario
-            .where((v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
+            .where(
+                (v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
   }
 
- 
   void _abrirCamara() {
     // CAMBIO: Si se proporciona callback, úsalo para cambiar de tab.
     if (widget.onCameraTap != null) {
@@ -232,11 +247,10 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
         context,
         MaterialPageRoute(builder: (context) => const FotoPage()),
       ).then((_) {
-        _cargarVariedadesBackend(); 
+        _cargarVariedadesBackend();
       });
     }
   }
-  
 
   void _mostrarDialogoNuevaVariedad(File imagen, String ubicacionInicial) {
     final nombreCtrl = TextEditingController();
@@ -253,7 +267,8 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
               Image.file(imagen, height: 100),
               TextField(
                 controller: nombreCtrl,
-                decoration: const InputDecoration(labelText: "Nombre de variedad"),
+                decoration:
+                    const InputDecoration(labelText: "Nombre de variedad"),
               ),
               TextField(
                 controller: descCtrl,
@@ -283,7 +298,7 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                   'descripcion': descCtrl.text,
                   'ubicacion': ubicCtrl.text,
                   'region': 'Colección Personal',
-                  'tipo': 'Desconocido', 
+                  'tipo': 'Desconocido',
                 });
                 _filtradas = List.from(_variedades);
               });
@@ -448,17 +463,18 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
       ),
     );
   }
-  
+
   void _alternarTema() {
-     setState(() {
-       _modoOscuro = !_modoOscuro;
-     });
-   }
-   
+    setState(() {
+      _modoOscuro = !_modoOscuro;
+    });
+  }
+
   // ------------------------------------------------------------------
   // --- WIDGETS DE INTERFAZ (ADAPTADOS AL NUEVO DISEÑO) ---
 
-  Widget _buildVarietyCard(Map<String, dynamic> variedad,{bool isColeccion = false}) {
+  Widget _buildVarietyCard(Map<String, dynamic> variedad,
+      {bool isColeccion = false}) {
     final bool isBlanca = variedad['tipo'] == 'Blanca';
     final String? imagenPath = variedad['imagen'];
 
@@ -469,18 +485,21 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
         elevation: 1.5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: InkWell(
-          onTap: () async { // Hazlo async
+          onTap: () async {
+            // Hazlo async
             if (isColeccion) {
-              final resultado = await Navigator.push( // Espera el resultado
+              final resultado = await Navigator.push(
+                // Espera el resultado
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DetalleColeccionPage(coleccionItem: variedad),
+                  builder: (context) =>
+                      DetalleColeccionPage(coleccionItem: variedad),
                 ),
               );
-              
+
               // Si devolvió 'true', significa que borramos o editamos algo -> Recargar lista
               if (resultado == true) {
-                _cargarColeccionBackend(); 
+                _cargarColeccionBackend();
               }
             } else {
               // SI ES BIBLIOTECA -> Navegación interna (Master-Detail)
@@ -501,23 +520,33 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                     children: [
                       Text(
                         variedad['region'] ?? 'Región Desconocida',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         variedad['nombre'],
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isBlanca ? Colors.lime.shade700 : Colors.purple.shade900,
+                          color: isBlanca
+                              ? Colors.lime.shade700
+                              : Colors.purple.shade900,
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
                           variedad['tipo'],
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -526,14 +555,23 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                 // Miniatura de imagen
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: imagenPath != null 
-                    ? Image.network(
-                        imagenPath, 
-                        width: 70, height: 70, 
-                        fit: BoxFit.cover,
-                        errorBuilder: (c,e,s) => Container(width:70, height:70, color:Colors.grey[300], child: const Icon(Icons.broken_image)),
-                      )
-                    : Container(width:70, height:70, color:Colors.grey[300], child: const Icon(Icons.wine_bar)),
+                  child: imagenPath != null
+                      ? Image.network(
+                          imagenPath,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, s) => Container(
+                              width: 70,
+                              height: 70,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.broken_image)),
+                        )
+                      : Container(
+                          width: 70,
+                          height: 70,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.wine_bar)),
                 ),
               ],
             ),
@@ -561,22 +599,26 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                 ),
                 filled: true,
                 fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
               ),
             ),
           ),
           const SizedBox(width: 8),
-           Container(
-            padding: const EdgeInsets.all(10), // Padding para que el icono no toque los bordes
+          Container(
+            padding: const EdgeInsets.all(
+                10), // Padding para que el icono no toque los bordes
             decoration: BoxDecoration(
               color: Colors.grey.shade100, // Color de fondo gris claro
               shape: BoxShape.circle, // Forma circular
             ),
-            child: InkWell( // InkWell para el efecto de splash al pulsar (opcional)
+            child: InkWell(
+              // InkWell para el efecto de splash al pulsar (opcional)
               onTap: () {
-                 // Lógica para abrir filtros
+                // Lógica para abrir filtros
               },
-              customBorder: const CircleBorder(), // Asegura que el splash sea circular
+              customBorder:
+                  const CircleBorder(), // Asegura que el splash sea circular
               child: const Icon(
                 Icons.sort,
                 color: Colors.black54,
@@ -616,7 +658,10 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                   SizedBox(width: 8),
                   Text(
                     "Favoritos",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -635,8 +680,8 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 if (index == favoritos.length) {
-                   // Elemento extra p/ efecto visual
-                   return const SizedBox(width: 20); 
+                  // Elemento extra p/ efecto visual
+                  return const SizedBox(width: 20);
                 }
                 return _buildFavoritoCard(favoritos[index]);
               },
@@ -666,7 +711,7 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
             item['imagen']!,
             height: 80,
             fit: BoxFit.contain,
-            errorBuilder: (_,__,___) => const Icon(Icons.grass, size: 50),
+            errorBuilder: (_, __, ___) => const Icon(Icons.grass, size: 50),
           ),
           Text(
             item['nombre']!,
@@ -678,7 +723,6 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     );
   }
 
-  // Widget específico para el diseño de tarjetas de "Tus Variedades" (Agrupadas)
   Widget _buildCollectionGroupCard(Map<String, dynamic> item) {
     // Buscamos cuántas tienes
     final nombre = item['nombre'];
@@ -687,7 +731,8 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container( // Usamos Container para borde personalizado si se quiere
+      child: Container(
+        // Usamos Container para borde personalizado si se quiere
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -710,8 +755,12 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      item['region'] ?? "Comunidad Valenciana", // Placeholder si es null
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                      item['region'] ??
+                          "Comunidad Valenciana", // Placeholder si es null
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.bold),
                     ),
                     const Icon(Icons.favorite, size: 20, color: Colors.black)
                   ],
@@ -721,26 +770,34 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                   nombre,
                   style: const TextStyle(
                     fontFamily: 'Serif',
-                    fontSize: 28, 
+                    fontSize: 28,
                     fontWeight: FontWeight.w400, // Letra estilo display
                     color: Color(0xFF1E2623),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isBlanca ? const Color(0xFF8B8000).withOpacity(0.8) : const Color(0xFF800020).withOpacity(0.8), // Gold/Burgundy
+                    color: isBlanca
+                        ? const Color(0xFF8B8000).withOpacity(0.8)
+                        : const Color(0xFF800020)
+                            .withOpacity(0.8), // Gold/Burgundy
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     item['tipo'], // "Blanca" / "Tinta"
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 if (cantidad > 1) ...[
-                   const SizedBox(height: 10),
-                   Text("$cantidad capturas", style: const TextStyle(color: Colors.grey, fontSize: 12)) 
+                  const SizedBox(height: 10),
+                  Text("$cantidad capturas",
+                      style: const TextStyle(color: Colors.grey, fontSize: 12))
                 ]
               ],
             ),
@@ -750,8 +807,42 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     );
   }
 
+  Widget _buildAddCollectionCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: GestureDetector(
+        onTap: _abrirCamara,
+        child: Container(
+          height: 120, // Altura discreta pero suficiente
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: Colors.grey.shade300, style: BorderStyle.solid),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add_a_photo, color: Colors.grey.shade600, size: 30),
+                const SizedBox(height: 8),
+                Text(
+                  "Añadir Variedad",
+                  style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // ------------------------------------------------------------------
-  
+
   @override
   Widget build(BuildContext context) {
     // 1. SI HAY UNA VARIEDAD SELECCIONADA, MOSTRAMOS SU DETALLE (Dentro del Scaffold padre)
@@ -760,36 +851,36 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
       return PopScope(
         canPop: false,
         onPopInvoked: (didPop) {
-           if (didPop) return;
-           setState(() => _variedadSeleccionada = null);
+          if (didPop) return;
+          setState(() => _variedadSeleccionada = null);
         },
         child: DetalleVariedadPage(
           variedad: _variedadSeleccionada!,
           onBack: () {
-             setState(() => _variedadSeleccionada = null);
+            setState(() => _variedadSeleccionada = null);
           },
         ),
       );
     }
-    
+
     // 2. SI HAY UN GRUPO DE COLECCIÓN SELECCIONADO
     if (_grupoColeccionSeleccionado != null) {
       final nombre = _grupoColeccionSeleccionado!['nombre'];
       final listaCapturas = _mapaVariedadesUsuario[nombre] ?? [];
-      
+
       return PopScope(
         canPop: false,
         onPopInvoked: (didPop) {
-           if (didPop) return;
-           setState(() => _grupoColeccionSeleccionado = null);
-           _cargarColeccionBackend(); // Refrescar al volver
+          if (didPop) return;
+          setState(() => _grupoColeccionSeleccionado = null);
+          _cargarColeccionBackend(); // Refrescar al volver
         },
         child: UserVarietyDetailPage(
           varietyInfo: _grupoColeccionSeleccionado!,
           captures: listaCapturas,
           onBack: () {
-             setState(() => _grupoColeccionSeleccionado = null);
-             _cargarColeccionBackend();
+            setState(() => _grupoColeccionSeleccionado = null);
+            _cargarColeccionBackend();
           },
         ),
       );
@@ -805,29 +896,31 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
             const SizedBox(height: 10),
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                 // Decoración negra curvada superior (estilo "Isla" o Header)
-                 // Como en la imagen parece un texto simple, lo dejamos simple.
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                // Decoración negra curvada superior (estilo "Isla" o Header)
+                // Como en la imagen parece un texto simple, lo dejamos simple.
                 child: const Text(
                   "VitIA",
                   style: TextStyle(
-                    fontWeight: FontWeight.bold, 
-                    fontSize: 16,
-                    letterSpacing: 1.0
-                  ),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      letterSpacing: 1.0),
                 ),
               ),
             ),
-            
+
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     "Biblioteca",
                     style: TextStyle(
-                      fontFamily: 'Serif', // O usa GoogleFonts.dmSerifDisplay() si tienes el paquete
+                      fontFamily:
+                          'Serif', // O usa GoogleFonts.dmSerifDisplay() si tienes el paquete
                       fontSize: 32,
                       fontWeight: FontWeight.w400, // Letra más fina/elegante
                       color: Color(0xFF1E2623),
@@ -845,7 +938,8 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
 
             // 2. TABS PERSONALIZADOS (Pills)
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8), // Más margen lateral
+              margin: const EdgeInsets.symmetric(
+                  horizontal: 24, vertical: 8), // Más margen lateral
               height: 50,
               decoration: BoxDecoration(
                 color: const Color(0xFFF2F2F2), // Gris clarito específico
@@ -853,24 +947,25 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
               ),
               child: TabBar(
                 controller: _tabController,
-                indicatorSize: TabBarIndicatorSize.tab, 
+                indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08), 
-                      blurRadius: 4, 
-                      offset: const Offset(0, 2)
-                    )
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2))
                   ],
                 ),
                 labelColor: Colors.black87,
                 unselectedLabelColor: Colors.grey.shade500,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                labelStyle:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                 splashBorderRadius: BorderRadius.circular(30),
-                padding: const EdgeInsets.all(5), // Espacio interno para que el indicador "flote"
+                padding: const EdgeInsets.all(
+                    5), // Espacio interno para que el indicador "flote"
                 tabs: const [
                   Tab(text: "Todas"),
                   Tab(text: "Tus variedades"),
@@ -890,21 +985,26 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                       SliverToBoxAdapter(
                         child: _buildFavoritosSection(),
                       ),
-                      
+
                       // Buscador y Título "Todas las variedades"
                       SliverToBoxAdapter(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildSearchBarAndFilters(), 
+                            _buildSearchBarAndFilters(),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24.0, vertical: 12.0),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Todas las variedades',
-                                    style: TextStyle(fontSize: 18, color: Colors.grey.shade800, fontWeight: FontWeight.normal),
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey.shade800,
+                                        fontWeight: FontWeight.normal),
                                   ),
                                   const Icon(Icons.filter_list, size: 20),
                                 ],
@@ -918,9 +1018,10 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                       _filtradas.isEmpty
                           ? SliverFillRemaining(
                               child: Center(
-                                child: _isLoading 
-                                  ? const CircularProgressIndicator()
-                                  : const Text("No se encontraron variedades"),
+                                child: _isLoading
+                                    ? const CircularProgressIndicator()
+                                    : const Text(
+                                        "No se encontraron variedades"),
                               ),
                             )
                           : SliverList(
@@ -931,8 +1032,8 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                                 childCount: _filtradas.length,
                               ),
                             ),
-                      
-                       // Espacio final
+
+                      // Espacio final
                       const SliverToBoxAdapter(child: SizedBox(height: 80)),
                     ],
                   ),
@@ -944,74 +1045,58 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Text("Inicia sesión para ver tu colección"),
-                              const SizedBox(height:10),
+                              const SizedBox(height: 10),
                               ElevatedButton(
-                                onPressed: () {}, // Navegar login
-                                child: const Text("Ir a Login")
-                              )
+                                  onPressed: () {}, // Navegar login
+                                  child: const Text("Ir a Login"))
                             ],
                           ),
                         )
                       : Column(
                           children: [
-                             _buildSearchBarAndFilters(), // Buscador específico de colección
+                            _buildSearchBarAndFilters(), // Buscador específico de colección
                             Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text("Mis Capturas (${_filtradasColeccion.length})", 
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                                child: Text(
+                                    "Mis Capturas (${_filtradasColeccion.length})",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey)),
                               ),
                             ),
                             Expanded(
                               child: _filtradasColeccion.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
-                                        const SizedBox(height: 10),
-                                        const Text('Tu colección está vacía.'),
-                                        TextButton(
-                                          onPressed: _abrirCamara,
-                                          child: const Text('¡Escanea tu primera variedad!'),
-                                        ),
-                                      ],
+                                  ? Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.wine_bar,
+                                              size: 50, color: Colors.grey),
+                                          const SizedBox(height: 10),
+                                          const Text(
+                                              'Tu colección está vacía.'),
+                                          TextButton(
+                                            onPressed: _abrirCamara,
+                                            child: const Text(
+                                                '¡Escanea tu primera variedad!'),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      itemCount: _filtradasColeccion.length + 1,
+                                      itemBuilder: (context, index) {
+                                        if (index ==
+                                            _filtradasColeccion.length) {
+                                          return _buildAddCollectionCard();
+                                        }
+                                        return _buildCollectionGroupCard(
+                                            _filtradasColeccion[index]);
+                                      },
                                     ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: _filtradasColeccion.length,
-                                    itemBuilder: (context, index) {
-                                      // Usamos el NUEVO diseño de tarjeta agrupada
-                                      return _buildCollectionGroupCard(_filtradasColeccion[index]);
-                                    },
-                                  ),
-                            ),
-                            // NUEVO: Botón estático en la parte inferior
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    offset: const Offset(0, -4),
-                                    blurRadius: 10,
-                                  )
-                                ]
-                              ),
-                              child: ElevatedButton.icon(
-                                onPressed: _abrirCamara,
-                                icon: const Icon(Icons.camera_alt),
-                                label: const Text("Añadir Variedad"),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF151B18),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                              ),
                             ),
                           ],
                         ),
@@ -1024,4 +1109,3 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
     );
   }
 }
-

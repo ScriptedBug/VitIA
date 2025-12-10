@@ -89,21 +89,22 @@ def update_coleccion_item_endpoint(
 
 
 @router.delete("/{id_coleccion}",
-    response_model=schemas.Coleccion,
     summary="Eliminar un item de la colección"
 )
 def delete_coleccion_item_endpoint(
     id_coleccion: int,
     db: Session = Depends(get_db),
-    current_user: models.Usuario = Depends(get_current_user) # <-- Dependencia real
+    current_user: models.Usuario = Depends(get_current_user)
 ):
+    # Retrieve first to check existence (and ownership)
     db_item = crud.delete_coleccion_item(db=db, id_coleccion=id_coleccion, id_usuario=current_user.id_usuario)
     if db_item is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item de colección no encontrado o no pertenece al usuario"
         )
-    return db_item
+    # Don't return the object as it is detached and might have lazy loads
+    return {"message": "Item eliminado correctamente", "id": id_coleccion}
 
 @router.post("/upload", response_model=schemas.Coleccion)
 async def create_coleccion_with_image(

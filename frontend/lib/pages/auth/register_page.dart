@@ -63,7 +63,7 @@ class _RegisterPageState extends State<RegisterPage> {
           final tokenData = jsonDecode(loginResponse.body);
           final token = tokenData["access_token"];
 
-          UserSession.setToken(token);
+          await UserSession.setToken(token);
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

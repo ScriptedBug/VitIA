@@ -44,7 +44,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
         final data = jsonDecode(response.body);
         final token = data["access_token"];
 
-        UserSession.setToken(token);
+        await UserSession.setToken(token);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Inicio de sesión exitoso")),

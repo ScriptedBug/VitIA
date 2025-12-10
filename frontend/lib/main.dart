@@ -1,21 +1,29 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
-import 'pages/auth/login_page.dart'; // Importa la nueva ubicación
+import 'pages/auth/login_page.dart';
+import 'pages/main_layout/home_page.dart';
+import 'core/services/user_sesion.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Cargamos la sesión antes de iniciar la UI
+  final bool hasSession = await UserSession.loadSession();
+
+  runApp(MyApp(isLoggedIn: hasSession));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'VitIA',
-      home: LoginPage(), // Ahora apunta a la nueva página
+      // Si hay sesión, vamos directo a HomePage. Si no, a login.
+      home: isLoggedIn ? const HomePage() : const LoginPage(),
     );
   }
 }
-
