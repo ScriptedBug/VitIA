@@ -168,12 +168,15 @@ class _HomepageState extends State<HomePage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: GestureDetector(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (_) => PerfilPage(apiClient: _apiClient)),
               );
+              if (result == true) {
+                _checkTutorialStatus();
+              }
             },
             child: const Icon(Icons.account_circle, size: 28),
           ),

@@ -1,23 +1,19 @@
-
 import 'package:dio/dio.dart';
 import './models/prediction_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'models/coleccion_model.dart';
 import 'package:http_parser/http_parser.dart';
 
-
-
 class ApiClient {
-final Dio _dio;
-ApiClient(String baseUrl) : _dio = Dio(BaseOptions(baseUrl: baseUrl));
+  final Dio _dio;
+  ApiClient(String baseUrl) : _dio = Dio(BaseOptions(baseUrl: baseUrl));
 
+  Future<Map<String, dynamic>> ping() async {
+    final r = await _dio.get('/health/ping');
+    return r.data as Map<String, dynamic>;
+  }
 
-Future<Map<String, dynamic>> ping() async {
-final r = await _dio.get('/health/ping');
-return r.data as Map<String, dynamic>;
-}
-
-Future<List<dynamic>> getVariedades() async {
+  Future<List<dynamic>> getVariedades() async {
     try {
       final response = await _dio.get('/variedades/');
       return response.data as List<dynamic>;
@@ -27,17 +23,18 @@ Future<List<dynamic>> getVariedades() async {
     }
   }
 
-Future<List<PredictionModel>> predictImage(XFile file) async {
+  Future<List<PredictionModel>> predictImage(XFile file) async {
     try {
       // 1. Leemos los bytes del archivo (Funciona en Web y Móvil)
       final bytes = await file.readAsBytes();
-      
+
       // 2. Usamos fromBytes en lugar de fromFile
       FormData formData = FormData.fromMap({
         "file": MultipartFile.fromBytes(
-          bytes, 
+          bytes,
           filename: file.name, // XFile ya trae el nombre
-          contentType: MediaType('image', 'jpeg'), // Ajusta según el tipo real si es necesario
+          contentType: MediaType(
+              'image', 'jpeg'), // Ajusta según el tipo real si es necesario
         ),
       });
 
@@ -60,12 +57,10 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   }) async {
     try {
       final bytes = await imageFile.readAsBytes();
-      
+
       FormData formData = FormData.fromMap({
-        "file": MultipartFile.fromBytes(
-          bytes, 
-          filename: imageFile.name,
-          contentType: MediaType('image', 'jpeg')),
+        "file": MultipartFile.fromBytes(bytes,
+            filename: imageFile.name, contentType: MediaType('image', 'jpeg')),
         "nombre_variedad": nombreVariedad, // <--- Enviamos el nombre
         if (notas != null) "notas": notas,
         if (lat != null) "latitud": lat,
@@ -92,7 +87,8 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     }
   }
 
-  Future<void> updateCollectionItem(int idColeccion, Map<String, dynamic> updates) async {
+  Future<void> updateCollectionItem(
+      int idColeccion, Map<String, dynamic> updates) async {
     try {
       // El backend espera un PATCH a /coleccion/{id}
       await _dio.patch('/coleccion/$idColeccion', data: updates);
@@ -114,11 +110,10 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   Future<void> logout() async {
     try {
       // Notifica al servidor (aunque JWT es stateless, es una buena práctica)
-      await _dio.post('/auth/logout'); 
-      
-      // Limpiar el token de la cabecera del cliente Dio inmediatamente
-      _dio.options.headers.remove("Authorization"); 
+      await _dio.post('/auth/logout');
 
+      // Limpiar el token de la cabecera del cliente Dio inmediatamente
+      _dio.options.headers.remove("Authorization");
     } catch (e) {
       // Ignoramos errores, ya que la acción crítica es la limpieza local.
       print("Advertencia: Fallo al notificar cierre de sesión al servidor: $e");
@@ -150,7 +145,8 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   }
 
   // 3. Crear nueva publicación (con soporte para imagen)
-  Future<void> createPublicacion(String titulo, String texto, {XFile? imageFile}) async {
+  Future<void> createPublicacion(String titulo, String texto,
+      {XFile? imageFile}) async {
     try {
       final Map<String, dynamic> dataMap = {
         "titulo": titulo,
@@ -188,7 +184,8 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   // 5. Obtener comentarios de una publicación
   Future<List<dynamic>> getComentariosPublicacion(int idPublicacion) async {
     try {
-      final response = await _dio.get('/comentarios/publicacion/$idPublicacion');
+      final response =
+          await _dio.get('/comentarios/publicacion/$idPublicacion');
       return response.data as List<dynamic>;
     } catch (e) {
       print("Error al obtener comentarios: $e");
@@ -247,14 +244,13 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     try {
       // Esta llamada requiere que el token haya sido configurado previamente.
       final response = await _dio.get('/users/me');
-      
+
       // La respuesta de /users/me contiene el objeto Usuario con el campo
       return response.data['tutorial_superado'] as bool? ?? false;
-      
     } catch (e) {
       print("Error al obtener el estado del tutorial (GET /users/me): $e");
       // Fallback defensivo: Si falla (401, red), asumimos true para no bloquear el build
-      return true; 
+      return true;
     }
   }
 
@@ -273,12 +269,21 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
   Future<void> markTutorialAsComplete() async {
     try {
       // Reutilizamos PATCH /users/me enviando SOLO el campo a actualizar
-      await _dio.patch('/users/me', data: {
-        "tutorial_superado": true
-      });
+      await _dio.patch('/users/me', data: {"tutorial_superado": true});
     } catch (e) {
       print("Error al marcar tutorial como completo (PATCH /users/me): $e");
-      throw Exception('Fallo al actualizar estado del tutorial en el servidor.');
+      throw Exception(
+          'Fallo al actualizar estado del tutorial en el servidor.');
+    }
+  }
+
+  // Actualizar perfil de usuario (Nombre, Apellidos, Ubicación)
+  Future<void> updateProfile(Map<String, dynamic> data) async {
+    try {
+      await _dio.patch('/users/me', data: data);
+    } catch (e) {
+      print("Error al actualizar perfil: $e");
+      rethrow;
     }
   }
 }
