@@ -3,26 +3,54 @@
 import 'package:flutter/material.dart';
 import 'package:vinas_mobile/core/services/user_sesion.dart';
 import '../auth/login_page.dart'; 
-import '../../core/api_client.dart'; // <<< Importar ApiClient
+import '../../core/api_client.dart'; 
 
 class PerfilPage extends StatelessWidget {
-  final ApiClient apiClient; // <<< REQUIERE ApiClient
+  final ApiClient apiClient; 
   
-  const PerfilPage({super.key, required this.apiClient}); // <<< MODIFICADO
+  const PerfilPage({super.key, required this.apiClient});
 
-  void logout(BuildContext context) async { // Hacemos el método async
-    // 1. Notificar al backend y limpiar cabeceras de Dio
-    await apiClient.logout(); 
-    
-    // 2. Limpiar el token localmente (la acción crítica)
-    UserSession.clearToken(); 
-    
-    // 3. Navegar a Login y limpiar el historial
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()), 
-      (route) => false, 
+  // 🔑 MODIFICADO: Ahora muestra un cuadro de diálogo antes de cerrar.
+  void logout(BuildContext context) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cerrar Sesión'),
+          content: const Text('¿Estás seguro de que quieres cerrar la sesión?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar', style: TextStyle(color: Colors.black54)),
+              onPressed: () {
+                Navigator.of(context).pop(false); // No cerrar
+              },
+            ),
+            TextButton(
+              child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Confirmar cierre
+              },
+            ),
+          ],
+        );
+      },
     );
+
+    // Si el usuario confirma el cierre (confirm == true)
+    if (confirm == true) {
+      // 1. Notificar al backend y limpiar cabeceras de Dio
+      await apiClient.logout(); 
+      
+      // 2. Limpiar el token localmente (la acción crítica)
+      UserSession.clearToken(); 
+      
+      // 3. Navegar a Login y limpiar el historial
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()), 
+        (route) => false, 
+      );
+    }
   }
 
   // Widget para construir los botones/tarjetas de perfil (Estilo del mockup)
@@ -120,7 +148,7 @@ class PerfilPage extends StatelessWidget {
                   const SizedBox(height: 30),
 
 
-                  // --- Botón de CERRAR SESIÓN (Funcional) ---
+                  // --- Botón de CERRAR SESIÓN (Funcional con diálogo) ---
                   _buildProfileCard(
                       title: "Cerrar sesión",
                       onTap: () => logout(context), 
