@@ -31,10 +31,19 @@ class _HomepageState extends State<HomePage> {
   bool _isLoadingStatus = true;
   late ApiClient _apiClient; 
 
-  final List<Widget> _screens = [
+  // CAMBIO: Convertimos _screens en un método get para poder acceder a setState y lógica de instancia
+  List<Widget> get _screens => [
     const InicioScreen(),                          
     const FotoPage(),                                
-    const CatalogoPage(initialTab: 0),             
+    // CAMBIO: Ahora pasamos el callback al catálogo
+    CatalogoPage(
+        initialTab: 0,
+        onCameraTap: () {
+            setState(() {
+                currentIndex = 1; // Cambia al tab de cámara (FotoPage)
+            });
+        },
+    ),             
     const ForoPage(),
   ];
 
@@ -173,6 +182,8 @@ class _HomepageState extends State<HomePage> {
           
           body: _screens[currentIndex],
           
+
+
           // BARRA DE NAVEGACIÓN FLOTANTE (OPERATIVA)
           bottomNavigationBar: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 25), 
@@ -217,6 +228,14 @@ class _HomepageState extends State<HomePage> {
                                     color: currentIndex == 0 ? Colors.white : Colors.white70 // Color de activo/inactivo
                                 ),
                               ),                 
+                              // CAMBIO: Ocultamos el botón de cámara de la barra si ahora es un FAB flotante
+                              // O lo mantenemos si queremos redundancia. El usuario dijo "que el boton de hacer foto se mantenga arriba".
+                              // Si ponemos un FAB central, ¿qué hacemos con la barra?
+                              // Opción 1: Mantener los 4 items y el FAB flota encima (tapando quizás el de cámara).
+                              // Opción 2: Dejar hueco.
+                              // Vamos a mantener la barra tal cual y el FAB flotará "encima", aunque visualmente puede chocar.
+                              // REVISIÓN: El usuario dijo "mueva por la barra de herramientas que ya existe".
+                              // Si ponemos el FAB en `centerDocked`, quedará encima.
                               GButton(
                                 icon: Icons.camera_alt_outlined, 
                                 iconSize: 0,

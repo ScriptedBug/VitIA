@@ -16,7 +16,9 @@ import 'user_variety_detail_page.dart'; // <--- NUEVA PÁGINA
 class CatalogoPage extends StatefulWidget { // ⬅️ CLASE RENOMBRADA A CATÁLOGO
   final int initialTab; 
   final ApiClient? apiClient;
-  const CatalogoPage({super.key, this.initialTab = 0, this.apiClient,}); 
+  final VoidCallback? onCameraTap; // CAMBIO: Callback para navegación externa
+
+  const CatalogoPage({super.key, this.initialTab = 0, this.apiClient, this.onCameraTap}); 
 
   @override
   State<CatalogoPage> createState() => _CatalogoPageState(); // ⬅️ ESTADO RENOMBRADO A CATÁLOGO
@@ -217,14 +219,18 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
 
  
   void _abrirCamara() {
-    // Navegamos directamente a la pantalla de cámara (FotoPage)
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const FotoPage()),
-    ).then((_) {
-      // Opcional: Cuando vuelvas de la cámara, recargar la lista por si guardaste algo nuevo
-      _cargarVariedadesBackend(); 
-    });
+    // CAMBIO: Si se proporciona callback, úsalo para cambiar de tab.
+    if (widget.onCameraTap != null) {
+      widget.onCameraTap!();
+    } else {
+      // Fallback a navegación antigua (por si acaso)
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const FotoPage()),
+      ).then((_) {
+        _cargarVariedadesBackend(); 
+      });
+    }
   }
   
 
@@ -945,6 +951,32 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                                     },
                                   ),
                             ),
+                            // NUEVO: Botón estático en la parte inferior
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    offset: const Offset(0, -4),
+                                    blurRadius: 10,
+                                  )
+                                ]
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: _abrirCamara,
+                                icon: const Icon(Icons.camera_alt),
+                                label: const Text("Añadir Variedad"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF151B18),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                 ],
@@ -953,13 +985,7 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
           ],
         ),
       ),
-      // Mantenemos el FAB si se quiere botón flotante, o lo quitamos si basta con el botón de la AppBar (que ya no está).
-      // Añadimos botón flotante para cámara por si acaso
-      floatingActionButton: FloatingActionButton(
-        onPressed: _abrirCamara,
-        backgroundColor: const Color(0xFF151B18),
-        child: const Icon(Icons.camera_alt, color: Colors.white),
-      ),
     );
   }
 }
+

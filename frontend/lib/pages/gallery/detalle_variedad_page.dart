@@ -268,13 +268,26 @@ class DetalleVariedadPage extends StatelessWidget {
 
   Widget _buildMorfologiaCard({
     required String titulo,
-    required String descripcion,
+    required dynamic descripcion, // Changed to dynamic
     required String iconPath,
     required TextStyle textStyle,
   }) {
-    // AQUÍ ESTÁ EL CAMBIO CLAVE:
-    // Separamos la descripción por comas para hacer la lista
-    List<String> items = descripcion.split(',');
+    List<String> items = [];
+    
+    if (descripcion is String) {
+       items = descripcion.split(',');
+    } else if (descripcion is List) {
+       items = descripcion.map((e) => e.toString()).toList();
+    } else if (descripcion is Map) {
+       items = descripcion.values.map((e) => e.toString()).toList();
+    } else {
+       items = [descripcion.toString()];
+    }
+
+    // Filter empty items
+    items = items.where((i) => i.trim().isNotEmpty).toList();
+
+    if (items.isEmpty) return const SizedBox.shrink();
 
     return Container(
       width: double.infinity,
