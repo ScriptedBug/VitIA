@@ -318,43 +318,99 @@ def toggle_favorito(db: Session, id_usuario: int, id_variedad: int):
         user.favoritos.append(variedad)
         return "añadido a" # Pequeña corrección en el return string
 
-# --- LOGICA VOTOS (3 ESTADOS) ---
-def gestionar_voto(db: Session, modelo_voto, id_usuario: int, id_objeto_campo, id_objeto_valor, es_like: Optional[bool]):
+def _actualizar_contador_likes(db: Session, modelo_voto, modelo_padre, id_campo_fk, id_valor_fk, columna_likes_padre):
     """
-    Gestiona los 3 estados del voto:
-    - input es True/False: Asegura que exista el voto con ese valor.
-    - input es None: Asegura que NO exista el voto (lo borra si hay).
+    Función interna: Cuenta cuántos 'True' hay en la tabla de votos
+    y actualiza la columna 'likes' del objeto padre (Publicacion o Comentario).
+    """
+    # 1. Contar likes reales (es_like = True)
+    filtro = {id_campo_fk: id_valor_fk, "es_like": True}
+    total_likes = db.query(modelo_voto).filter_by(**filtro).count()
+    
+    # Si quisieras restar los dislikes (Score), descomenta esto:
+    # total_dislikes = db.query(modelo_voto).filter_by({id_campo_fk: id_valor_fk, "es_like": False}).count()
+    # score_final = total_likes - total_dislikes
+    
+    # 2. Actualizar el padre
+    # Usamos db.query().update() para ser eficientes
+    db.query(modelo_padre).filter(
+        getattr(modelo_padre, id_campo_fk) == id_valor_fk
+    ).update({columna_likes_padre: total_likes})
+    
+    db.commit()
+
+# --- LOGICA VOTOS (3 ESTADOS) ---
+def gestionar_voto(db: Session, modelo_voto, modelo_padre, id_usuario: int, id_campo_fk, id_valor_fk, es_like: Optional[bool]):
+    """
+    1. Gestiona el voto (Crear, Borrar o Actualizar).
+    2. Recalcula el contador del padre.
     """
     filtro = {
         "id_usuario": id_usuario,
-        id_objeto_campo: id_objeto_valor
+        id_campo_fk: id_valor_fk
     }
-    # Buscamos si ya hay un voto
-    voto_existente = db.query(modelo_voto).filter_by(**filtro).first()
     
-    # CASO A: El usuario quiere quitar su voto (Neutro)
+    # 1. Buscar voto existente
+    voto_existente = db.query(modelo_voto).filter_by(**filtro).first()
+    estado = ""
+
+    # CASO A: Quitar voto (Neutro)
     if es_like is None:
         if voto_existente:
             db.delete(voto_existente)
-            db.commit()
-        return "voto_eliminado"
+            estado = "voto_eliminado"
+        else:
+            estado = "sin_cambios"
 
-    # CASO B: El usuario quiere dar Like o Dislike
-    if voto_existente:
-        # Si ya existe, actualizamos el valor (aunque sea el mismo, no pasa nada)
-        voto_existente.es_like = es_like
-        db.commit()
-        return "voto_actualizado"
+    # CASO B: Dar Like o Dislike
+    elif voto_existente:
+        # Actualizar si cambia
+        if voto_existente.es_like != es_like:
+            voto_existente.es_like = es_like
+            estado = "voto_actualizado"
+        else:
+            estado = "sin_cambios"
     else:
-        # Si no existe, creamos uno nuevo
+        # Crear nuevo
         nuevo_voto = modelo_voto(es_like=es_like, **filtro)
         db.add(nuevo_voto)
-        db.commit()
-        return "voto_creado"
+        estado = "voto_creado"
+    
+    db.commit()
+
+    # 2. IMPORTANTE: Sincronizar el contador en la tabla padre
+    # Solo recalculamos si hubo cambios para ahorrar recursos
+    if estado != "sin_cambios":
+        _actualizar_contador_likes(
+            db, 
+            modelo_voto=modelo_voto, 
+            modelo_padre=modelo_padre, 
+            id_campo_fk=id_campo_fk, 
+            id_valor_fk=id_valor_fk, 
+            columna_likes_padre="likes" # Nombre de la columna en Publicacion/Comentario
+        )
+    
+    return estado
 
 # Wrappers
 def votar_publicacion(db: Session, id_usuario: int, id_publicacion: int, es_like: Optional[bool]):
-    return gestionar_voto(db, models.VotoPublicacion, id_usuario, "id_publicacion", id_publicacion, es_like)
+    return gestionar_voto(
+        db=db,
+        modelo_voto=models.VotoPublicacion,
+        modelo_padre=models.Publicacion, # <-- Pasamos el modelo padre
+        id_usuario=id_usuario,
+        id_campo_fk="id_publicacion",
+        id_valor_fk=id_publicacion,
+        es_like=es_like
+    )
 
 def votar_comentario(db: Session, id_usuario: int, id_comentario: int, es_like: Optional[bool]):
-    return gestionar_voto(db, models.VotoComentario, id_usuario, "id_comentario", id_comentario, es_like)
+    return gestionar_voto(
+        db=db,
+        modelo_voto=models.VotoComentario,
+        modelo_padre=models.Comentario, # <-- Pasamos el modelo padre
+        id_usuario=id_usuario,
+        id_campo_fk="id_comentario",
+        id_valor_fk=id_comentario,
+        es_like=es_like
+    )
