@@ -1,10 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
 
+import 'services/api_config.dart';
 
-final apiBaseUrlProvider = Provider<String>((ref) => const String.fromEnvironment(
-'API_BASE_URL', defaultValue: 'http://10.0.2.2:8000',
-));
+final apiBaseUrlProvider = Provider<String>((ref) {
+  const env = String.fromEnvironment('API_BASE_URL');
+  if (env.isNotEmpty) return env;
+  return getBaseUrl();
+});
 
-
-final apiProvider = Provider<ApiClient>((ref) => ApiClient(ref.watch(apiBaseUrlProvider)));
+final apiProvider =
+    Provider<ApiClient>((ref) => ApiClient(ref.watch(apiBaseUrlProvider)));
