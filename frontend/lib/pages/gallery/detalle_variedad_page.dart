@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'dart:ui';
 
 class DetalleVariedadPage extends StatelessWidget {
   final Map<String, dynamic> variedad;
@@ -35,8 +36,16 @@ class DetalleVariedadPage extends StatelessWidget {
     final bool isBlanca = variedad['tipo'] == 'Blanca';
     final colorTema = isBlanca ? Colors.lime.shade700 : Colors.purple.shade900;
     
-    final Map<String, dynamic>? morfologia = variedad['morfologia'];
-    final Map<String, dynamic>? infoExtra = variedad['info_extra'];
+    final dynamic morfologia = variedad['morfologia'];
+    final dynamic infoExtra = variedad['info_extra'];
+    
+    // DEBUG: Inspect data structure matching new DB format
+    print("--- DEBUG VARIETY DETAIL ---");
+    print("Variedad Complete Map: $variedad");
+    print("Morfologia Type: ${morfologia.runtimeType}");
+    print("Morfologia Content: $morfologia");
+    print("InfoExtra Type: ${infoExtra.runtimeType}");
+    print("----------------------------");
 
     // --- ESTILOS DE TEXTO ---
     const TextStyle textoGeneralStyle = TextStyle(
@@ -53,131 +62,207 @@ class DetalleVariedadPage extends StatelessWidget {
 
     const TextStyle contentListStyle = TextStyle(
       color: Colors.black87, 
-      fontSize: 15, 
+      fontSize: 16, // A little bigger
       height: 1.4
     );
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: CustomScrollView(
-        slivers: [
-          // 1. APPBAR CON IMAGEN
-          SliverAppBar(
-            expandedHeight: 350.0,
-            pinned: true,
-            backgroundColor: colorTema,
-            iconTheme: const IconThemeData(color: Colors.white),
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                variedad['nombre'] ?? 'Detalle',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  shadows: [Shadow(color: Colors.black45, blurRadius: 10)],
-                ),
-              ),
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _buildImagen(variedad),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [Colors.black54, Colors.transparent],
-                      ),
-                    ),
-                  ),
-                ],
+      backgroundColor: Colors.white, // Fondo base
+      body: Stack(
+        children: [
+          // 1. IMAGEN DE FONDO (Con Blur) + IMAGEN PRINCIPAL (Contain)
+          Positioned.fill(
+             child: Container(
+               color: Colors.black, // Fondo base
+               child: _buildImagen(variedad),
+             ),
+          ),
+          
+          // Botón de atrás flotante (para poder salir)
+          Positioned(
+            top: 40,
+            left: 20,
+            child: CircleAvatar(
+              backgroundColor: Colors.black45,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
           ),
 
-          // 2. CONTENIDO PRINCIPAL
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Badges y ubicación
-                  Row(
+          // 2. SHEET DESLIZABLE
+          DraggableScrollableSheet(
+            initialChildSize: 0.4, // Bajamos para que se vea más imagen al principio (Feedback usuario)
+            minChildSize: 0.25,      // Se puede bajar hasta ver casi toda la imagen
+            maxChildSize: 0.95,     // Casi pantalla completa al subir
+            builder: (context, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5)],
+                ),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: colorTema.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: colorTema),
-                        ),
-                        child: Text(
-                          (variedad['tipo'] ?? 'Desconocido').toUpperCase(),
-                          style: TextStyle(color: colorTema, fontWeight: FontWeight.bold, fontSize: 12),
+                      // Barra de "agarrar"
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
-                      const Spacer(),
-                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(variedad['region'] ?? 'España', style: TextStyle(color: Colors.grey.shade600)),
+
+                      // Título y Badges
+                      Text(
+                        variedad['nombre'] ?? 'Detalle',
+                        style: const TextStyle(
+                          fontSize: 28, 
+                          fontWeight: FontWeight.bold, 
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: colorTema.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: colorTema),
+                            ),
+                            child: Text(
+                              (variedad['tipo'] ?? 'Desconocido').toUpperCase(),
+                              style: TextStyle(color: colorTema, fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                          const Spacer(),
+                          const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Text(variedad['region'] ?? 'España', style: TextStyle(color: Colors.grey.shade600)),
+                        ],
+                      ),
+                      const SizedBox(height: 25),
+
+                      // Descripción General
+                      _buildSectionTitle("Descripción"),
+                      Text(
+                        variedad['descripcion'] ?? "Sin descripción detallada.",
+                        style: textoGeneralStyle, 
+                      ),
+                      const SizedBox(height: 30),
+
+                      // -----------------------------------------------------------
+                      // SECCIÓN: MORFOLOGÍA
+                      // -----------------------------------------------------------
+                      if (morfologia != null) 
+                        _buildMorfologiaSectionNuevo(morfologia, isBlanca, contentListStyle),
+
+                      // -----------------------------------------------------------
+                      // SECCIÓN: DATOS ADICIONALES
+                      // -----------------------------------------------------------
+                      if (infoExtra != null) ...[
+                        Builder(
+                          builder: (context) {
+                            List<MapEntry<String, String>> datosParaMostrar = [];
+
+                            if (infoExtra is Map) {
+                              infoExtra.forEach((k, v) {
+                                if (v != null && v.toString().isNotEmpty) {
+                                  datosParaMostrar.add(MapEntry(k.toString(), v.toString()));
+                                }
+                              });
+                            } else if (infoExtra is List) {
+                              for (var item in infoExtra) {
+                                if (item is Map) {
+                                  item.forEach((k, v) {
+                                    String keyLower = k.toString().toLowerCase();
+                                    String valLower = v.toString().toLowerCase();
+                                    // Filtro Web y Ficha
+                                    if (keyLower.contains('ficha') || keyLower.contains('web') || 
+                                        valLower.contains('ficha') || valLower.contains('web') ||
+                                        (keyLower == 'titulo' && valLower.contains('ficha'))) {
+                                      return;
+                                    }
+                                    if (v != null && v.toString().isNotEmpty) {
+                                      datosParaMostrar.add(MapEntry(k.toString(), v.toString()));
+                                    }
+                                  });
+                                } else if (item is String) {
+                                   if (!item.toLowerCase().contains('ficha')) {
+                                      datosParaMostrar.add(MapEntry("Info", item));
+                                   }
+                                }
+                              }
+                            }
+
+                            if (datosParaMostrar.isEmpty) return const SizedBox.shrink();
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 30),
+                                _buildSectionTitle("Datos Adicionales"),
+                                
+                                ...datosParaMostrar.map((e) {
+                                  final String rawValue = e.value;
+                                  final List<String> items = rawValue.split(',');
+                                  final bool isUrl = e.key.toLowerCase().contains('url') || e.key.toLowerCase() == 'web';
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // SOLO mostramos el label si NO es URL
+                                        if (!isUrl) 
+                                          Row(
+                                            children: [
+                                              Icon(Icons.label_important_outline, size: 20, color: colorTema),
+                                              const SizedBox(width: 8),
+                                              Text("${e.key}:", style: labelExtraStyle),
+                                            ],
+                                          ),
+                                        
+                                        if (!isUrl) const SizedBox(height: 8),
+                                        
+                                        ..._buildCleanList(items, contentListStyle),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              ],
+                            );
+                          }
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 100), // Espacio extra al final
                     ],
                   ),
-                  const SizedBox(height: 25),
-
-                  // Descripción General
-                  _buildSectionTitle("Descripción"),
-                  Text(
-                    variedad['descripcion'] ?? "Sin descripción detallada.",
-                    style: textoGeneralStyle, 
-                  ),
-                  const SizedBox(height: 30),
-
-                  // -----------------------------------------------------------
-                  // SECCIÓN: MORFOLOGÍA (AHORA CON LISTA SEPARADA)
-                  // -----------------------------------------------------------
-                  if (morfologia != null) 
-                    _buildMorfologiaSectionNuevo(morfologia, isBlanca, contentListStyle),
-
-                  // -----------------------------------------------------------
-                  // SECCIÓN: DATOS ADICIONALES (LISTA SEPARADA)
-                  // -----------------------------------------------------------
-                  if (infoExtra != null && infoExtra.isNotEmpty) ...[
-                    const SizedBox(height: 30),
-                    _buildSectionTitle("Datos Adicionales"),
-                    
-                    ...infoExtra.entries.map((e) {
-                      final String rawValue = e.value.toString();
-                      final List<String> items = rawValue.split(',');
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.label_important_outline, size: 18, color: colorTema),
-                                const SizedBox(width: 8),
-                                Text("${e.key}:", style: labelExtraStyle),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            // Generamos la lista de items
-                            ..._buildBulletedList(items, contentListStyle),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
-                  
-                  const SizedBox(height: 50),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
+  }
+
+  String _capitalize(String s) {
+    if (s.trim().isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
   }
 
   // --- WIDGETS AUXILIARES ---
@@ -187,78 +272,84 @@ class DetalleVariedadPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
       ),
     );
   }
 
-  // Construye la lista de viñetas (usada en Morfología y Datos Extra)
-  List<Widget> _buildBulletedList(List<String> items, TextStyle style) {
+  // Lista limpia: Capitalizada y CON punto final
+  List<Widget> _buildCleanList(List<String> items, TextStyle style) {
     return items.map((item) {
-      String textoLimpio = item.trim();
-      if (textoLimpio.isEmpty) return const SizedBox.shrink();
-
+      String texto = item.trim();
+      if (texto.isEmpty) return const SizedBox.shrink();
+      
+      // Capitalizar y añadir punto final si no lo tiene
+      texto = _capitalize(texto);
+      if (!texto.endsWith('.')) {
+        texto += '.';
+      }
+      
       return Padding(
         padding: const EdgeInsets.only(bottom: 6.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // El puntito (bullet)
-            Container(
-              margin: const EdgeInsets.only(top: 8, right: 10),
-              width: 5,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey[500],
-                shape: BoxShape.circle,
-              ),
-            ),
-            // El texto (con soporte para links)
-            Expanded(
-              child: Linkify(
-                onOpen: (link) => _launchURL(link.url),
-                text: textoLimpio,
-                style: style,
-                linkStyle: const TextStyle(
-                  color: Colors.blue, 
-                  decoration: TextDecoration.underline,
-                  fontWeight: FontWeight.bold
-                ),
-                options: const LinkifyOptions(humanize: false),
-              ),
-            ),
-          ],
+        child: Linkify(
+          onOpen: (link) => _launchURL(link.url),
+          text: texto, 
+          style: style,
+          linkStyle: const TextStyle(
+            color: Colors.blue, 
+            decoration: TextDecoration.underline,
+            fontWeight: FontWeight.bold
+          ),
+          options: const LinkifyOptions(humanize: false),
         ),
       );
     }).toList();
   }
 
-  Widget _buildMorfologiaSectionNuevo(Map<String, dynamic> morfologia, bool isBlanca, TextStyle textStyle) {
+  Widget _buildMorfologiaSectionNuevo(dynamic morfologia, bool isBlanca, TextStyle textStyle) {
     final int iconProp = isBlanca ? 3 : 1;
+
+    // Si es null, no mostramos nada
+    if (morfologia == null) return const SizedBox.shrink();
+
+    // Si resulta que es una Lista (el nuevo formato posible), por ahora no sabemos su estructura exacta.
+    Map<String, dynamic> dataMap = {};
+    if (morfologia is Map) {
+      dataMap = Map<String, dynamic>.from(morfologia);
+    } else if (morfologia is List) {
+      // TODO: Adaptar a la estructura de lista cuando la veamos en los logs.
+      // Por ahora intentamos convertirlo a Map si es posible o lo dejamos vacío
+      // Ejemplo: si fuera [{'key': 'hoja', 'value': ...}]
+      print("Warning: Morfologia is a List, not a Map. UI update pending data inspection.");
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text("Formato de morfología desconocido (Lista)"),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle("Morfología"),
         const SizedBox(height: 8),
-        if (morfologia['hoja'] != null && morfologia['hoja'].toString().isNotEmpty)
+        if (dataMap.containsKey('hoja') && dataMap['hoja'] != null && dataMap['hoja'].toString().isNotEmpty)
           _buildMorfologiaCard(
             titulo: "Hoja",
-            descripcion: morfologia['hoja'],
+            descripcion: dataMap['hoja'],
             iconPath: 'assets/icons/Propiedad$iconProp=hoja.png',
             textStyle: textStyle,
           ),
-        if (morfologia['racimo'] != null && morfologia['racimo'].toString().isNotEmpty)
+        if (dataMap.containsKey('racimo') && dataMap['racimo'] != null && dataMap['racimo'].toString().isNotEmpty)
           _buildMorfologiaCard(
             titulo: "Racimo",
-            descripcion: morfologia['racimo'],
+            descripcion: dataMap['racimo'],
             iconPath: 'assets/icons/Propiedad$iconProp=racimo.png',
             textStyle: textStyle,
           ),
-        if (morfologia['uva'] != null && morfologia['uva'].toString().isNotEmpty)
+        if (dataMap.containsKey('uva') && dataMap['uva'] != null && dataMap['uva'].toString().isNotEmpty)
           _buildMorfologiaCard(
             titulo: "Uva",
-            descripcion: morfologia['uva'],
+            descripcion: dataMap['uva'],
             iconPath: 'assets/icons/Propiedad$iconProp=uva.png',
             textStyle: textStyle,
           ),
@@ -266,9 +357,10 @@ class DetalleVariedadPage extends StatelessWidget {
     );
   }
 
+  // Reuse logic but remove bullets calling _buildCleanList
   Widget _buildMorfologiaCard({
     required String titulo,
-    required dynamic descripcion, // Changed to dynamic
+    required dynamic descripcion,
     required String iconPath,
     required TextStyle textStyle,
   }) {
@@ -295,51 +387,53 @@ class DetalleVariedadPage extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.black, width: 1.2), // Borde negro
+        border: Border.all(color: Colors.grey.shade200, width: 1),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // Alineación vertical centrada para que el icono quede centrado respecto al bloque de texto
+        crossAxisAlignment: CrossAxisAlignment.center, 
         children: [
-          // ICONO
+          // ICONO REESCALADO (Más grande y centrado)
           Container(
-            width: 50,
-            height: 50,
+            width: 64, // Aumentado (antes 56)
+            height: 64, // Aumentado (antes 56)
             decoration: BoxDecoration(
               color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(20),
             ),
-            padding: const EdgeInsets.all(8),
-            child: Image.asset(
-              iconPath,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.image_not_supported, color: Colors.grey);
-              },
+            padding: const EdgeInsets.all(12), // Ajustado (antes 10)
+            child: Center(
+              child: Image.asset(
+                iconPath,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.image_not_supported, color: Colors.grey);
+                },
+              ),
             ),
           ),
           const SizedBox(width: 16),
           
-          // CONTENIDO DE TEXTO
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   titulo,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
-                const SizedBox(height: 8), // Espacio entre título y lista
+                const SizedBox(height: 8), 
                 
-                // Generamos la lista de viñetas automáticamente
-                ..._buildBulletedList(items, textStyle),
+                // Nueva lista limpia
+                ..._buildCleanList(items, textStyle),
               ],
             ),
           ),
@@ -350,9 +444,44 @@ class DetalleVariedadPage extends StatelessWidget {
 
   Widget _buildImagen(Map<String, dynamic> variedad) {
     final String? path = variedad['imagen'];
-    if (path == null) return Container(color: Colors.grey.shade300);
-    if (variedad['es_local'] == true) return Image.file(File(path), fit: BoxFit.cover);
-    if (path.startsWith('assets/')) return Image.asset(path, fit: BoxFit.cover);
-    return Image.network(path, fit: BoxFit.cover);
+    if (path == null) return const Center(child: Icon(Icons.image_not_supported, color: Colors.white, size: 50));
+    
+    ImageProvider imgProvider;
+    if (variedad['es_local'] == true) {
+      imgProvider = FileImage(File(path));
+    } else if (path.startsWith('assets/')) {
+      imgProvider = AssetImage(path);
+    } else {
+      imgProvider = NetworkImage(path);
+    }
+
+    // STACK: Fondo Blurreer + Imagen Contain
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Fondo blurreado (ocupa todo y da ambiente)
+        Image(
+          image: imgProvider,
+          fit: BoxFit.cover,
+        ),
+        // Máscara de blur
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            color: Colors.black.withOpacity(0.3), // Un poco de oscurecimiento
+          ),
+        ),
+        
+        // 2. La imagen real nítida encima, top center
+        Align(
+          alignment: Alignment.topCenter,
+          child: Image(
+             image: imgProvider,
+             fit: BoxFit.contain,
+             alignment: Alignment.topCenter,
+          ),
+        ),
+      ],
+    );
   }
 }
