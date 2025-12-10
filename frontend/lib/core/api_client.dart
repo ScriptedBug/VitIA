@@ -149,14 +149,26 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     }
   }
 
-  // 3. Crear nueva publicación (Para el futuro botón "+")
-  Future<void> createPublicacion(String titulo, String texto) async {
+  // 3. Crear nueva publicación (con soporte para imagen)
+  Future<void> createPublicacion(String titulo, String texto, {XFile? imageFile}) async {
     try {
-      await _dio.post('/publicaciones/', data: {
+      final Map<String, dynamic> dataMap = {
         "titulo": titulo,
         "texto": texto,
-        "links_fotos": [] // Por ahora lista vacía, luego podrás subir fotos
-      });
+      };
+
+      if (imageFile != null) {
+        final bytes = await imageFile.readAsBytes();
+        dataMap['file'] = MultipartFile.fromBytes(
+          bytes,
+          filename: imageFile.name,
+          contentType: MediaType('image', 'jpeg'), // Ajustar si es necesario
+        );
+      }
+
+      final formData = FormData.fromMap(dataMap);
+
+      await _dio.post('/publicaciones/', data: formData);
     } catch (e) {
       print("Error al crear publicación: $e");
       rethrow;
@@ -243,6 +255,17 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
       print("Error al obtener el estado del tutorial (GET /users/me): $e");
       // Fallback defensivo: Si falla (401, red), asumimos true para no bloquear el build
       return true; 
+    }
+  }
+
+  /// Obtiene la información del usuario actual (GET /users/me).
+  Future<Map<String, dynamic>> getMe() async {
+    try {
+      final response = await _dio.get('/users/me');
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      print("Error al obtener perfil usuario: $e");
+      rethrow;
     }
   }
 

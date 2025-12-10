@@ -14,7 +14,7 @@ imagekit = ImageKit(
     url_endpoint=os.getenv("IMAGEKIT_URL_ENDPOINT")
 )
 
-def upload_image_to_imagekit(file_bytes: bytes, filename: str) -> str:
+def upload_image_to_imagekit(file_bytes: bytes, filename: str, folder: str = "/vitia") -> str:
     try:
         encoded_string = base64.b64encode(file_bytes).decode("utf-8")
 
@@ -30,7 +30,7 @@ def upload_image_to_imagekit(file_bytes: bytes, filename: str) -> str:
             file=encoded_string,
             file_name=unique_filename,
             options=UploadFileRequestOptions(
-                folder="/vitia",
+                folder=folder,
                 is_private_file=False, # Asegúrate de que sea pública
                 use_unique_file_name=True,
                 tags=["vitia-app"]

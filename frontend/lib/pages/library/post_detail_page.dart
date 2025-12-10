@@ -103,6 +103,40 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
+  Future<void> _borrarPublicacion() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Eliminar publicación"),
+        content: const Text("¿Estás seguro de que quieres eliminar esta publicación?"),
+        actions: [
+          TextButton(child: const Text("Cancelar"), onPressed: () => Navigator.pop(ctx, false)),
+          TextButton(child: const Text("Eliminar", style: TextStyle(color: Colors.red)), onPressed: () => Navigator.pop(ctx, true)),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // Mostrar indicador de carga o bloquear UI
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Eliminando...")));
+    }
+
+    try {
+      await _apiClient.deletePublicacion(widget.post['id']);
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Publicación eliminada")));
+        Navigator.pop(context, true); // Retornar true para indicar que se eliminó
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error al eliminar: $e")));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,6 +146,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
         elevation: 0,
         leading: const BackButton(color: Colors.black),
         title: const Text("Hilo", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        actions: [
+          if (widget.post['isMine'] == true)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.black),
+              onPressed: _borrarPublicacion,
+            ),
+        ],
       ),
       body: Column( // Cambiado a Column para dejar campo de texto abajo
         children: [
