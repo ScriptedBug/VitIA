@@ -4,6 +4,7 @@ import '../../core/services/api_config.dart';
 import '../../core/services/user_sesion.dart';
 import 'post_detail_page.dart';
 import 'create_post_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ForoPage extends StatefulWidget {
   const ForoPage({super.key});
@@ -174,13 +175,11 @@ class _ForoPageState extends State<ForoPage>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Comunidad",
-                              style: TextStyle(
-                                  fontFamily:
-                                      'Serif', // O usa GoogleFonts.playfairDisplay()
+                          Text("Comunidad",
+                              style: GoogleFonts.lora(
                                   fontSize: 34,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF1A1A1A))),
+                                  color: const Color(0xFF1A1A1A))),
                           IconButton(
                             icon: const Icon(Icons.search, size: 28),
                             onPressed: () {},
@@ -213,15 +212,14 @@ class _ForoPageState extends State<ForoPage>
 
               // 3. SECCIÓN POPULARES (Solo si estamos en 'Todos')
               if (_selectedTab == 0) ...[
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
                     child: Text("Populares",
-                        style: TextStyle(
-                            fontFamily: 'Serif',
+                        style: GoogleFonts.lora(
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF2A2A2A))),
+                            color: const Color(0xFF2A2A2A))),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -256,15 +254,14 @@ class _ForoPageState extends State<ForoPage>
               ],
 
               // 4. SECCIÓN RECIENTES (Encabezado)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
                   child: Text("Recientes",
-                      style: TextStyle(
-                          fontFamily: 'Serif',
+                      style: GoogleFonts.lora(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF2A2A2A))),
+                          color: const Color(0xFF2A2A2A))),
                 ),
               ),
 

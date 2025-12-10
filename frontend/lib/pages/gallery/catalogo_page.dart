@@ -11,6 +11,7 @@ import '../../pages/capture/foto_page.dart';
 import '../../pages/main_layout/home_page.dart';
 import 'detalle_coleccion_page.dart';
 import 'user_variety_detail_page.dart'; // <--- NUEVA PÁGINA
+import 'package:google_fonts/google_fonts.dart';
 
 class CatalogoPage extends StatefulWidget {
   // ⬅️ CLASE RENOMBRADA A CATÁLOGO
@@ -55,6 +56,10 @@ class _CatalogoPageState extends State<CatalogoPage>
 
   bool _isLoading = true;
   ApiClient? _apiClient; // Usa ? para evitar problemas de late si algo falla
+
+  // --- NUEVOS CONTROLADORES DE FILTRO ---
+  String _currentSort = 'az'; // 'az', 'za'
+  String _currentFilterColor = 'all'; // 'all', 'blanca', 'tinta'
 
   @override
   void initState() {
@@ -222,19 +227,174 @@ class _CatalogoPageState extends State<CatalogoPage>
 
   void _filtrar(String query) {
     setState(() {
-      // Filtramos la lista activa según la pestaña
-      if (_tabController.index == 0) {
-        _filtradas = _variedades
-            .where(
-                (v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
-            .toList();
+      // 1. Elegir la lista base según la pestaña
+      List<Map<String, dynamic>> baseList =
+          (_tabController.index == 0) ? _variedades : _coleccionUsuario;
+
+      // 2. Filtrar por TEXTO
+      var temp = baseList
+          .where((v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
+          .toList();
+
+      // 3. Filtrar por COLOR
+      if (_currentFilterColor != 'all') {
+        final target = _currentFilterColor == 'blanca' ? 'Blanca' : 'Negra';
+        // Ajustamos para que coincida con 'tipo' o 'color' que venga del backend
+        temp = temp.where((v) {
+          final tipo = v['tipo'].toString();
+          // A veces viene "Blanca", otras "blanca". Normalizamos.
+          return tipo.toLowerCase() == target.toLowerCase();
+        }).toList();
+      }
+
+      // 4. ORDENAR (Sort)
+      if (_currentSort == 'az') {
+        temp.sort((a, b) => a['nombre'].compareTo(b['nombre']));
       } else {
-        _filtradasColeccion = _coleccionUsuario
-            .where(
-                (v) => v['nombre'].toLowerCase().contains(query.toLowerCase()))
-            .toList();
+        temp.sort((a, b) => b['nombre'].compareTo(a['nombre']));
+      }
+
+      // 5. Asignar al estado correspondiente
+      if (_tabController.index == 0) {
+        _filtradas = temp;
+      } else {
+        _filtradasColeccion = temp;
       }
     });
+  }
+
+  void _mostrarMenuFiltros(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        builder: (ctx) {
+          return StatefulBuilder(builder: (ctx, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Filtrar y Ordenar",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Cierra el modal
+                        },
+                        child: const Text("Aplicar",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text("Orden",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      ActionChip(
+                        label: const Text("A - Z"),
+                        backgroundColor: _currentSort == 'az'
+                            ? Colors.black
+                            : Colors.grey.shade100,
+                        labelStyle: TextStyle(
+                            color: _currentSort == 'az'
+                                ? Colors.white
+                                : Colors.black),
+                        onPressed: () {
+                          setModalState(() => _currentSort = 'az');
+                          _filtrar(_searchController.text);
+                          setState(() {}); // Actualiza la pantalla principal
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      ActionChip(
+                        label: const Text("Z - A"),
+                        backgroundColor: _currentSort == 'za'
+                            ? Colors.black
+                            : Colors.grey.shade100,
+                        labelStyle: TextStyle(
+                            color: _currentSort == 'za'
+                                ? Colors.white
+                                : Colors.black),
+                        onPressed: () {
+                          setModalState(() => _currentSort = 'za');
+                          _filtrar(_searchController.text);
+                          setState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text("Tipo de Uva",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      ActionChip(
+                        label: const Text("Todas"),
+                        backgroundColor: _currentFilterColor == 'all'
+                            ? Colors.black
+                            : Colors.grey.shade100,
+                        labelStyle: TextStyle(
+                            color: _currentFilterColor == 'all'
+                                ? Colors.white
+                                : Colors.black),
+                        onPressed: () {
+                          setModalState(() => _currentFilterColor = 'all');
+                          _filtrar(_searchController.text);
+                          setState(() {});
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      ActionChip(
+                        label: const Text("Blanca"),
+                        backgroundColor: _currentFilterColor == 'blanca'
+                            ? const Color(0xFF8B8000)
+                            : Colors.grey.shade100, // Gold
+                        labelStyle: TextStyle(
+                            color: _currentFilterColor == 'blanca'
+                                ? Colors.white
+                                : Colors.black),
+                        onPressed: () {
+                          setModalState(() => _currentFilterColor = 'blanca');
+                          _filtrar(_searchController.text);
+                          setState(() {});
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      ActionChip(
+                        label: const Text("Negra"),
+                        backgroundColor: _currentFilterColor == 'tinta'
+                            ? const Color(0xFF800020)
+                            : Colors.grey.shade100, // Burgundy
+                        labelStyle: TextStyle(
+                            color: _currentFilterColor == 'tinta'
+                                ? Colors.white
+                                : Colors.black),
+                        onPressed: () {
+                          setModalState(() => _currentFilterColor = 'tinta');
+                          _filtrar(_searchController.text);
+                          setState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          });
+        });
   }
 
   void _abrirCamara() {
@@ -480,37 +640,36 @@ class _CatalogoPageState extends State<CatalogoPage>
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Card(
-        margin: EdgeInsets.zero,
-        elevation: 1.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Container(
+        // Mismo diseño de contenedor que la colección
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade500),
+        ),
         child: InkWell(
+          borderRadius: BorderRadius.circular(20),
           onTap: () async {
-            // Hazlo async
             if (isColeccion) {
               final resultado = await Navigator.push(
-                // Espera el resultado
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
                       DetalleColeccionPage(coleccionItem: variedad),
                 ),
               );
-
-              // Si devolvió 'true', significa que borramos o editamos algo -> Recargar lista
               if (resultado == true) {
                 _cargarColeccionBackend();
               }
             } else {
-              // SI ES BIBLIOTECA -> Navegación interna (Master-Detail)
               setState(() {
                 _variedadSeleccionada = variedad;
               });
             }
           },
-          borderRadius: BorderRadius.circular(15),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(
+                20.0), // Padding aumentado a 20 como en colección
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -518,32 +677,29 @@ class _CatalogoPageState extends State<CatalogoPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        variedad['region'] ?? 'Región Desconocida',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 2),
+                      // Nombre con estilo Serif
                       Text(
                         variedad['nombre'],
-                        style: const TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.lora(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF1E2623)),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
+
+                      // Pill de Tipo con colores Gold/Burgundy
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: isBlanca
-                              ? Colors.lime.shade700
-                              : Colors.purple.shade900,
-                          borderRadius: BorderRadius.circular(5),
+                              ? const Color(0xFF8B8000).withOpacity(0.8)
+                              : const Color(0xFF800020).withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           variedad['tipo'],
-                          style: const TextStyle(
+                          style: GoogleFonts.lora(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.bold),
@@ -552,26 +708,30 @@ class _CatalogoPageState extends State<CatalogoPage>
                     ],
                   ),
                 ),
-                // Miniatura de imagen
+                // Imagen mantenida
+                const SizedBox(width: 16),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius:
+                      BorderRadius.circular(15), // Radio un poco más suave
                   child: imagenPath != null
                       ? Image.network(
                           imagenPath,
-                          width: 70,
-                          height: 70,
+                          width: 80, // Un poco más grande
+                          height: 80,
                           fit: BoxFit.cover,
                           errorBuilder: (c, e, s) => Container(
-                              width: 70,
-                              height: 70,
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.broken_image)),
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.broken_image,
+                                  color: Colors.grey)),
                         )
                       : Container(
-                          width: 70,
-                          height: 70,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.wine_bar)),
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[200],
+                          child:
+                              const Icon(Icons.wine_bar, color: Colors.grey)),
                 ),
               ],
             ),
@@ -615,7 +775,7 @@ class _CatalogoPageState extends State<CatalogoPage>
             child: InkWell(
               // InkWell para el efecto de splash al pulsar (opcional)
               onTap: () {
-                // Lógica para abrir filtros
+                _mostrarMenuFiltros(context);
               },
               customBorder:
                   const CircleBorder(), // Asegura que el splash sea circular
@@ -736,7 +896,7 @@ class _CatalogoPageState extends State<CatalogoPage>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: Colors.grey.shade500),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
@@ -754,25 +914,18 @@ class _CatalogoPageState extends State<CatalogoPage>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      item['region'] ??
-                          "Comunidad Valenciana", // Placeholder si es null
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.bold),
-                    ),
+                    // Text removed
+                    const Spacer(),
                     const Icon(Icons.favorite, size: 20, color: Colors.black)
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
                   nombre,
-                  style: const TextStyle(
-                    fontFamily: 'Serif',
+                  style: GoogleFonts.lora(
                     fontSize: 28,
                     fontWeight: FontWeight.w400, // Letra estilo display
-                    color: Color(0xFF1E2623),
+                    color: const Color(0xFF1E2623),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -916,22 +1069,15 @@ class _CatalogoPageState extends State<CatalogoPage>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Biblioteca",
-                    style: TextStyle(
-                      fontFamily:
-                          'Serif', // O usa GoogleFonts.dmSerifDisplay() si tienes el paquete
+                    style: GoogleFonts.lora(
                       fontSize: 32,
                       fontWeight: FontWeight.w400, // Letra más fina/elegante
-                      color: Color(0xFF1E2623),
+                      color: const Color(0xFF1E2623),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.search, size: 28),
-                    onPressed: () {
-                      // Acción de búsqueda global si se desea
-                    },
-                  )
+                  // IconButton Removed
                 ],
               ),
             ),
@@ -981,7 +1127,12 @@ class _CatalogoPageState extends State<CatalogoPage>
                   // --- PESTAÑA 1: TODAS ---
                   CustomScrollView(
                     slivers: [
-                      // Sección Favoritos (scrollea con la página)
+                      // 1. Buscador y Filtros (MOVIDO ARRIBA)
+                      SliverToBoxAdapter(
+                        child: _buildSearchBarAndFilters(),
+                      ),
+
+                      // 2. Sección Favoritos (scrollea con la página)
                       SliverToBoxAdapter(
                         child: _buildFavoritosSection(),
                       ),
@@ -991,23 +1142,18 @@ class _CatalogoPageState extends State<CatalogoPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildSearchBarAndFilters(),
+                            // _buildSearchBarAndFilters() moved up
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24.0, vertical: 12.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Todas las variedades',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey.shade800,
-                                        fontWeight: FontWeight.normal),
-                                  ),
-                                  const Icon(Icons.filter_list, size: 20),
-                                ],
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Todas las variedades (${_filtradas.length})',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey),
+                                ),
                               ),
                             ),
                           ],
@@ -1056,14 +1202,16 @@ class _CatalogoPageState extends State<CatalogoPage>
                           children: [
                             _buildSearchBarAndFilters(), // Buscador específico de colección
                             Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24.0, vertical: 12.0),
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                    "Mis Capturas (${_filtradasColeccion.length})",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey)),
+                                  "Mis variedades (${_filtradasColeccion.length})",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey),
+                                ),
                               ),
                             ),
                             Expanded(

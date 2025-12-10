@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 import 'detalle_coleccion_page.dart';
 import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
@@ -197,9 +198,8 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                             // Title & Region
                             Text(
                               widget.varietyInfo['nombre'] ?? 'Sin Nombre',
-                              style: const TextStyle(
+                              style: GoogleFonts.lora(
                                 fontSize: 32,
-                                fontFamily: 'Serif',
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
@@ -217,23 +217,13 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                                   child: Text(
                                     (widget.varietyInfo['tipo'] ?? 'Personal')
                                         .toUpperCase(),
-                                    style: TextStyle(
+                                    style: GoogleFonts.lora(
                                         color: colorTema,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 10),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Icon(Icons.location_on,
-                                    size: 16, color: Colors.grey.shade600),
-                                const SizedBox(width: 4),
-                                Text(
-                                  widget.varietyInfo['region'] ??
-                                      'Región Desconocida',
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade600),
-                                ),
+                                // Region removed
                               ],
                             ),
                           ],
@@ -251,7 +241,7 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                           children: [
                             Text(
                               "Mis fotos (${_captures.length})",
-                              style: const TextStyle(
+                              style: GoogleFonts.lora(
                                   fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             if (_isLoading)

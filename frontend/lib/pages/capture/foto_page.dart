@@ -11,6 +11,7 @@ import '../../core/services/user_sesion.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart'; // Standard date formatting if available, or just use raw strings
+import 'package:google_fonts/google_fonts.dart';
 
 class GroupedResult {
   final String variety;
@@ -22,7 +23,10 @@ class GroupedResult {
   final double? latitude;
   final double? longitude;
 
-  GroupedResult(this.variety, this.confidence, this.photos, {
+  GroupedResult(
+    this.variety,
+    this.confidence,
+    this.photos, {
     Set<String>? selected,
     required this.date,
     required this.location,
@@ -38,31 +42,30 @@ class FotoPage extends StatefulWidget {
   State<FotoPage> createState() => _FotoPageState();
 }
 
-
-
 class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _useSimulatedCamera = false;
-  
+
   // States: 0 = Capture/Gallery, 1 = Analysis/Loading, 2 = Result
-  int _uiState = 0; 
+  int _uiState = 0;
   bool _isSaving = false;
 
   List<XFile> _capturedPhotos = [];
-  
+
   // Now we store a LIST of groups
   List<GroupedResult> _results = [];
-  
+
   // Controller for the currently viewed result (if we have multiple varieties, we page them)
   final PageController _resultPageController = PageController();
   int _currentResultIndex = 0;
 
   late ApiClient _apiClient;
   final ImagePicker _picker = ImagePicker();
-  
+
   // Controllers map: Index in _results -> TextEditingController
-  final String _fallbackImage = 'https://images.unsplash.com/photo-1596244956306-a9df17907407?q=80&w=1974&auto=format&fit=crop';
+  final String _fallbackImage =
+      'https://images.unsplash.com/photo-1596244956306-a9df17907407?q=80&w=1974&auto=format&fit=crop';
 
   @override
   void initState() {
@@ -88,8 +91,6 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     }
   }
 
-
-
   Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
@@ -104,7 +105,8 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       );
       await _cameraController!.initialize();
       try {
-        await _cameraController!.lockCaptureOrientation(DeviceOrientation.portraitUp);
+        await _cameraController!
+            .lockCaptureOrientation(DeviceOrientation.portraitUp);
       } catch (_) {}
       if (mounted) setState(() => _isCameraInitialized = true);
     } catch (e) {
@@ -127,11 +129,11 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     try {
       XFile photo;
       if (_useSimulatedCamera) {
-         photo = XFile('simulated_path');
+        photo = XFile('simulated_path');
       } else {
         photo = await _cameraController!.takePicture();
       }
-      
+
       setState(() {
         _capturedPhotos.add(photo);
       });
@@ -173,36 +175,42 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       // Safe Location Fetch
       Position? position;
       String locationStr = "Ubicación desconocida";
-      
+
       try {
-         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-         if (serviceEnabled) {
-            LocationPermission permission = await Geolocator.checkPermission();
-            if (permission == LocationPermission.denied) {
-              permission = await Geolocator.requestPermission();
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (serviceEnabled) {
+          LocationPermission permission = await Geolocator.checkPermission();
+          if (permission == LocationPermission.denied) {
+            permission = await Geolocator.requestPermission();
+          }
+
+          if (permission == LocationPermission.whileInUse ||
+              permission == LocationPermission.always) {
+            // Get position with timeout
+            position = await Geolocator.getCurrentPosition(
+                timeLimit: const Duration(seconds: 5));
+
+            // Reverse Geocoding
+            List<Placemark> placemarks = await placemarkFromCoordinates(
+                position.latitude, position.longitude);
+            if (placemarks.isNotEmpty) {
+              final place = placemarks.first;
+              locationStr =
+                  "${place.locality ?? ''}, ${place.administrativeArea ?? ''}"
+                      .trim()
+                      .replaceAll(RegExp(r'^, |,$'), '');
+              if (locationStr.isEmpty) locationStr = "Ubicación guardada";
             }
-            
-            if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-               // Get position with timeout
-               position = await Geolocator.getCurrentPosition(timeLimit: const Duration(seconds: 5));
-               
-               // Reverse Geocoding
-               List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-               if (placemarks.isNotEmpty) {
-                  final place = placemarks.first;
-                  locationStr = "${place.locality ?? ''}, ${place.administrativeArea ?? ''}".trim().replaceAll(RegExp(r'^, |,$'), '');
-                  if (locationStr.isEmpty) locationStr = "Ubicación guardada";
-               }
-            }
-         }
+          }
+        }
       } catch (e) {
-         debugPrint("Location Error: $e");
-         // Fallback for simulation/testing
-         if (_useSimulatedCamera) {
-            locationStr = "Requena, Valencia (Sim)";
-            // Mock coords
-            // position = Position(longitude: -1.1, latitude: 39.4, timestamp: DateTime.now(), accuracy: 1, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0, altitudeAccuracy: 0, headingAccuracy: 0); 
-         }
+        debugPrint("Location Error: $e");
+        // Fallback for simulation/testing
+        if (_useSimulatedCamera) {
+          locationStr = "Requena, Valencia (Sim)";
+          // Mock coords
+          // position = Position(longitude: -1.1, latitude: 39.4, timestamp: DateTime.now(), accuracy: 1, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0, altitudeAccuracy: 0, headingAccuracy: 0);
+        }
       }
 
       final DateTime now = DateTime.now();
@@ -214,21 +222,21 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       for (var photo in _capturedPhotos) {
         String variety = "Desconocido";
         double confidence = 0.0;
-        
+
         // Simulation Check
         if (_useSimulatedCamera && photo.path == 'simulated_path') {
-           await Future.delayed(const Duration(milliseconds: 500));
-           variety = "Moscatel";
-           confidence = 98.2;
+          await Future.delayed(const Duration(milliseconds: 500));
+          variety = "Moscatel";
+          confidence = 98.2;
         } else {
-           // Real API
-           final predictions = await _apiClient.predictImage(photo);
-           if (predictions != null && predictions.isNotEmpty) {
-             variety = predictions.first.variedad;
-             confidence = predictions.first.confianza;
-           }
+          // Real API
+          final predictions = await _apiClient.predictImage(photo);
+          if (predictions != null && predictions.isNotEmpty) {
+            variety = predictions.first.variedad;
+            confidence = predictions.first.confianza;
+          }
         }
-        
+
         if (!grouping.containsKey(variety)) {
           grouping[variety] = [];
         }
@@ -239,33 +247,30 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       final List<GroupedResult> finalResults = [];
       grouping.forEach((key, list) {
         // Calculate average confidence or max
-        double avgConf = list.map((e) => e.key).reduce((a, b) => a + b) / list.length;
+        double avgConf =
+            list.map((e) => e.key).reduce((a, b) => a + b) / list.length;
         List<XFile> photos = list.map((e) => e.value).toList();
-        finalResults.add(GroupedResult(
-          key, 
-          avgConf, 
-          photos,
-          date: now,
-          location: locationStr,
-          latitude: position?.latitude,
-          longitude: position?.longitude
-        ));
+        finalResults.add(GroupedResult(key, avgConf, photos,
+            date: now,
+            location: locationStr,
+            latitude: position?.latitude,
+            longitude: position?.longitude));
       });
-      finalResults.sort((a,b) => b.photos.length.compareTo(a.photos.length));
+      finalResults.sort((a, b) => b.photos.length.compareTo(a.photos.length));
 
       if (mounted) {
         setState(() {
           _results = finalResults;
-          
+
           if (_results.isEmpty) {
-             _uiState = 0;
-             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No se pudo identificar nada.")));
+            _uiState = 0;
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("No se pudo identificar nada.")));
           } else {
-             _uiState = 2;
+            _uiState = 2;
           }
         });
       }
-      
     } catch (e) {
       if (mounted) {
         setState(() => _uiState = 0);
@@ -275,91 +280,98 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       }
     }
   }
-  
+
   Future<void> _saveCurrentResult() async {
-     if (_results.isEmpty) return;
-     
-     final currentGroup = _results[_currentResultIndex];
-     final nameToSave = currentGroup.variety;
-     
-     final photosToSave = currentGroup.photos.where((p) => currentGroup.selectedPaths.contains(p.path)).toList();
-    
-     if (photosToSave.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Selecciona al menos una foto para guardar.")));
-        return;
-     }
+    if (_results.isEmpty) return;
 
-     setState(() => _isSaving = true);
+    final currentGroup = _results[_currentResultIndex];
+    final nameToSave = currentGroup.variety;
 
-     try {
-       int successCount = 0;
-       // Save ALL selected photos in this group
-       for (var photo in photosToSave) {
-          if (_useSimulatedCamera && photo.path == 'simulated_path') continue;
-          
-          await _apiClient.saveToCollection(
-            imageFile: photo,
-            nombreVariedad: nameToSave,
-            notas: "Identificado con VitIA (${currentGroup.confidence.toStringAsFixed(1)}%)",
-            lat: currentGroup.latitude,
-            lon: currentGroup.longitude,
+    final photosToSave = currentGroup.photos
+        .where((p) => currentGroup.selectedPaths.contains(p.path))
+        .toList();
+
+    if (photosToSave.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Selecciona al menos una foto para guardar.")));
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      int successCount = 0;
+      // Save ALL selected photos in this group
+      for (var photo in photosToSave) {
+        if (_useSimulatedCamera && photo.path == 'simulated_path') continue;
+
+        await _apiClient.saveToCollection(
+          imageFile: photo,
+          nombreVariedad: nameToSave,
+          notas:
+              "Identificado con VitIA (${currentGroup.confidence.toStringAsFixed(1)}%)",
+          lat: currentGroup.latitude,
+          lon: currentGroup.longitude,
+        );
+        successCount++;
+      }
+
+      if (mounted) {
+        if (successCount > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text('¡$successCount fotos guardadas en "$nameToSave"!'),
+                backgroundColor: Colors.green),
           );
-          successCount++;
-       }
-       
-       if (mounted) {
-         if (successCount > 0) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('¡$successCount fotos guardadas en "$nameToSave"!'), backgroundColor: Colors.green),
-            );
-         } else {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Simulación: No se guardó nada.")));
-         }
-         
-         // Remove THIS group from list
-         setState(() {
-           _results.removeAt(_currentResultIndex);
-           // Adjust index if needed
-           if (_currentResultIndex >= _results.length) {
-             _currentResultIndex = _results.length - 1;
-           }
-           
-           // If no more results, reset everything
-           if (_results.isEmpty) {
-             _reset();
-           } else {
-             // Force PageView to jump to valid page if index shifted? 
-             // PageView controller is tricky when list creates shifts.
-             // Simplest: Replace PageController if index invalid, or just jump
-             if (_resultPageController.hasClients) {
-                // Wait next frame to jump safely? Or just rebuild will handle?
-             }
-           }
-         });
-       }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Simulación: No se guardó nada.")));
+        }
 
-     } catch (e) {
-       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-         );
-       }
-     } finally {
-       if (mounted) setState(() => _isSaving = false);
-     }
+        // Remove THIS group from list
+        setState(() {
+          _results.removeAt(_currentResultIndex);
+          // Adjust index if needed
+          if (_currentResultIndex >= _results.length) {
+            _currentResultIndex = _results.length - 1;
+          }
+
+          // If no more results, reset everything
+          if (_results.isEmpty) {
+            _reset();
+          } else {
+            // Force PageView to jump to valid page if index shifted?
+            // PageView controller is tricky when list creates shifts.
+            // Simplest: Replace PageController if index invalid, or just jump
+            if (_resultPageController.hasClients) {
+              // Wait next frame to jump safely? Or just rebuild will handle?
+            }
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   void _discardCurrentResult() {
-     setState(() {
-       _results.removeAt(_currentResultIndex);
-       if (_currentResultIndex >= _results.length) {
-         _currentResultIndex = _results.length - 1;
-       }
-       
-       if (_results.isEmpty) {
-         _reset();
-       } 
-     });
+    setState(() {
+      _results.removeAt(_currentResultIndex);
+      if (_currentResultIndex >= _results.length) {
+        _currentResultIndex = _results.length - 1;
+      }
+
+      if (_results.isEmpty) {
+        _reset();
+      }
+    });
   }
 
   void _reset() {
@@ -377,7 +389,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      resizeToAvoidBottomInset: false, 
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // 1. Camera Layer
@@ -387,7 +399,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
 
           // 2. Camera Controls
           if (_uiState == 0) ...[
-             Positioned(
+            Positioned(
               left: 0, right: 0,
               top: MediaQuery.of(context).padding.top + 100,
               bottom: 350, // Moved up from 250
@@ -404,7 +416,6 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
 
           // 4. Draggable Bottom Sheet
           _buildDraggableSheet(),
-   
         ],
       ),
     );
@@ -433,21 +444,25 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
           GestureDetector(
             onTap: _takePhoto,
             child: Container(
-              width: 72, height: 72,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 4),
               ),
               child: Center(
                 child: Container(
-                  width: 62, height: 62,
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  width: 62,
+                  height: 62,
+                  decoration: const BoxDecoration(
+                      color: Colors.white, shape: BoxShape.circle),
                 ),
               ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.cameraswitch_outlined, color: Colors.white, size: 28),
+            icon: const Icon(Icons.cameraswitch_outlined,
+                color: Colors.white, size: 28),
             onPressed: () {},
           ),
         ],
@@ -461,17 +476,23 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     double initialSize = 0.4;
 
     // Check UI State for sizing
-    if (_uiState == 1) { 
-      initialSize = 0.6; minSize = 0.6; maxSize = 0.6;
-    } else if (_uiState == 2) { 
-      initialSize = 0.65; minSize = 0.5; maxSize = 1.0;
+    if (_uiState == 1) {
+      initialSize = 0.6;
+      minSize = 0.6;
+      maxSize = 0.6;
+    } else if (_uiState == 2) {
+      initialSize = 0.65;
+      minSize = 0.5;
+      maxSize = 1.0;
     } else {
       // CAPTURE STATE: Start at 0.2 (sticks out slightly)
-      initialSize = 0.2; minSize = 0.2; maxSize = 1.0; 
+      initialSize = 0.2;
+      minSize = 0.2;
+      maxSize = 1.0;
     }
 
     return DraggableScrollableSheet(
-      key: ValueKey(_uiState), 
+      key: ValueKey(_uiState),
       initialChildSize: initialSize,
       minChildSize: minSize,
       maxChildSize: maxSize,
@@ -479,43 +500,49 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, -2))]
-          ),
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    offset: Offset(0, -2))
+              ]),
           // Move padding to content or keep here? Keep here but allow sliver to scroll top area?
           // Actually, if we put handle in scroll view, we need the container to clip?
           // The container provides the white background.
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                controller: scrollController,
-                physics: const ClampingScrollPhysics(), // Better for sheet connection
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight, 
-                  ),
-                  child: Column(
-                    children: [
-                       const SizedBox(height: 12),
-                       // HANDLE IS NOW PART OF SCROLLABLE CONTENT
-                       Center(
-                        child: Container(
-                          width: 40, height: 4,
-                          decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: _buildSheetContent(),
-                      ),
-                    ],
-                  ),
+          child: LayoutBuilder(builder: (context, constraints) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              physics:
+                  const ClampingScrollPhysics(), // Better for sheet connection
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-              );
-            }
-          ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    // HANDLE IS NOW PART OF SCROLLABLE CONTENT
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _buildSheetContent(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         );
       },
     );
@@ -537,58 +564,61 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           "Fotos capturadas",
-          style: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.w400, fontFamily: 'Serif', color: Colors.black87,
+          style: GoogleFonts.lora(
+            fontSize: 24,
+            fontWeight: FontWeight.w400,
+            color: Colors.black87,
           ),
         ),
         const SizedBox(height: 16),
-        
         GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.0,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              ..._capturedPhotos.map((file) => Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: kIsWeb 
-                        ? Image.network(file.path, fit: BoxFit.cover)
-                        : Image.file(File(file.path), fit: BoxFit.cover),
-                  ),
-                  Positioned(
-                    top: 8, right: 8,
-                    child: GestureDetector(
-                      onTap: () => _removePhoto(_capturedPhotos.indexOf(file)),
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 12,
-                        child: Icon(Icons.close, size: 14, color: Colors.black),
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.0,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            ..._capturedPhotos.map((file) => Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: kIsWeb
+                          ? Image.network(file.path, fit: BoxFit.cover)
+                          : Image.file(File(file.path), fit: BoxFit.cover),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () =>
+                            _removePhoto(_capturedPhotos.indexOf(file)),
+                        child: const CircleAvatar(
+                          backgroundColor: Colors.white,
+                          radius: 12,
+                          child:
+                              Icon(Icons.close, size: 14, color: Colors.black),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              )),
-             GestureDetector(
-               onTap: _pickFromGallery,
-               child: Container(
-                 decoration: BoxDecoration(
-                   color: Colors.white,
-                   borderRadius: BorderRadius.circular(16),
-                   border: Border.all(color: Colors.grey[300]!),
-                 ),
-                 child: const Icon(Icons.collections, color: Colors.black54),
-               ),
-             ),
-            ],
+                  ],
+                )),
+            GestureDetector(
+              onTap: _pickFromGallery,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: const Icon(Icons.collections, color: Colors.black54),
+              ),
+            ),
+          ],
         ),
-        
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
@@ -598,10 +628,12 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF8B8036),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28)),
               elevation: 0,
             ),
-            child: const Text("Identificar", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            child: const Text("Identificar",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ),
         const SizedBox(height: 80),
@@ -615,11 +647,15 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       children: [
         const SizedBox(height: 40),
         const SizedBox(
-          width: 60, height: 60,
-          child: CircularProgressIndicator(color: Color(0xFF8B1E5C), strokeWidth: 6),
+          width: 60,
+          height: 60,
+          child: CircularProgressIndicator(
+              color: Color(0xFF8B1E5C), strokeWidth: 6),
         ),
         const SizedBox(height: 24),
-        const Text("Identificando...", style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w500)),
+        const Text("Identificando...",
+            style: TextStyle(
+                fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -640,16 +676,19 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // HEADER with Counter (if multiple groups)
-              if (_results.length > 1) 
-                 Padding(
-                   padding: const EdgeInsets.only(bottom: 8.0),
-                   child: Text("Grupo ${index + 1} de ${_results.length} - ${group.photos.length} fotos", style: const TextStyle(color: Colors.grey)),
-                 ),
-              
+              if (_results.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                      "Grupo ${index + 1} de ${_results.length} - ${group.photos.length} fotos",
+                      style: const TextStyle(color: Colors.grey)),
+                ),
+
               // STATIC NAME
               Text(
                 group.variety,
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w400, fontFamily: 'Serif'),
+                style:
+                    GoogleFonts.lora(fontSize: 32, fontWeight: FontWeight.w400),
               ),
 
               Text(
@@ -657,120 +696,153 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 16),
-              
-              // MOSAIC GALLERY 
+
+              // MOSAIC GALLERY
               ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                     height: 400,
-                     color: Colors.grey[100],
-                     child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // THE MOSAIC WIDGET
-                        MosaicGallery(
-                          photos: group.photos,
-                          selectedPaths: group.selectedPaths,
-                          onSelectionChanged: (path, selected) {
-                             setState(() {
-                                if (selected) {
-                                  group.selectedPaths.add(path);
-                                } else {
-                                  group.selectedPaths.remove(path);
-                                }
-                             });
-                          },
-                        ),
-                        
-                        // Bottom Info Overlay
-                        Positioned(
-                          bottom: 12, left: 12, right: 12,
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.95),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                 Row(
-                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                   children: [
-                                     Text(DateFormat('dd/MM/yyyy').format(group.date), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                     Text(group.location, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                   ],
-                                 ),
-                                 const SizedBox(height: 12),
-                                 // BUTTON TO SAVE
-                                 SizedBox(
-                                   width: double.infinity,
-                                   height: 44,
-                                   child: ElevatedButton(
-                                     onPressed: _isSaving ? null : _saveCurrentResult,
-                                     style: ElevatedButton.styleFrom(
-                                       backgroundColor: Colors.grey[200],
-                                       foregroundColor: Colors.black54,
-                                       elevation: 0,
-                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22))
-                                     ),
-                                     child: _isSaving 
-                                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                       : const Text("Añadir a mi biblioteca"),
-                                   ),
-                                 ),
-                                 
-                                 // DISCARD BUTTON
-                                 Center(
-                                   child: TextButton(
-                                      onPressed: _isSaving ? null : _discardCurrentResult,
-                                      child: const Text("Descartar", style: TextStyle(color: Colors.grey, decoration: TextDecoration.underline)),
-                                   ),
-                                 )
-                              ],
-                            ),
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  height: 400,
+                  color: Colors.grey[100],
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // THE MOSAIC WIDGET
+                      MosaicGallery(
+                        photos: group.photos,
+                        selectedPaths: group.selectedPaths,
+                        onSelectionChanged: (path, selected) {
+                          setState(() {
+                            if (selected) {
+                              group.selectedPaths.add(path);
+                            } else {
+                              group.selectedPaths.remove(path);
+                            }
+                          });
+                        },
+                      ),
+
+                      // Bottom Info Overlay
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                      DateFormat('dd/MM/yyyy')
+                                          .format(group.date),
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold)),
+                                  Text(group.location,
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey)),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              // BUTTON TO SAVE
+                              SizedBox(
+                                width: double.infinity,
+                                height: 44,
+                                child: ElevatedButton(
+                                  onPressed:
+                                      _isSaving ? null : _saveCurrentResult,
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.grey[200],
+                                      foregroundColor: Colors.black54,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(22))),
+                                  child: _isSaving
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2))
+                                      : const Text("Añadir a mi biblioteca"),
+                                ),
+                              ),
+
+                              // DISCARD BUTTON
+                              Center(
+                                child: TextButton(
+                                  onPressed:
+                                      _isSaving ? null : _discardCurrentResult,
+                                  child: const Text("Descartar",
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          decoration:
+                                              TextDecoration.underline)),
+                                ),
+                              )
+                            ],
                           ),
                         ),
+                      ),
 
-                        // Navigation Arrows (only if multiple Groups)
-                        if (_results.length > 1) ...[
-                           if (index > 0)
-                             Positioned(
-                               left: 8, top: 0, bottom: 0,
-                               child: Center(
-                                 child: CircleAvatar(
-                                   backgroundColor: Colors.black26,
-                                   radius: 20,
-                                   child: IconButton(
-                                      icon: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
-                                      onPressed: () {
-                                        _resultPageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                                      },
-                                   ),
-                                 ),
-                               ),
-                             ),
-                           if (index < _results.length - 1)
-                             Positioned(
-                               right: 8, top: 0, bottom: 0,
-                               child: Center(
-                                 child: CircleAvatar(
-                                   backgroundColor: Colors.black26,
-                                   radius: 20,
-                                   child: IconButton(
-                                      icon: const Icon(Icons.chevron_right, color: Colors.white, size: 28),
-                                      onPressed: () {
-                                        _resultPageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                                      },
-                                   ),
-                                 ),
-                               ),
-                             ),
-                        ]
-                      ],
-                    ),
+                      // Navigation Arrows (only if multiple Groups)
+                      if (_results.length > 1) ...[
+                        if (index > 0)
+                          Positioned(
+                            left: 8,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: CircleAvatar(
+                                backgroundColor: Colors.black26,
+                                radius: 20,
+                                child: IconButton(
+                                  icon: const Icon(Icons.chevron_left,
+                                      color: Colors.white, size: 28),
+                                  onPressed: () {
+                                    _resultPageController.previousPage(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (index < _results.length - 1)
+                          Positioned(
+                            right: 8,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: CircleAvatar(
+                                backgroundColor: Colors.black26,
+                                radius: 20,
+                                child: IconButton(
+                                  icon: const Icon(Icons.chevron_right,
+                                      color: Colors.white, size: 28),
+                                  onPressed: () {
+                                    _resultPageController.nextPage(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                      ]
+                    ],
                   ),
+                ),
               ),
             ],
           );
@@ -785,12 +857,11 @@ class MosaicGallery extends StatelessWidget {
   final Set<String> selectedPaths;
   final Function(String, bool) onSelectionChanged;
 
-  const MosaicGallery({
-     super.key, 
-     required this.photos,
-     required this.selectedPaths,
-     required this.onSelectionChanged
-  });
+  const MosaicGallery(
+      {super.key,
+      required this.photos,
+      required this.selectedPaths,
+      required this.onSelectionChanged});
 
   void _showFullScreen(BuildContext context, int initialIndex) {
     showDialog(
@@ -807,19 +878,20 @@ class MosaicGallery extends StatelessWidget {
               itemBuilder: (context, index) {
                 final file = photos[index];
                 return InteractiveViewer(
-                   child: kIsWeb 
-                     ? Image.network(file.path, fit: BoxFit.contain)
-                     : Image.file(File(file.path), fit: BoxFit.contain),
+                  child: kIsWeb
+                      ? Image.network(file.path, fit: BoxFit.contain)
+                      : Image.file(File(file.path), fit: BoxFit.contain),
                 );
               },
             ),
-             Positioned(
-               top: 40, right: 20,
-               child: IconButton(
-                 icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                 onPressed: () => Navigator.pop(context),
-               ),
-             ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
           ],
         ),
       ),
@@ -830,7 +902,7 @@ class MosaicGallery extends StatelessWidget {
   Widget build(BuildContext context) {
     if (photos.isEmpty) return const SizedBox();
     if (photos.length == 1) return _img(context, photos[0], 0);
-    
+
     if (photos.length == 2) {
       return Row(children: [
         Expanded(child: _img(context, photos[0], 0)),
@@ -838,37 +910,40 @@ class MosaicGallery extends StatelessWidget {
         Expanded(child: _img(context, photos[1], 1)),
       ]);
     }
-    
+
     if (photos.length == 3) {
       return Row(children: [
-         Expanded(flex: 2, child: _img(context, photos[0], 0)),
-         const SizedBox(width: 2),
-         Expanded(child: Column(
-           children: [
-             Expanded(child: _img(context, photos[1], 1)),
-             const SizedBox(height: 2),
-             Expanded(child: _img(context, photos[2], 2)),
-           ],
-         ))
+        Expanded(flex: 2, child: _img(context, photos[0], 0)),
+        const SizedBox(width: 2),
+        Expanded(
+            child: Column(
+          children: [
+            Expanded(child: _img(context, photos[1], 1)),
+            const SizedBox(height: 2),
+            Expanded(child: _img(context, photos[2], 2)),
+          ],
+        ))
       ]);
     }
 
     // 4 or more
     return Column(children: [
-      Expanded(child: Row(children: [
+      Expanded(
+          child: Row(children: [
         Expanded(child: _img(context, photos[0], 0)),
         const SizedBox(width: 2),
         Expanded(child: _img(context, photos[1], 1)),
       ])),
       const SizedBox(height: 2),
-      Expanded(child: Row(children: [
+      Expanded(
+          child: Row(children: [
         Expanded(child: _img(context, photos[2], 2)),
         const SizedBox(width: 2),
-        Expanded(child: _img(context, photos[3], 3)), 
+        Expanded(child: _img(context, photos[3], 3)),
       ])),
     ]);
   }
-  
+
   Widget _img(BuildContext context, XFile file, int index) {
     final isSelected = selectedPaths.contains(file.path);
     return GestureDetector(
@@ -878,33 +953,35 @@ class MosaicGallery extends StatelessWidget {
         children: [
           Hero(
             tag: file.path,
-            child: kIsWeb 
-               ? Image.network(file.path, fit: BoxFit.cover)
-               : Image.file(File(file.path), fit: BoxFit.cover),
+            child: kIsWeb
+                ? Image.network(file.path, fit: BoxFit.cover)
+                : Image.file(File(file.path), fit: BoxFit.cover),
           ),
-          
+
           // Selection Overlay (Active if NOT selected)
-          if (!isSelected)
-             Container(color: Colors.white.withOpacity(0.4)),
-             
+          if (!isSelected) Container(color: Colors.white.withOpacity(0.4)),
+
           // Checkbox Toggle
           Positioned(
-            top: 8, right: 8,
+            top: 8,
+            right: 8,
             child: GestureDetector(
-               onTap: () => onSelectionChanged(file.path, !isSelected),
-               child: Container(
-                 width: 30, height: 30,
-                 decoration: const BoxDecoration(
-                   shape: BoxShape.circle,
-                   color: Colors.white,
-                   boxShadow: [BoxShadow(blurRadius: 4, color: Colors.black26)]
-                 ),
-                 child: Icon(
-                   isSelected ? Icons.check_circle : Icons.circle_outlined,
-                   color: isSelected ? const Color(0xFF8B8036) : Colors.grey,
-                   size: 28,
-                 ),
-               ),
+              onTap: () => onSelectionChanged(file.path, !isSelected),
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(blurRadius: 4, color: Colors.black26)
+                    ]),
+                child: Icon(
+                  isSelected ? Icons.check_circle : Icons.circle_outlined,
+                  color: isSelected ? const Color(0xFF8B8036) : Colors.grey,
+                  size: 28,
+                ),
+              ),
             ),
           )
         ],
@@ -913,30 +990,36 @@ class MosaicGallery extends StatelessWidget {
   }
 }
 
-  Widget _buildBottomNav() {
-    return Container(
-      height: 70, // Slightly taller
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF151D14), // Dark green/black
-        borderRadius: BorderRadius.circular(35),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(icon: const Icon(Icons.home_outlined, color: Colors.white54), onPressed: () {}),
-          Container(
-             decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-             padding: const EdgeInsets.all(8),
-             child: const Icon(Icons.camera_alt, color: Colors.black, size: 20),
-          ),
-          IconButton(icon: const Icon(Icons.book_outlined, color: Colors.white54), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.chat_bubble_outline, color: Colors.white54), onPressed: () {}),
-        ],
-      ),
-    );
-  }
-
+Widget _buildBottomNav() {
+  return Container(
+    height: 70, // Slightly taller
+    margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+    decoration: BoxDecoration(
+      color: const Color(0xFF151D14), // Dark green/black
+      borderRadius: BorderRadius.circular(35),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        IconButton(
+            icon: const Icon(Icons.home_outlined, color: Colors.white54),
+            onPressed: () {}),
+        Container(
+          decoration:
+              const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+          padding: const EdgeInsets.all(8),
+          child: const Icon(Icons.camera_alt, color: Colors.black, size: 20),
+        ),
+        IconButton(
+            icon: const Icon(Icons.book_outlined, color: Colors.white54),
+            onPressed: () {}),
+        IconButton(
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white54),
+            onPressed: () {}),
+      ],
+    ),
+  );
+}
 
 // Custom Painter for the brackets
 class ScannerOverlay extends StatelessWidget {
@@ -945,7 +1028,8 @@ class ScannerOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
-        width: 250, height: 250,
+        width: 250,
+        height: 250,
         child: CustomPaint(painter: ScannerCornerPainter()),
       ),
     );
@@ -965,28 +1049,43 @@ class ScannerCornerPainter extends CustomPainter {
     double radius = 24.0;
 
     // TL
-    canvas.drawPath(Path()
-      ..moveTo(0, length)..lineTo(0, radius)
-      ..arcToPoint(Offset(radius, 0), radius: Radius.circular(radius))
-      ..lineTo(length, 0), paint);
+    canvas.drawPath(
+        Path()
+          ..moveTo(0, length)
+          ..lineTo(0, radius)
+          ..arcToPoint(Offset(radius, 0), radius: Radius.circular(radius))
+          ..lineTo(length, 0),
+        paint);
 
     // TR
-    canvas.drawPath(Path()
-      ..moveTo(size.width - length, 0)..lineTo(size.width - radius, 0)
-      ..arcToPoint(Offset(size.width, radius), radius: Radius.circular(radius))
-      ..lineTo(size.width, length), paint);
+    canvas.drawPath(
+        Path()
+          ..moveTo(size.width - length, 0)
+          ..lineTo(size.width - radius, 0)
+          ..arcToPoint(Offset(size.width, radius),
+              radius: Radius.circular(radius))
+          ..lineTo(size.width, length),
+        paint);
 
     // BL
-    canvas.drawPath(Path()
-      ..moveTo(0, size.height - length)..lineTo(0, size.height - radius)
-      ..arcToPoint(Offset(radius, size.height), radius: Radius.circular(radius), clockwise: false)
-      ..lineTo(length, size.height), paint);
+    canvas.drawPath(
+        Path()
+          ..moveTo(0, size.height - length)
+          ..lineTo(0, size.height - radius)
+          ..arcToPoint(Offset(radius, size.height),
+              radius: Radius.circular(radius), clockwise: false)
+          ..lineTo(length, size.height),
+        paint);
 
     // BR
-    canvas.drawPath(Path()
-      ..moveTo(size.width - length, size.height)..lineTo(size.width - radius, size.height)
-      ..arcToPoint(Offset(size.width, size.height - radius), radius: Radius.circular(radius), clockwise: false)
-      ..lineTo(size.width, size.height - length), paint);
+    canvas.drawPath(
+        Path()
+          ..moveTo(size.width - length, size.height)
+          ..lineTo(size.width - radius, size.height)
+          ..arcToPoint(Offset(size.width, size.height - radius),
+              radius: Radius.circular(radius), clockwise: false)
+          ..lineTo(size.width, size.height - length),
+        paint);
   }
 
   @override
