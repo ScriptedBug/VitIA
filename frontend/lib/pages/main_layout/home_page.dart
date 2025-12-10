@@ -1,6 +1,7 @@
 // lib/pages/main_layout/home_page.dart
 
 import 'package:flutter/material.dart';
+import '../../widgets/vitia_logo.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:dio/dio.dart';
 
@@ -38,6 +39,13 @@ class _HomepageState extends State<HomePage> {
         InicioScreen(
           userName: _userName,
           location: _userLocation,
+          onAvatarTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => PerfilPage(apiClient: _apiClient)),
+            );
+          },
         ),
         const FotoPage(),
         // CAMBIO: Ahora pasamos el callback al catálogo
@@ -121,19 +129,6 @@ class _HomepageState extends State<HomePage> {
     }
   }
 
-  void _launchTutorialManual() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (context) => TutorialPage(
-          apiClient: _apiClient,
-          onFinished: () => Navigator.of(context).pop(),
-          isCompulsory: false,
-        ),
-      ),
-    );
-  }
-
   void _showTutorialPage({required bool isInitial}) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -152,14 +147,26 @@ class _HomepageState extends State<HomePage> {
     );
   }
 
+  void _launchTutorialManual() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => TutorialPage(
+          apiClient: _apiClient,
+          onFinished: () => Navigator.of(context).pop(),
+          isCompulsory: false,
+        ),
+      ),
+    );
+  }
+
   PreferredSizeWidget _buildAppBarInicio(BuildContext context) {
     return AppBar(
-      title: const Text('VitIA'),
+      title: const VitIALogo(fontSize: 28),
       centerTitle: true,
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
-      elevation: 1,
-      // BOTÓN DE AYUDA (Mantiene IconData, ya que el mockup no tiene icono de imagen aquí)
+      elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.help_outline, size: 26),
         onPressed: _launchTutorialManual,
@@ -175,7 +182,6 @@ class _HomepageState extends State<HomePage> {
                     builder: (_) => PerfilPage(apiClient: _apiClient)),
               );
             },
-            // Ícono de Perfil (Mantiene IconData)
             child: const Icon(Icons.account_circle, size: 28),
           ),
         ),
