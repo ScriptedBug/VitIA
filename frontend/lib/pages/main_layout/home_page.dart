@@ -207,7 +207,7 @@ class _HomepageState extends State<HomePage> {
               color: Colors.white70,
               activeColor: Colors.white,
               tabBackgroundColor:
-                  activeTabColor.withOpacity(0.5), // Magenta/Vino
+                  activeTabColor, // Blanco puro (definido arriba como 255,255,255,255)
               tabBorderRadius: 100,
               tabShadow: const [],
               padding: const EdgeInsets.all(12),
