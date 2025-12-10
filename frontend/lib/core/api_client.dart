@@ -111,6 +111,20 @@ Future<List<PredictionModel>> predictImage(XFile file) async {
     }
   }
 
+  Future<void> logout() async {
+    try {
+      // Notifica al servidor (aunque JWT es stateless, es una buena práctica)
+      await _dio.post('/auth/logout'); 
+      
+      // Limpiar el token de la cabecera del cliente Dio inmediatamente
+      _dio.options.headers.remove("Authorization"); 
+
+    } catch (e) {
+      // Ignoramos errores, ya que la acción crítica es la limpieza local.
+      print("Advertencia: Fallo al notificar cierre de sesión al servidor: $e");
+    }
+  }
+
   // --- SECCIÓN FORO / PUBLICACIONES ---
 
   // 1. Obtener el feed global (Todos)

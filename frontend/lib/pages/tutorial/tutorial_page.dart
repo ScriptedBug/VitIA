@@ -1,3 +1,5 @@
+// lib/pages/tutorial/tutorial_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
@@ -30,9 +32,9 @@ class _TutorialPageState extends State<TutorialPage> {
     bool _isCompleting = false;
 
     // --- COLORES AJUSTADOS A FIGMA ---
-    final Color _mainColor = const Color(0xFF8B9E3A); // Verde Musgo
+    final Color _mainColor = const Color(0xFF8B9E3A); // Verde Musgo (Usado en el botón de la P0)
     final Color _activeProgressColor = const Color(0xFF9C27B0); // Magenta/Vino
-    final Color _darkBackgroundColor = const Color(0xFF1B2414); // Color de la barra inferior
+    // El color oscuro de la barra ya no es necesario aquí.
 
     @override
     void dispose() {
@@ -112,7 +114,8 @@ class _TutorialPageState extends State<TutorialPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                         const SizedBox(height: 50),
-                        const Text('Es tu primera vez\npor aquí?', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, height: 1.1)), 
+                        // Título con fuente Lora simulada
+                        const Text('Es tu primera vez\npor aquí?', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, height: 1.1, fontFamily: 'Lora')), 
                         const SizedBox(height: 15),
                         const Text('Vitia te ayuda a identificar variedades de viñas usando la cámara.'),
                         
@@ -136,7 +139,7 @@ class _TutorialPageState extends State<TutorialPage> {
                             // 🖼️ Burbuja P1: (burbuja_p1.png)
                             Center(
                                 child: Image.asset(
-                                    'assets/tutorial/burbuja_p1.png', // Nombre seguro
+                                    'assets/tutorial/burbuja_p1.png', 
                                     width: 250,
                                 ),
                             ),
@@ -158,7 +161,7 @@ class _TutorialPageState extends State<TutorialPage> {
                             Center(
                                 // 🖼️ Ilustración del móvil/mano (ilustracion_movil.png)
                                 child: Image.asset(
-                                    'assets/tutorial/ilustracion_movil.png', // Nombre seguro
+                                    'assets/tutorial/ilustracion_movil.png', 
                                     width: 250, 
                                     height: 350, 
                                     fit: BoxFit.contain,
@@ -181,11 +184,12 @@ class _TutorialPageState extends State<TutorialPage> {
                                 alignment: WrapAlignment.center, 
                                 spacing: 10,
                                 runSpacing: 10,
+                                // 🖼️ Tarjetas de consejos
                                 children: [
-                                    _buildImageTipCard('tarjeta_consejo_1.png'),
-                                    _buildImageTipCard('tarjeta_consejo_2.png'),
-                                    _buildImageTipCard('tarjeta_consejo_3.png'),
-                                    _buildImageTipCard('tarjeta_consejo_4.png'),
+                                    _buildImageTipCard('tarjeta_consejo_1.png'), 
+                                    _buildImageTipCard('tarjeta_consejo_2.png'), 
+                                    _buildImageTipCard('tarjeta_consejo_3.png'), 
+                                    _buildImageTipCard('tarjeta_consejo_4.png'), 
                                 ],
                             ),
                             const SizedBox(height: 50),
@@ -265,13 +269,12 @@ class _TutorialPageState extends State<TutorialPage> {
                                                 fit: BoxFit.contain,
                                             ),
                                             // 2. Botón interactivo superpuesto sobre la ilustración
-                                            // Ajustado para cubrir la zona del botón visualmente.
                                             Positioned(
                                                 right: 15,
                                                 bottom: 10,
                                                 child: SizedBox(
-                                                    width: 110, // Área de clic ampliada
-                                                    height: 50, // Área de clic ampliada
+                                                    width: 110, 
+                                                    height: 50, 
                                                     child: ElevatedButton(
                                                         onPressed: _completeTutorial,
                                                         // Hacemos el botón visualmente transparente pero funcional
@@ -383,7 +386,7 @@ class _TutorialPageState extends State<TutorialPage> {
                             // 2. CONTENIDO 
                             Expanded(child: _buildPageContent(index)),
 
-                            // 3. Controles de Navegación Inferior (Botones y Barra Negra)
+                            // 3. Botones Inferiores (Solo en P0)
                             Column(
                                 children: [
                                     if (isFirstPage)
@@ -418,23 +421,7 @@ class _TutorialPageState extends State<TutorialPage> {
                                         const SizedBox.shrink(),
 
                                     // Barra de navegación inferior (simulada)
-                                    const SizedBox(height: 20),
-                                    Container(
-                                        height: 60,
-                                        decoration: BoxDecoration(
-                                            color: _darkBackgroundColor,
-                                            borderRadius: BorderRadius.circular(30),
-                                        ),
-                                        child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                            children: [
-                                                Icon(Icons.home, color: Colors.white.withOpacity(0.8)),
-                                                Icon(Icons.camera_alt, color: _activeProgressColor), 
-                                                Icon(Icons.bookmark, color: Colors.white.withOpacity(0.8)),
-                                                Icon(Icons.chat_bubble, color: Colors.white.withOpacity(0.8)),
-                                            ],
-                                        ),
-                                    ),
+                                    const SizedBox(height: 20), // Este espacio es necesario para el relleno inferior de P0
                                 ],
                             ),
                         ],

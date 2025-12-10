@@ -1,17 +1,20 @@
+// lib/pages/main_layout/home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:dio/dio.dart'; // Para manejar errores de Dio
+import 'package:dio/dio.dart';
 
-// 🚨 Importaciones de páginas y servicios (Asegúrate que las rutas sean correctas)
+// Importaciones de páginas y servicios
 import '../gallery/catalogo_page.dart'; 
 import '../capture/foto_page.dart';
 import '../library/foro_page.dart'; 
 import 'inicio_screen.dart'; 
-import 'perfil_page.dart';
+import 'perfil_page.dart'; // Mismo directorio
 import '../../core/api_client.dart'; 
-import '../../core/services/api_config.dart'; // Para getBaseUrl()
-import '../../core/services/user_sesion.dart'; // ⬅️ Tu clase UserSession
-import '../tutorial/tutorial_page.dart'; // ⬅️ Tu widget TutorialPage
+import '../../core/services/api_config.dart';
+import '../../core/services/user_sesion.dart'; 
+import '../tutorial/tutorial_page.dart'; 
+import '../auth/login_page.dart'; 
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,18 +26,11 @@ class HomePage extends StatefulWidget {
 class _HomepageState extends State<HomePage> {
   int currentIndex = 0;
   
-  // ESTADO AÑADIDO PARA EL TUTORIAL Y LA CARGA
+  bool _isAuthenticated = false; 
   bool _tutorialSuperado = true;
   bool _isLoadingStatus = true;
   late ApiClient _apiClient; 
 
-  // Función Helper que verifica si hay un token válido
-  bool _checkIsAuthenticated() {
-      // Verifica directamente el getter estático 'token'
-      return UserSession.token != null && UserSession.token!.isNotEmpty;
-  }
-
-  // 1. LISTA DE PANTALLAS: [Home, Foto, Catálogo, Foro]
   final List<Widget> _screens = [
     const InicioScreen(),                          
     const FotoPage(),                                
@@ -46,30 +42,41 @@ class _HomepageState extends State<HomePage> {
   void initState() {
     super.initState();
     _apiClient = ApiClient(getBaseUrl());
-    
-    if (_checkIsAuthenticated()) { 
-        // 1. Configura el token del ApiClient (CRUCIAL para /users/me)
-        _apiClient.setToken(UserSession.token!);
-        // 2. Inicia la comprobación del tutorial
-        _checkTutorialStatus();
-    } else {
-        // Si no hay token, asumimos el estado normal (para evitar bucle)
-        _isLoadingStatus = false;
-        _tutorialSuperado = true; 
-    }
+    _checkAuthAndTutorial(); 
   }
   
-  // Lógica para comprobar el estado del tutorial desde el backend
+  bool _checkIsAuthenticated() {
+      return UserSession.token != null && UserSession.token!.isNotEmpty;
+  }
+
+  void _checkAuthAndTutorial() {
+      _isAuthenticated = _checkIsAuthenticated();
+      
+      if (!_isAuthenticated) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+              );
+          });
+      } else {
+          _apiClient.setToken(UserSession.token!);
+          _checkTutorialStatus();
+      }
+  }
+
   Future<void> _checkTutorialStatus() async {
       if (!mounted) return;
       setState(() => _isLoadingStatus = true);
 
       try {
-          // LLAMADA AL API PARA OBTENER EL ESTADO REAL (GET /users/me)
           final bool tutorialStatus = await _apiClient.getTutorialStatus(); 
           
           if (!tutorialStatus) {
-              // Si NO está superado, lo lanzamos en el siguiente frame
+              // Si el tutorial NO está superado, bloqueamos el build y lo mostramos.
+              if (mounted) setState(() => _tutorialSuperado = false); 
+              
               WidgetsBinding.instance.addPostFrameCallback((_) {
                   _showTutorialPage(isInitial: true);
               });
@@ -79,7 +86,6 @@ class _HomepageState extends State<HomePage> {
 
       } on DioException catch (e) {
           debugPrint("Error al cargar estado del tutorial: ${e.message}");
-          // Fallback seguro: asumimos superado si el servidor falla (para no bloquear la app)
           if (mounted) setState(() => _tutorialSuperado = true); 
       } catch (e) {
           debugPrint("Error general al cargar estado del tutorial: $e");
@@ -89,14 +95,13 @@ class _HomepageState extends State<HomePage> {
       }
   }
 
-  // Función para lanzar el tutorial de forma manual (Botón de Ayuda)
+  // FUNCIÓN ASIGNADA AL BOTÓN DE AYUDA (El que faltaba)
   void _launchTutorialManual() {
       Navigator.of(context).push(
           MaterialPageRoute(
               fullscreenDialog: true,
               builder: (context) => TutorialPage(
                   apiClient: _apiClient, 
-                  // 🚨 FIX: isCompulsory: false para que no llame al backend al cerrar
                   onFinished: () => Navigator.of(context).pop(), 
                   isCompulsory: false, 
               ),
@@ -104,16 +109,14 @@ class _HomepageState extends State<HomePage> {
       );
   }
 
-  // Función para lanzar el tutorial de forma obligatoria (usado en initState)
   void _showTutorialPage({required bool isInitial}) {
       Navigator.of(context).push(
           MaterialPageRoute(
               fullscreenDialog: true,
               builder: (context) => TutorialPage(
                   apiClient: _apiClient,
-                  isCompulsory: isInitial, // ⬅️ TRUE para el flujo inicial
+                  isCompulsory: isInitial, 
                   onFinished: () {
-                      // Cierra el tutorial y actualiza el estado local
                       Navigator.of(context).pop(); 
                       if (mounted) {
                           setState(() => _tutorialSuperado = true); 
@@ -131,10 +134,10 @@ class _HomepageState extends State<HomePage> {
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
       elevation: 1,
-      // 🚨 FIX CLAVE: Botón de Ayuda (Interrogante)
+      // 🔑 BOTÓN DE AYUDA (LEADING)
       leading: IconButton(
         icon: const Icon(Icons.help_outline, size: 26), 
-        onPressed: _launchTutorialManual, // ⬅️ Lanza el tutorial manual
+        onPressed: _launchTutorialManual, // <<< El botón está aquí y funcional
       ),
       actions: [
         Padding(
@@ -143,7 +146,7 @@ class _HomepageState extends State<HomePage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PerfilPage()),
+                MaterialPageRoute(builder: (_) => PerfilPage(apiClient: _apiClient)), // Pasamos apiClient
               );
             },
             child: const Icon(Icons.account_circle, size: 28),
@@ -153,25 +156,24 @@ class _HomepageState extends State<HomePage> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
-      // ⚠️ Bloquea la interfaz principal si está cargando O si el tutorial no ha sido superado
       if (_isLoadingStatus || !_tutorialSuperado) { 
           return const Scaffold(
-              body: Center(child: CircularProgressIndicator(color: Color(0xFF6B8E23))),
+              body: Center(child: CircularProgressIndicator(color: Color(0xFF8B9E3A))),
           );
       }
       
-      const Color darkBarColor = Color(0xFF142018); 
+      const Color darkBarColor = Color(0xFF142018); // Negro VitIA
 
       return Scaffold(
           extendBody: true,
-          // Muestra el AppBar solo en la pantalla de inicio (currentIndex == 0)
           appBar: currentIndex == 0 ? _buildAppBarInicio(context) : null,
           
           body: _screens[currentIndex],
           
-          // BARRA DE NAVEGACIÓN FLOTANTE
+          // BARRA DE NAVEGACIÓN FLOTANTE (OPERATIVA)
           bottomNavigationBar: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 25), 
               
@@ -196,7 +198,7 @@ class _HomepageState extends State<HomePage> {
                           gap: 8,
                           color: Colors.white70,
                           activeColor: Colors.white,
-                          tabBackgroundColor: const Color(0xFF283A2F), 
+                          tabBackgroundColor: const Color(0xFF9C27B0).withOpacity(0.5), // Magenta/Vino
                           tabBorderRadius: 100,
                           tabShadow: const [], 
                           padding: const EdgeInsets.all(12),
