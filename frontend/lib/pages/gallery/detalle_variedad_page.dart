@@ -16,7 +16,7 @@ class DetalleVariedadPage extends StatelessWidget {
     print("--- INTENTANDO ABRIR LINK ---");
     String urlLimpia = urlString.trim();
     // Si no empieza por http ni https, lo forzamos
-    if (!urlLimpia.startsWith('http://') && !urlLimpia.startsWith('https://')) {
+    if (!urlLimpia.startsWith(RegExp(r'^https?://', caseSensitive: false))) {
       urlLimpia = 'https://$urlLimpia';
     }
 
@@ -426,7 +426,7 @@ class DetalleVariedadPage extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+        border: Border.all(color: Colors.grey.shade900, width: 1),
       ),
       child: Row(
         // Alineación vertical centrada para que el icono quede centrado respecto al bloque de texto
@@ -434,13 +434,14 @@ class DetalleVariedadPage extends StatelessWidget {
         children: [
           // ICONO REESCALADO (Más grande y centrado)
           Container(
-            width: 64, // Aumentado (antes 56)
-            height: 64, // Aumentado (antes 56)
+            width: 76, // Aumentado (antes 64)
+            height: 76, // Aumentado (antes 64)
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
+              color: Colors.transparent, // Fondo transparente
               borderRadius: BorderRadius.circular(20),
             ),
-            padding: const EdgeInsets.all(12), // Ajustado (antes 10)
+            padding: const EdgeInsets.all(
+                6), // Padding reducido para icon más grande
             child: Center(
               child: Image.asset(
                 iconPath,

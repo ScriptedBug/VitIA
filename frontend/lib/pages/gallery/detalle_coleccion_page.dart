@@ -56,6 +56,30 @@ class _DetalleColeccionPageState extends State<DetalleColeccionPage> {
 
   // --- GUARDAR CAMBIOS ---
   Future<void> _guardarCambios() async {
+    // 1. Mostrar diálogo de confirmación
+    final bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Guardar cambios"),
+        content:
+            const Text("¿Deseas guardar los cambios realizados en esta ficha?"),
+        actions: [
+          TextButton(
+            child: const Text("Cancelar"),
+            onPressed: () => Navigator.pop(ctx, false),
+          ),
+          TextButton(
+            child: const Text("Guardar"),
+            onPressed: () => Navigator.pop(ctx, true),
+          ),
+        ],
+      ),
+    );
+
+    // Si cancela o cierra el diálogo, no hacemos nada
+    if (confirmar != true) return;
+
+    // 2. Proceder con el guardado
     setState(() => _isUpdating = true);
     try {
       final updates = <String, dynamic>{

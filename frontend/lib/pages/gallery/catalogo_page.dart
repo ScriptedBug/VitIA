@@ -12,6 +12,7 @@ import '../../pages/main_layout/home_page.dart';
 import 'detalle_coleccion_page.dart';
 import 'user_variety_detail_page.dart'; // <--- NUEVA PÁGINA
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CatalogoPage extends StatefulWidget {
   // ⬅️ CLASE RENOMBRADA A CATÁLOGO
@@ -194,11 +195,22 @@ class _CatalogoPageState extends State<CatalogoPage>
       }
 
       // 2. Crear lista de representantes (uno por cada clave del mapa)
+      final prefs = await SharedPreferences.getInstance();
+      final userId = UserSession.userId ?? 0;
       final List<Map<String, dynamic>> representantes = [];
-      agrupado.forEach((key, valor) {
-        // Usamos el primero como representante visual
-        representantes.add(valor.first);
-      });
+
+      for (var entry in agrupado.entries) {
+        // Clonamos el primero para no mutar el original
+        var rep = Map<String, dynamic>.from(entry.value.first);
+        final keyPref = "cover_$userId" + "_" + (rep['nombre'] ?? '');
+        final customCover = prefs.getString(keyPref);
+
+        if (customCover != null) {
+          rep['imagen'] = customCover;
+        }
+
+        representantes.add(rep);
+      }
 
       setState(() {
         _coleccionUsuario = representantes; // Esto ahora es la lista de GRUPOS
@@ -645,7 +657,7 @@ class _CatalogoPageState extends State<CatalogoPage>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade500),
+          border: Border.all(color: Colors.grey.shade900),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
@@ -677,6 +689,14 @@ class _CatalogoPageState extends State<CatalogoPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Header con Corazón (Visual)
+                      const Row(
+                        children: [
+                          Spacer(),
+                          Icon(Icons.favorite_border,
+                              size: 20, color: Colors.black54),
+                        ],
+                      ),
                       // Nombre con estilo Serif
                       Text(
                         variedad['nombre'],
@@ -896,7 +916,7 @@ class _CatalogoPageState extends State<CatalogoPage>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade500),
+          border: Border.all(color: Colors.grey.shade900),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
@@ -908,56 +928,105 @@ class _CatalogoPageState extends State<CatalogoPage>
           },
           child: Padding(
             padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Text removed
-                    const Spacer(),
-                    const Icon(Icons.favorite, size: 20, color: Colors.black)
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  nombre,
-                  style: GoogleFonts.lora(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w400, // Letra estilo display
-                    color: const Color(0xFF1E2623),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header con Corazón (Visual)
+                      const Row(
+                        children: [
+                          Spacer(),
+                          Icon(Icons.favorite,
+                              size: 20,
+                              color: Colors
+                                  .black54), // Filled heart for collection? Or border? User said "viñeta ... igual que en variedades" where we have empty heart. User code had filled heart in collection before. Let's keep filled to distinguish "Owned".
+                        ],
+                      ),
+                      Text(
+                        nombre,
+                        style: GoogleFonts.lora(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w400, // Letra estilo display
+                          color: const Color(0xFF1E2623),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isBlanca
+                              ? const Color(0xFF8B8000).withOpacity(0.8)
+                              : const Color(0xFF800020)
+                                  .withOpacity(0.8), // Gold/Burgundy
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          item['tipo'], // "Blanca" / "Tinta"
+                          style: GoogleFonts.lora(
+                              // Consistent font
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      if (cantidad > 1) ...[
+                        const SizedBox(height: 10),
+                        Text("$cantidad capturas",
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 12))
+                      ]
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isBlanca
-                        ? const Color(0xFF8B8000).withOpacity(0.8)
-                        : const Color(0xFF800020)
-                            .withOpacity(0.8), // Gold/Burgundy
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    item['tipo'], // "Blanca" / "Tinta"
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold),
-                  ),
+                // Imagen (NUEVO)
+                const SizedBox(width: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: item['imagen'] != null
+                      ? _buildImageWidget(
+                          item['imagen']) // Helper or direct image
+                      : Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[200],
+                          child:
+                              const Icon(Icons.wine_bar, color: Colors.grey)),
                 ),
-                if (cantidad > 1) ...[
-                  const SizedBox(height: 10),
-                  Text("$cantidad capturas",
-                      style: const TextStyle(color: Colors.grey, fontSize: 12))
-                ]
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  // Helper para manejar URLs vs Archivos Locales (ya que colección puede tener ambos)
+  Widget _buildImageWidget(String path) {
+    if (path.startsWith('http')) {
+      return Image.network(path,
+          width: 80,
+          height: 80,
+          fit: BoxFit.cover,
+          errorBuilder: (c, e, s) => Container(
+              width: 80,
+              height: 80,
+              color: Colors.grey[200],
+              child: const Icon(Icons.broken_image)));
+    } else {
+      return Image.file(File(path),
+          width: 80,
+          height: 80,
+          fit: BoxFit.cover,
+          errorBuilder: (c, e, s) => Container(
+              width: 80,
+              height: 80,
+              color: Colors.grey[200],
+              child: const Icon(Icons.broken_image)));
+    }
   }
 
   Widget _buildAddCollectionCard() {

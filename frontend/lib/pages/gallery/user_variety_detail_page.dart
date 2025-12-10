@@ -6,6 +6,7 @@ import 'detalle_coleccion_page.dart';
 import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
 import '../../core/services/user_sesion.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserVarietyDetailPage extends StatefulWidget {
   final Map<String, dynamic> varietyInfo;
@@ -28,21 +29,45 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
   Map<String, dynamic>? _selectedCapture;
 
   // VIEW MODE: true = Individual (Horizontal), false = Multiple (Vertical)
-  bool _isHorizontalView = false;
+  bool _isHorizontalView = true;
 
   // STATE: Local captures list to allow refreshing
   late List<Map<String, dynamic>> _captures;
   late ApiClient _apiClient;
   bool _isLoading = false;
 
+  // Custom Cover
+  String? _customCoverPath;
+
   @override
   void initState() {
     super.initState();
     _captures = List.from(widget.captures);
+    _loadCustomCover(); // Cargar portada guardada
     _apiClient = ApiClient(getBaseUrl());
     if (UserSession.token != null) {
       _apiClient.setToken(UserSession.token!);
     }
+  }
+
+  Future<void> _loadCustomCover() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = UserSession.userId ?? 0; // Fallback safe ID
+    final key = "cover_$userId" + "_" + widget.varietyInfo['nombre'];
+    setState(() {
+      _customCoverPath = prefs.getString(key);
+    });
+  }
+
+  Future<void> _setAsCover(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = UserSession.userId ?? 0;
+    final key = "cover_$userId" + "_" + widget.varietyInfo['nombre'];
+    await prefs.setString(key, path);
+    setState(() {
+      _customCoverPath = path;
+    });
+    // Feedback visual opcional o eliminada si es redundante con el cambio de icono
   }
 
   // REFRESH LOGIC
@@ -117,10 +142,11 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
       );
     }
 
-    // MAIN IMAGE RESOLUTION
-    final String mainImage = widget.varietyInfo['imagen'] ??
+    // MAIN IMAGE RESOLUTION (Priority: Custom Cover -> Variety Image -> First Capture -> Fallback)
+    final String mainImage = _customCoverPath ??
+        widget.varietyInfo['imagen'] ??
         (_captures.isNotEmpty ? _captures[0]['imagen'] : null) ??
-        'assets/images/placeholder.png'; // Fallback
+        'assets/images/placeholder.png';
 
     // THEME COLOR
     final bool isBlanca = (widget.varietyInfo['tipo'] == 'Blanca');
@@ -370,19 +396,44 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: ClipRRect(
-                // Si es Horizontal View, redondeamos solo arriba. Si es Grid, redondeamos TODO porque es solo imagen.
-                borderRadius: isHorizontal
-                    ? const BorderRadius.vertical(top: Radius.circular(15))
-                    : BorderRadius.circular(15),
-                child: _buildImage(item['imagen'], fit: BoxFit.cover),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    // Si es Horizontal View, redondeamos solo arriba. Si es Grid, redondeamos TODO porque es solo imagen.
+                    borderRadius: isHorizontal
+                        ? const BorderRadius.vertical(top: Radius.circular(15))
+                        : BorderRadius.circular(15),
+                    child: _buildImage(item['imagen'], fit: BoxFit.cover),
+                  ),
+                  Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => _setAsCover(item['imagen']),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                              _customCoverPath == item['imagen']
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              size: 20,
+                              color: Colors.orange),
+                        ),
+                      ))
+                ],
               ),
             ),
 
             // SOLO MOSTRAR INFO SI ES LA VISTA HORIZONTAL
             if (isHorizontal)
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -404,14 +455,11 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                       ),
                     ),
 
-                    // Fecha Derecha
+                    // ACCIONES: Fecha y Botón Estrella
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 14, color: Colors.grey),
-                        const SizedBox(width: 4),
                         Text(
-                          "Capturado: $fecha",
+                          fecha,
                           style: TextStyle(
                               fontSize: 12, color: Colors.grey.shade700),
                         ),
@@ -420,6 +468,9 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                   ],
                 ),
               )
+            // SI ES GRID VIEW (VERTICAL), YA NO NECESITAMOS OVERLAY (ESTÁ EN STACK)
+            else
+              const SizedBox.shrink()
           ],
         ),
       ),
