@@ -12,12 +12,14 @@ class ForoPage extends StatefulWidget {
   State<ForoPage> createState() => _ForoPageState();
 }
 
-class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin {
+class _ForoPageState extends State<ForoPage>
+    with SingleTickerProviderStateMixin {
   late ApiClient _apiClient;
   bool _isLoading = true;
   List<Map<String, dynamic>> _publicacionesTodas = [];
-  List<Map<String, dynamic>> _publicacionesMias = []; // Keep this if used for tabs logic
-  
+  List<Map<String, dynamic>> _publicacionesMias =
+      []; // Keep this if used for tabs logic
+
   // Control de pestaña actual (0: Todos, 1: Tus hilos)
   int _selectedTab = 0;
 
@@ -35,7 +37,7 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
     setState(() => _isLoading = true);
     try {
       final listaTodas = await _apiClient.getPublicaciones();
-      
+
       List<dynamic> listaMias = [];
       if (UserSession.token != null) {
         try {
@@ -65,37 +67,44 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
   }
 
   List<Map<String, dynamic>> _mapearPublicaciones(List<dynamic> rawList) {
-    return rawList.map((item) {
-      String? imagenUrl;
-      if (item['links_fotos'] != null && (item['links_fotos'] as List).isNotEmpty) {
-        imagenUrl = item['links_fotos'][0];
-      }
+    return rawList
+        .map((item) {
+          String? imagenUrl;
+          if (item['links_fotos'] != null &&
+              (item['links_fotos'] as List).isNotEmpty) {
+            imagenUrl = item['links_fotos'][0];
+          }
 
-      String nombreUsuario = "Anónimo";
-      int? authorId; // Para verificar isMine
+          String nombreUsuario = "Anónimo";
+          int? authorId; // Para verificar isMine
 
-      if (item['autor'] != null) {
-        final autor = item['autor'];
-        nombreUsuario = "${autor['nombre'] ?? 'Usuario'} ${autor['apellidos'] ?? ''}".trim();
-        authorId = autor['id_usuario'];
-      } else if (item['id_usuario'] != null) {
-        // Fallback si la API devuelve id_usuario en root
-        nombreUsuario = "Usuario #${item['id_usuario']}";
-        authorId = item['id_usuario'];
-      }
+          if (item['autor'] != null) {
+            final autor = item['autor'];
+            nombreUsuario =
+                "${autor['nombre'] ?? 'Usuario'} ${autor['apellidos'] ?? ''}"
+                    .trim();
+            authorId = autor['id_usuario'];
+          } else if (item['id_usuario'] != null) {
+            // Fallback si la API devuelve id_usuario en root
+            nombreUsuario = "Usuario #${item['id_usuario']}";
+            authorId = item['id_usuario'];
+          }
 
-      return {
-        'id': item['id_publicacion'],
-        'titulo': item['titulo'] ?? '',
-        'text': item['texto'] ?? '',
-        'user': nombreUsuario,
-        'time': _formatearFecha(item['fecha_publicacion'] ?? item['fecha_creacion']),
-        'image': imagenUrl,
-        'likes': item['likes'] ?? 0,
-        'comments': (item['comentarios'] as List?)?.length ?? 0,
-        'isMine': authorId != null && authorId == UserSession.userId, 
-      };
-    }).toList().cast<Map<String, dynamic>>();
+          return {
+            'id': item['id_publicacion'],
+            'titulo': item['titulo'] ?? '',
+            'text': item['texto'] ?? '',
+            'user': nombreUsuario,
+            'time': _formatearFecha(
+                item['fecha_publicacion'] ?? item['fecha_creacion']),
+            'image': imagenUrl,
+            'likes': item['likes'] ?? 0,
+            'comments': (item['comentarios'] as List?)?.length ?? 0,
+            'isMine': authorId != null && authorId == UserSession.userId,
+          };
+        })
+        .toList()
+        .cast<Map<String, dynamic>>();
   }
 
   String _formatearFecha(String? fechaIso) {
@@ -111,13 +120,10 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
     }
   }
 
-
-
   Future<void> _mostrarDialogoCrear() async {
-     if (UserSession.token == null) {
+    if (UserSession.token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Debes iniciar sesión para publicar."))
-      );
+          const SnackBar(content: Text("Debes iniciar sesión para publicar.")));
       return;
     }
 
@@ -132,15 +138,15 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
       if (mounted) {
         _cargarDatos();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Publicación creada exitosamente!"))
-        );
+            const SnackBar(content: Text("¡Publicación creada exitosamente!")));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final activeList = _selectedTab == 0 ? _publicacionesTodas : _publicacionesMias;
+    final activeList =
+        _selectedTab == 0 ? _publicacionesTodas : _publicacionesMias;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA), // Color fondo muy suave
@@ -157,23 +163,24 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // "VitIA" pequeño centrado o arriba
-                     const Center(
-                        child: Text("VitIA", style: TextStyle(
-                          fontSize: 16, 
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2
-                        )),
+                      const Center(
+                        child: Text("VitIA",
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2)),
                       ),
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Comunidad", style: TextStyle(
-                            fontFamily: 'Serif', // O usa GoogleFonts.playfairDisplay()
-                            fontSize: 34,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1A1A1A)
-                          )),
+                          const Text("Comunidad",
+                              style: TextStyle(
+                                  fontFamily:
+                                      'Serif', // O usa GoogleFonts.playfairDisplay()
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF1A1A1A))),
                           IconButton(
                             icon: const Icon(Icons.search, size: 28),
                             onPressed: () {},
@@ -188,7 +195,8 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
               // 2. TABS (Botones pastilla)
               SliverToBoxAdapter(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
@@ -208,39 +216,41 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-                    child: Text("Populares", style: TextStyle(
-                      fontFamily: 'Serif',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2A2A2A)
-                    )),
+                    child: Text("Populares",
+                        style: TextStyle(
+                            fontFamily: 'Serif',
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2A2A2A))),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 180, // Altura tarjetas populares
-                    child: _isLoading 
-                      ? const Center(child: CircularProgressIndicator()) 
-                      : ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        // Usamos la misma lista o una filtrada. Aquí dummy para ejemplo visual
-                        itemCount: _publicacionesTodas.take(5).length,
-                        itemBuilder: (context, index) {
-                          return _PopularCard(
-                            post: _publicacionesTodas[index],
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => PostDetailPage(post: _publicacionesTodas[index])),
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            // Usamos la misma lista o una filtrada. Aquí dummy para ejemplo visual
+                            itemCount: _publicacionesTodas.take(5).length,
+                            itemBuilder: (context, index) {
+                              return _PopularCard(
+                                post: _publicacionesTodas[index],
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => PostDetailPage(
+                                            post: _publicacionesTodas[index])),
+                                  );
+                                  if (result == true && mounted) {
+                                    _cargarDatos();
+                                  }
+                                },
                               );
-                              if (result == true && mounted) {
-                                _cargarDatos();
-                              }
                             },
-                          );
-                        },
-                      ),
+                          ),
                   ),
                 ),
               ],
@@ -249,12 +259,12 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
-                  child: Text("Recientes", style: TextStyle(
-                    fontFamily: 'Serif',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2A2A2A)
-                  )),
+                  child: Text("Recientes",
+                      style: TextStyle(
+                          fontFamily: 'Serif',
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2A2A2A))),
                 ),
               ),
 
@@ -263,26 +273,31 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
 
               // 6. LISTA VERTICAL (RECIENTES)
               _isLoading
-                ? const SliverToBoxAdapter(child: SizedBox(height: 200, child: Center(child: CircularProgressIndicator())))
-                : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return _RecentCard(
-                          post: activeList[index], 
-                          onTap: () async {
+                  ? const SliverToBoxAdapter(
+                      child: SizedBox(
+                          height: 200,
+                          child: Center(child: CircularProgressIndicator())))
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return _RecentCard(
+                            post: activeList[index],
+                            onTap: () async {
                               final result = await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => PostDetailPage(post: activeList[index])),
+                                MaterialPageRoute(
+                                    builder: (context) => PostDetailPage(
+                                        post: activeList[index])),
                               );
                               if (result == true && mounted) {
                                 _cargarDatos();
                               }
                             },
-                        );
-                      },
-                      childCount: activeList.length,
+                          );
+                        },
+                        childCount: activeList.length,
+                      ),
                     ),
-                  ),
 
               // Espacio extra al final para que no tape el toolbar flotante ni el botón
               const SliverToBoxAdapter(child: SizedBox(height: 160)),
@@ -291,25 +306,23 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
 
           // BOTÓN FLOTANTE CREAR HILO (Fijo)
           Positioned(
-            bottom: 110, left: 20, right: 20,
+            bottom: 110,
+            left: 20,
+            right: 20,
             child: ElevatedButton(
               onPressed: _mostrarDialogoCrear,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF7A7A30), // Color oliva
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25)),
                 elevation: 4,
                 shadowColor: const Color(0xFF7A7A30).withOpacity(0.4),
               ),
-              child: const Text("Crear hilo", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: const Text("Crear hilo",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
-          ),
-
-          // BARRA DE NAVEGACIÓN FLOTANTE PERSONALIZADA
-          Positioned(
-            left: 40, right: 40, bottom: 20,
-            child: _buildFloatingNavBar(),
           ),
         ],
       ),
@@ -327,7 +340,14 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(25),
-            boxShadow: isSelected ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))] : [],
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2))
+                  ]
+                : [],
           ),
           child: Center(
             child: Text(
@@ -342,57 +362,13 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
       ),
     );
   }
-
-  Widget _buildFloatingNavBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E241E), // Negro verdoso oscuro
-        borderRadius: BorderRadius.circular(35),
-        boxShadow: const [
-          BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 5))
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavIcon(icon: Icons.home_outlined, isSelected: false),
-          _NavIcon(icon: Icons.camera_alt_outlined, isSelected: false), // Cámara
-          _NavIcon(icon: Icons.book, isSelected: true), // Foro/Comunidad (Activo)
-           // Icono chat (simulado como en la imagen con burbuja)
-          _NavIcon(icon: Icons.chat_bubble_outline, isSelected: false),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavIcon extends StatelessWidget {
-  final IconData icon;
-  final bool isSelected;
-  const _NavIcon({required this.icon, required this.isSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: isSelected 
-          ? const BoxDecoration(color: Colors.white, shape: BoxShape.circle) 
-          : null,
-      child: Icon(
-        icon, 
-        color: isSelected ? Colors.black : Colors.white70,
-        size: 24
-      ),
-    );
-  }
 }
 
 // TARJETA POPULARES (Diseño Horizontal)
 class _PopularCard extends StatefulWidget {
   final Map<String, dynamic> post;
-  final VoidCallback onTap; 
-  
+  final VoidCallback onTap;
+
   const _PopularCard({required this.post, required this.onTap});
 
   @override
@@ -455,7 +431,12 @@ class _PopularCardState extends State<_PopularCard> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [BoxShadow(color: Colors.grey.shade100, blurRadius: 4, offset:const Offset(0,2))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.grey.shade100,
+                blurRadius: 4,
+                offset: const Offset(0, 2))
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,15 +449,21 @@ class _PopularCardState extends State<_PopularCard> {
                   children: [
                     const CircleAvatar(
                       radius: 16,
-                      backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'), // Avatar dummy
+                      backgroundImage: NetworkImage(
+                          'https://i.pravatar.cc/150?img=12'), // Avatar dummy
                     ),
                     const SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.post['user'], maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        Text(widget.post['time'], style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                        Text(widget.post['user'],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text(widget.post['time'],
+                            style: TextStyle(
+                                fontSize: 10, color: Colors.grey.shade500)),
                       ],
                     )
                   ],
@@ -485,10 +472,12 @@ class _PopularCardState extends State<_PopularCard> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: Text(widget.post['text'], 
-                maxLines: 4, 
+              child: Text(
+                widget.post['text'],
+                maxLines: 4,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.grey.shade800, fontSize: 13, height: 1.4),
+                style: TextStyle(
+                    color: Colors.grey.shade800, fontSize: 13, height: 1.4),
               ),
             ),
             const SizedBox(height: 8),
@@ -498,20 +487,22 @@ class _PopularCardState extends State<_PopularCard> {
                   onTap: _darLike,
                   child: Row(
                     children: [
-                      Text("$_likes", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text("$_likes",
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
                       const SizedBox(width: 4),
-                      Icon(
-                        _isLiked ? Icons.favorite : Icons.favorite_border, 
-                        size: 16, 
-                        color: _isLiked ? Colors.red : Colors.grey
-                      ),
+                      Icon(_isLiked ? Icons.favorite : Icons.favorite_border,
+                          size: 16, color: _isLiked ? Colors.red : Colors.grey),
                     ],
                   ),
                 ),
                 const SizedBox(width: 16),
-                Text("${widget.post['comments']}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                Text("${widget.post['comments']}",
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
-                const Icon(Icons.chat_bubble_outline, size: 16, color: Colors.grey),
+                const Icon(Icons.chat_bubble_outline,
+                    size: 16, color: Colors.grey),
               ],
             )
           ],
@@ -592,35 +583,42 @@ class _RecentCardState extends State<_RecentCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-             Row(
+            Row(
               children: [
                 CircleAvatar(
                   radius: 20,
                   // Color aleatorio o imagen dummy si no hay avatar real
                   backgroundColor: Colors.brown.shade100,
-                  child: const Icon(Icons.person, color: Colors.brown), 
+                  child: const Icon(Icons.person, color: Colors.brown),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.post['user'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      Text(widget.post['time'], style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                      Text(widget.post['user'],
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text(widget.post['time'],
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade500)),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            
+
             if (widget.post['titulo'] != '')
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: Text(widget.post['titulo'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                child: Text(widget.post['titulo'],
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 15)),
               ),
 
-            Text(widget.post['text'], style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
+            Text(widget.post['text'],
+                style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
             const SizedBox(height: 12),
 
             // Imagen opcional
@@ -634,11 +632,12 @@ class _RecentCardState extends State<_RecentCard> {
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (c,e,s) => Container(height: 100, color: Colors.grey.shade100),
+                    errorBuilder: (c, e, s) =>
+                        Container(height: 100, color: Colors.grey.shade100),
                   ),
                 ),
               ),
-            
+
             // Footer
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -647,20 +646,22 @@ class _RecentCardState extends State<_RecentCard> {
                   onTap: _darLike,
                   child: Row(
                     children: [
-                      Text("$_likes", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text("$_likes",
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.bold)),
                       const SizedBox(width: 4),
-                      Icon(
-                        _isLiked ? Icons.favorite : Icons.favorite_border, 
-                        size: 20, 
-                        color: _isLiked ? Colors.red : Colors.grey
-                      ),
+                      Icon(_isLiked ? Icons.favorite : Icons.favorite_border,
+                          size: 20, color: _isLiked ? Colors.red : Colors.grey),
                     ],
                   ),
                 ),
                 const SizedBox(width: 16),
-                Text("${widget.post['comments']}", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                Text("${widget.post['comments']}",
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
-                const Icon(Icons.chat_bubble_outline, size: 20, color: Colors.grey),
+                const Icon(Icons.chat_bubble_outline,
+                    size: 20, color: Colors.grey),
               ],
             )
           ],
