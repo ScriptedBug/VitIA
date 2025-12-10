@@ -814,27 +814,32 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
 
             // 2. TABS PERSONALIZADOS (Pills)
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              height: 45,
+              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8), // Más margen lateral
+              height: 50,
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(25),
+                color: const Color(0xFFF2F2F2), // Gris clarito específico
+                borderRadius: BorderRadius.circular(30),
               ),
               child: TabBar(
                 controller: _tabController,
+                indicatorSize: TabBarIndicatorSize.tab, 
+                dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: Colors.black12),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08), 
+                      blurRadius: 4, 
+                      offset: const Offset(0, 2)
+                    )
                   ],
                 ),
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.grey,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                splashBorderRadius: BorderRadius.circular(25),
-                padding: const EdgeInsets.all(4),
+                labelColor: Colors.black87,
+                unselectedLabelColor: Colors.grey.shade500,
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                splashBorderRadius: BorderRadius.circular(30),
+                padding: const EdgeInsets.all(5), // Espacio interno para que el indicador "flote"
                 tabs: const [
                   Tab(text: "Todas"),
                   Tab(text: "Tus variedades"),
@@ -860,7 +865,7 @@ class _CatalogoPageState extends State<CatalogoPage> with SingleTickerProviderSt
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            //_buildSearchBarAndFilters(), // Quizás ya no hace falta si el header tiene search, pero lo dejo por si acaso
+                            _buildSearchBarAndFilters(), 
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
                               child: Row(

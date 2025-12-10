@@ -14,27 +14,51 @@ router = APIRouter(
     tags=["Publicaciones (Foro)"]
 )
 
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
+from ..services.imagekit_service import upload_image_to_imagekit
+
+# ... imports ...
+
 @router.post("/",
     response_model=schemas.Publicacion,
     status_code=status.HTTP_201_CREATED,
     summary="Crear una nueva publicación en el foro"
 )
-def create_publicacion_endpoint(
-    publicacion: schemas.PublicacionCreate,
+async def create_publicacion_endpoint(
+    titulo: str = Form(...),
+    texto: str = Form(...),
+    file: UploadFile = File(None),
     db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(get_current_user)
 ):
     """
     Crea un nuevo post en el foro, asociado al usuario autenticado.
-    
-    - **titulo**: Título del post (requerido).
-    - **texto**: Contenido del post (requerido).
-    - **links_fotos**: Lista opcional de URLs de fotos (JSONB).
+    Soporta subida de imagen (Multipart).
     """
-    # Llama a la función CRUD, pasando el ID del usuario desde el token
+    links_fotos = []
+    
+    # 1. Si hay archivo, lo subimos
+    if file:
+        try:
+            file_bytes = await file.read()
+            # Guardamos en la carpeta específica del Foro
+            image_url = upload_image_to_imagekit(file_bytes, file.filename, folder="/vitia/Foro")
+            links_fotos.append(image_url)
+        except Exception as e:
+            print(f"Error subiendo a ImageKit: {e}")
+            # Opcional: Fallar o continuar sin imagen. Aquí continuamos pero logueamos.
+
+    # 2. Creamos el objeto esquema manually
+    publicacion_create = schemas.PublicacionCreate(
+        titulo=titulo,
+        texto=texto,
+        links_fotos=links_fotos
+    )
+
+    # 3. Llama a la función CRUD
     return crud.create_publicacion(
         db=db, 
-        publicacion=publicacion, 
+        publicacion=publicacion_create, 
         id_usuario=current_user.id_usuario
     )
 

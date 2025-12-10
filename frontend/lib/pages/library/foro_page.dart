@@ -3,6 +3,7 @@ import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
 import '../../core/services/user_sesion.dart';
 import 'post_detail_page.dart';
+import 'create_post_page.dart';
 
 class ForoPage extends StatefulWidget {
   const ForoPage({super.key});
@@ -15,7 +16,7 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
   late ApiClient _apiClient;
   bool _isLoading = true;
   List<Map<String, dynamic>> _publicacionesTodas = [];
-  List<Map<String, dynamic>> _publicacionesMias = [];
+  List<Map<String, dynamic>> _publicacionesMias = []; // Keep this if used for tabs logic
   
   // Control de pestaña actual (0: Todos, 1: Tus hilos)
   int _selectedTab = 0;
@@ -38,6 +39,12 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
       List<dynamic> listaMias = [];
       if (UserSession.token != null) {
         try {
+          // 1. Obtener UserID si no lo tenemos
+          if (UserSession.userId == null) {
+            final meData = await _apiClient.getMe();
+            UserSession.setUserId(meData['id_usuario']);
+          }
+
           listaMias = await _apiClient.getUserPublicaciones();
         } catch (e) {
           debugPrint("Error loading user posts: $e");
@@ -65,13 +72,16 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
       }
 
       String nombreUsuario = "Anónimo";
+      int? authorId; // Para verificar isMine
+
       if (item['autor'] != null) {
         final autor = item['autor'];
-        String nombre = autor['nombre'] ?? "Usuario";
-        String apellidos = autor['apellidos'] ?? "";
-        nombreUsuario = "$nombre $apellidos".trim();
+        nombreUsuario = "${autor['nombre'] ?? 'Usuario'} ${autor['apellidos'] ?? ''}".trim();
+        authorId = autor['id_usuario'];
       } else if (item['id_usuario'] != null) {
+        // Fallback si la API devuelve id_usuario en root
         nombreUsuario = "Usuario #${item['id_usuario']}";
+        authorId = item['id_usuario'];
       }
 
       return {
@@ -83,6 +93,7 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
         'image': imagenUrl,
         'likes': item['likes'] ?? 0,
         'comments': (item['comentarios'] as List?)?.length ?? 0,
+        'isMine': authorId != null && authorId == UserSession.userId, 
       };
     }).toList().cast<Map<String, dynamic>>();
   }
@@ -100,7 +111,9 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
     }
   }
 
-  void _mostrarDialogoCrear() {
+
+
+  Future<void> _mostrarDialogoCrear() async {
      if (UserSession.token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Debes iniciar sesión para publicar."))
@@ -108,51 +121,21 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
       return;
     }
 
-    final tituloCtrl = TextEditingController();
-    final textoCtrl = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Nueva Publicación"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: tituloCtrl,
-              decoration: const InputDecoration(labelText: "Título", hintText: "Ej: Duda sobre poda..."),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: textoCtrl,
-              maxLines: 4,
-              decoration: const InputDecoration(labelText: "Mensaje", hintText: "Escribe aquí tu consulta..."),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(child: const Text("Cancelar"), onPressed: () => Navigator.pop(ctx)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7A7A30), foregroundColor: Colors.white),
-            child: const Text("Publicar"),
-            onPressed: () async {
-              if (tituloCtrl.text.isEmpty || textoCtrl.text.isEmpty) return;
-              Navigator.pop(ctx);
-              setState(() => _isLoading = true);
-              try {
-                await _apiClient.createPublicacion(tituloCtrl.text, textoCtrl.text);
-                if (mounted) {
-                   _cargarDatos();
-                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("¡Publicado!")));
-                }
-              } catch (e) {
-                if(mounted) setState(() => _isLoading = false);
-              }
-            },
-          ),
-        ],
-      ),
+    // Navegar a la pantalla de "Nueva Publicación"
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreatePostPage()),
     );
+
+    // Si result es true, significa que se publicó algo, recargamos
+    if (result == true) {
+      if (mounted) {
+        _cargarDatos();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("¡Publicación creada exitosamente!"))
+        );
+      }
+    }
   }
 
   @override
@@ -244,7 +227,18 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
                         // Usamos la misma lista o una filtrada. Aquí dummy para ejemplo visual
                         itemCount: _publicacionesTodas.take(5).length,
                         itemBuilder: (context, index) {
-                          return _PopularCard(post: _publicacionesTodas[index]);
+                          return _PopularCard(
+                            post: _publicacionesTodas[index],
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => PostDetailPage(post: _publicacionesTodas[index])),
+                              );
+                              if (result == true && mounted) {
+                                _cargarDatos();
+                              }
+                            },
+                          );
                         },
                       ),
                   ),
@@ -273,7 +267,18 @@ class _ForoPageState extends State<ForoPage> with SingleTickerProviderStateMixin
                 : SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        return _RecentCard(post: activeList[index]);
+                        return _RecentCard(
+                          post: activeList[index], 
+                          onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => PostDetailPage(post: activeList[index])),
+                              );
+                              if (result == true && mounted) {
+                                _cargarDatos();
+                              }
+                            },
+                        );
                       },
                       childCount: activeList.length,
                     ),
@@ -386,7 +391,9 @@ class _NavIcon extends StatelessWidget {
 // TARJETA POPULARES (Diseño Horizontal)
 class _PopularCard extends StatefulWidget {
   final Map<String, dynamic> post;
-  const _PopularCard({required this.post});
+  final VoidCallback onTap; 
+  
+  const _PopularCard({required this.post, required this.onTap});
 
   @override
   State<_PopularCard> createState() => _PopularCardState();
@@ -439,12 +446,7 @@ class _PopularCardState extends State<_PopularCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => PostDetailPage(post: widget.post)),
-        );
-      },
+      onTap: widget.onTap,
       child: Container(
         width: 250,
         margin: const EdgeInsets.only(right: 16, bottom: 10),
@@ -460,22 +462,25 @@ class _PopularCardState extends State<_PopularCard> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const CircleAvatar(
-                  radius: 16,
-                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'), // Avatar dummy
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 16,
+                      backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'), // Avatar dummy
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(widget.post['user'], maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text(widget.post['time'], style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                      ],
+                    )
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.post['user'], maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text(widget.post['time'], style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
-                    ],
-                  ),
-                )
               ],
             ),
             const SizedBox(height: 8),
@@ -519,7 +524,9 @@ class _PopularCardState extends State<_PopularCard> {
 // TARJETA RECIENTES (Diseño Vertical con imagen opcional)
 class _RecentCard extends StatefulWidget {
   final Map<String, dynamic> post;
-  const _RecentCard({required this.post});
+  final VoidCallback onTap;
+
+  const _RecentCard({required this.post, required this.onTap});
 
   @override
   State<_RecentCard> createState() => _RecentCardState();
@@ -572,12 +579,7 @@ class _RecentCardState extends State<_RecentCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => PostDetailPage(post: widget.post)),
-        );
-      },
+      onTap: widget.onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         padding: const EdgeInsets.all(16),
@@ -607,7 +609,7 @@ class _RecentCardState extends State<_RecentCard> {
                       Text(widget.post['time'], style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                     ],
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 12),
