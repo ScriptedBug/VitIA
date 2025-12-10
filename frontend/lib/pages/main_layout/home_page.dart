@@ -29,11 +29,16 @@ class _HomepageState extends State<HomePage> {
   bool _isAuthenticated = false;
   bool _tutorialSuperado = true;
   bool _isLoadingStatus = true;
+  String _userName = "Usuario";
+  String _userLocation = "";
   late ApiClient _apiClient;
 
   // CAMBIO: Convertimos _screens en un método get para poder acceder a setState y lógica de instancia
   List<Widget> get _screens => [
-        const InicioScreen(),
+        InicioScreen(
+          userName: _userName,
+          location: _userLocation,
+        ),
         const FotoPage(),
         // CAMBIO: Ahora pasamos el callback al catálogo
         CatalogoPage(
@@ -80,7 +85,21 @@ class _HomepageState extends State<HomePage> {
     setState(() => _isLoadingStatus = true);
 
     try {
+      // 1. Obtener estado del tutorial
       final bool tutorialStatus = await _apiClient.getTutorialStatus();
+
+      // 2. Obtener datos del perfil (Nombre, Ubicación)
+      try {
+        final userData = await _apiClient.getMe();
+        if (mounted) {
+          setState(() {
+            _userName = userData['nombre'] ?? "Usuario";
+            _userLocation = userData['ubicacion'] ?? "";
+          });
+        }
+      } catch (e) {
+        debugPrint("Error al cargar perfil usuario: $e");
+      }
 
       if (!tutorialStatus) {
         if (mounted) setState(() => _tutorialSuperado = false);
@@ -92,10 +111,10 @@ class _HomepageState extends State<HomePage> {
 
       if (mounted) setState(() => _tutorialSuperado = tutorialStatus);
     } on DioException catch (e) {
-      debugPrint("Error al cargar estado del tutorial: ${e.message}");
+      debugPrint("Error al cargar datos iniciales: ${e.message}");
       if (mounted) setState(() => _tutorialSuperado = true);
     } catch (e) {
-      debugPrint("Error general al cargar estado del tutorial: $e");
+      debugPrint("Error general al cargar datos iniciales: $e");
       if (mounted) setState(() => _tutorialSuperado = true);
     } finally {
       if (mounted) setState(() => _isLoadingStatus = false);
@@ -225,8 +244,7 @@ class _HomepageState extends State<HomePage> {
                       width: 30,
                       color: currentIndex == 0
                           ? Colors.black
-                          : const Color.fromARGB(
-                              179, 218, 211, 211) // Color de activo/inactivo
+                          : Colors.white // Color de activo/inactivo
                       ),
                 ),
                 // CAMBIO: Ocultamos el botón de cámara de la barra si ahora es un FAB flotante
@@ -242,27 +260,21 @@ class _HomepageState extends State<HomePage> {
                   iconSize: 0,
                   leading: Image.asset('assets/navbar/icon_nav_camera.png',
                       width: 30,
-                      color: currentIndex == 1
-                          ? Colors.black
-                          : const Color.fromARGB(179, 218, 211, 211)),
+                      color: currentIndex == 1 ? Colors.black : Colors.white),
                 ),
                 GButton(
                   icon: Icons.menu_book,
                   iconSize: 0,
                   leading: Image.asset('assets/navbar/icon_nav_catalogo.png',
                       width: 30,
-                      color: currentIndex == 2
-                          ? Colors.black
-                          : const Color.fromARGB(179, 218, 211, 211)),
+                      color: currentIndex == 2 ? Colors.black : Colors.white),
                 ),
                 GButton(
                   icon: Icons.forum,
                   iconSize: 0,
                   leading: Image.asset('assets/navbar/icon_nav_foro.png',
                       width: 30,
-                      color: currentIndex == 3
-                          ? Colors.black
-                          : const Color.fromARGB(179, 218, 211, 211)),
+                      color: currentIndex == 3 ? Colors.black : Colors.white),
                 ),
               ],
             ),

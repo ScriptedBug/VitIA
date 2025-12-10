@@ -20,6 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController passCtrl = TextEditingController();
   final TextEditingController nombreCtrl = TextEditingController();
   final TextEditingController apellidosCtrl = TextEditingController();
+  final TextEditingController ubicacionCtrl = TextEditingController();
 
   // Color principal (Vino VitIA: #A01B4C)
   final Color _authMainColor = const Color(0xFFA01B4C);
@@ -39,6 +40,7 @@ class _RegisterPageState extends State<RegisterPage> {
           "email": emailCtrl.text.trim(),
           "nombre": nombreCtrl.text.trim(),
           "apellidos": apellidosCtrl.text.trim(),
+          "ubicacion": ubicacionCtrl.text.trim(),
           "password": passCtrl.text.trim(),
         }),
       );
@@ -182,6 +184,29 @@ class _RegisterPageState extends State<RegisterPage> {
                     labelStyle: TextStyle(color: _authMainColor),
                   ),
                 ),
+                const SizedBox(height: 15),
+
+                // CAMPO UBICACIÓN
+                TextField(
+                  controller: ubicacionCtrl,
+                  style: TextStyle(color: _authMainColor, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: "Ubicación (opcional)",
+                    hintStyle:
+                        TextStyle(color: _authMainColor.withOpacity(0.7)),
+                    filled: true,
+                    fillColor: _authFieldColor,
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authMainColor, width: 2)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authFieldColor, width: 2)),
+                  ),
+                ),
+
                 const SizedBox(height: 15),
 
                 // --- Campo de Correo Electrónico ---
