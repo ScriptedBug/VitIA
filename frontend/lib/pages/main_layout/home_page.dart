@@ -9,7 +9,7 @@ import '../gallery/catalogo_page.dart';
 import '../capture/foto_page.dart';
 import '../library/foro_page.dart'; 
 import 'inicio_screen.dart'; 
-import 'perfil_page.dart'; // Mismo directorio
+import 'perfil_page.dart'; 
 import '../../core/api_client.dart'; 
 import '../../core/services/api_config.dart';
 import '../../core/services/user_sesion.dart'; 
@@ -74,7 +74,6 @@ class _HomepageState extends State<HomePage> {
           final bool tutorialStatus = await _apiClient.getTutorialStatus(); 
           
           if (!tutorialStatus) {
-              // Si el tutorial NO está superado, bloqueamos el build y lo mostramos.
               if (mounted) setState(() => _tutorialSuperado = false); 
               
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -95,7 +94,6 @@ class _HomepageState extends State<HomePage> {
       }
   }
 
-  // FUNCIÓN ASIGNADA AL BOTÓN DE AYUDA (El que faltaba)
   void _launchTutorialManual() {
       Navigator.of(context).push(
           MaterialPageRoute(
@@ -134,10 +132,10 @@ class _HomepageState extends State<HomePage> {
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
       elevation: 1,
-      // 🔑 BOTÓN DE AYUDA (LEADING)
+      // BOTÓN DE AYUDA (Mantiene IconData, ya que el mockup no tiene icono de imagen aquí)
       leading: IconButton(
         icon: const Icon(Icons.help_outline, size: 26), 
-        onPressed: _launchTutorialManual, // <<< El botón está aquí y funcional
+        onPressed: _launchTutorialManual, 
       ),
       actions: [
         Padding(
@@ -146,10 +144,11 @@ class _HomepageState extends State<HomePage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => PerfilPage(apiClient: _apiClient)), // Pasamos apiClient
+                MaterialPageRoute(builder: (_) => PerfilPage(apiClient: _apiClient)),
               );
             },
-            child: const Icon(Icons.account_circle, size: 28),
+            // Ícono de Perfil (Mantiene IconData)
+            child: const Icon(Icons.account_circle, size: 28), 
           ),
         ),
       ],
@@ -166,6 +165,7 @@ class _HomepageState extends State<HomePage> {
       }
       
       const Color darkBarColor = Color(0xFF142018); // Negro VitIA
+      const Color activeTabColor = Color(0xFF9C27B0); // Magenta/Vino
 
       return Scaffold(
           extendBody: true,
@@ -198,7 +198,7 @@ class _HomepageState extends State<HomePage> {
                           gap: 8,
                           color: Colors.white70,
                           activeColor: Colors.white,
-                          tabBackgroundColor: const Color(0xFF9C27B0).withOpacity(0.5), // Magenta/Vino
+                          tabBackgroundColor: activeTabColor.withOpacity(0.5), // Magenta/Vino
                           tabBorderRadius: 100,
                           tabShadow: const [], 
                           padding: const EdgeInsets.all(12),
@@ -207,12 +207,40 @@ class _HomepageState extends State<HomePage> {
                               setState(() => currentIndex = index);
                           },
                           
-                          // 2. LISTA DE BOTONES: [Home, Foto, Catálogo, Foro]
-                          tabs: const [
-                              GButton(icon: Icons.home, iconSize: 30),                 
-                              GButton(icon: Icons.camera_alt_outlined, iconSize: 30),   
-                              GButton(icon: Icons.menu_book, iconSize: 30),            
-                              GButton(icon: Icons.forum, iconSize: 30),                
+                          // 🚨 SUSTITUCIÓN DE ICONOS: Usamos Image.asset de la carpeta assets/navbar
+                          tabs: [
+                              GButton(
+                                icon: Icons.home, 
+                                iconSize: 0, // Deshabilitar el icono de Material
+                                leading: Image.asset('assets/navbar/icon_nav_home.png', 
+                                    width: 30, 
+                                    color: currentIndex == 0 ? Colors.white : Colors.white70 // Color de activo/inactivo
+                                ),
+                              ),                 
+                              GButton(
+                                icon: Icons.camera_alt_outlined, 
+                                iconSize: 0,
+                                leading: Image.asset('assets/navbar/icon_nav_camera.png', 
+                                    width: 30, 
+                                    color: currentIndex == 1 ? Colors.white : Colors.white70
+                                ),
+                              ),   
+                              GButton(
+                                icon: Icons.menu_book, 
+                                iconSize: 0,
+                                leading: Image.asset('assets/navbar/icon_nav_catalogo.png', 
+                                    width: 30, 
+                                    color: currentIndex == 2 ? Colors.white : Colors.white70
+                                ),
+                              ),            
+                              GButton(
+                                icon: Icons.forum, 
+                                iconSize: 0,
+                                leading: Image.asset('assets/navbar/icon_nav_foro.png', 
+                                    width: 30, 
+                                    color: currentIndex == 3 ? Colors.white : Colors.white70
+                                ),
+                              ),                
                           ],
                       ),
                   ),
