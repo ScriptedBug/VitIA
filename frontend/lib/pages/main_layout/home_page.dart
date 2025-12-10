@@ -57,6 +57,8 @@ class _HomepageState extends State<HomePage> {
   void initState() {
     super.initState();
     _apiClient = ApiClient(getBaseUrl());
+    // Conectamos el manejador de expiración
+    _apiClient.onTokenExpired = _handleTokenExpired;
     _checkAuthAndTutorial();
   }
 
@@ -120,6 +122,38 @@ class _HomepageState extends State<HomePage> {
     } finally {
       if (mounted) setState(() => _isLoadingStatus = false);
     }
+  }
+
+  void _handleTokenExpired() {
+    // Evitamos mostrar múltiples diálogos si llegan varios 401 seguidos
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Obligar a pulsar el botón
+      builder: (context) => AlertDialog(
+        title: const Text("Sesión Caducada"),
+        content: const Text(
+            "Tu sesión ha expirado por seguridad. Por favor, inicia sesión de nuevo."),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop(); // Cerrar diálogo
+              await UserSession.clearSession(); // Limpiar datos locales
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              }
+            },
+            child: const Text("Aceptar",
+                style: TextStyle(color: Color(0xFF142018))),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showTutorialPage({required bool isInitial}) {

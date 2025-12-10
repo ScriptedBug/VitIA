@@ -142,6 +142,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: "Nombre",
+                    prefixIcon:
+                        Icon(Icons.person_outline, color: _authMainColor),
                     filled: true,
                     fillColor: _authFieldColor,
                     border: OutlineInputBorder(
@@ -167,6 +169,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: "Apellidos",
+                    prefixIcon:
+                        Icon(Icons.person_outline, color: _authMainColor),
                     filled: true,
                     fillColor: _authFieldColor,
                     border: OutlineInputBorder(
@@ -192,6 +196,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: "Ubicación (opcional)",
+                    prefixIcon:
+                        Icon(Icons.location_on_outlined, color: _authMainColor),
                     hintStyle:
                         TextStyle(color: _authMainColor.withOpacity(0.7)),
                     filled: true,
@@ -204,6 +210,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         borderRadius: BorderRadius.circular(25),
                         borderSide:
                             BorderSide(color: _authFieldColor, width: 2)),
+                    labelStyle:
+                        TextStyle(color: _authMainColor), // Add label style
+                    border: OutlineInputBorder(
+                        // Explicit border
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: _authMainColor, width: 2)),
                   ),
                 ),
 
@@ -215,6 +228,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: "Correo electrónico",
+                    prefixIcon:
+                        Icon(Icons.email_outlined, color: _authMainColor),
                     filled: true,
                     fillColor: _authFieldColor,
                     border: OutlineInputBorder(
@@ -240,6 +255,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: "Contraseña",
+                    prefixIcon: Icon(Icons.lock_outline, color: _authMainColor),
                     filled: true,
                     fillColor: _authFieldColor,
                     border: OutlineInputBorder(

@@ -3,10 +3,26 @@ import './models/prediction_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'models/coleccion_model.dart';
 import 'package:http_parser/http_parser.dart';
+import 'dart:ui'; // Import for VoidCallback
 
 class ApiClient {
   final Dio _dio;
-  ApiClient(String baseUrl) : _dio = Dio(BaseOptions(baseUrl: baseUrl));
+  // Callback opcional para manejar expiración de sesión (401)
+  VoidCallback? onTokenExpired;
+
+  ApiClient(String baseUrl) : _dio = Dio(BaseOptions(baseUrl: baseUrl)) {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (DioException e, ErrorInterceptorHandler handler) {
+          if (e.response?.statusCode == 401) {
+            // Si el servidor devuelve 401 Unauthorized, llamamos al callback
+            onTokenExpired?.call();
+          }
+          return handler.next(e);
+        },
+      ),
+    );
+  }
 
   Future<Map<String, dynamic>> ping() async {
     final r = await _dio.get('/health/ping');

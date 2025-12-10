@@ -186,22 +186,6 @@ class _PerfilPageState extends State<PerfilPage> {
               },
             ),
 
-            // Opcional: Otros apartados dummy para llenar visualmente si se quiere,
-            // o solo dejar el solicitado. Dejaré "Privacidad" y "Ayuda" estilo mockup visual
-            // si no molestan, pero el usuario pidió "solo haciendo el cuadro de modificar perfil".
-            // Pondré solo el de modificar y el de cerrar sesión estrictamente a lo pedido
-            // pero manteniendo un buen look. Añadiré "Privacidad" como relleno visual safe.
-            _buildProfileCard(
-              title: "Privacidad",
-              subtitle: "Cambia tu contraseña",
-              onTap: () {}, // Dummy
-            ),
-            _buildProfileCard(
-              title: "Centro de ayuda",
-              subtitle: "Obtén ayuda y contáctanos",
-              onTap: () {}, // Dummy
-            ),
-
             const SizedBox(height: 20),
 
             // --- Botón de CERRAR SESIÓN ---

@@ -14,10 +14,16 @@ class WeatherService {
 
     try {
       // Endpoint forecast.json nos da clima actual y pronóstico días futuros
-      // days=3 para obtener hoy, mañana y pasado (o más si se requiere para la UI)
-      final String query =
-          location.contains(',') ? location : '$location, Spain';
-      debugPrint("🔍 WeatherService Query: '$query' (Input: '$location')");
+      // Limpiamos y preparamos la query
+      // 1. Si el usuario pone "España", lo cambiamos a "Spain" para mejor compatibilidad con WeatherAPI
+      String query = location.replaceAll("España", "Spain");
+
+      // 2. Si no tiene coma (es solo ciudad), añadimos ", Spain" por defecto
+      if (!query.contains(",")) {
+        query = "$query, Spain";
+      }
+
+      debugPrint("Fetching weather for: '$query' (Input: '$location')");
 
       final response = await _dio.get(
         '$weatherBaseUrl/forecast.json',

@@ -125,6 +125,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       label: "Ubicación (Ciudad, País)",
                       icon: Icons.location_on_outlined,
                       hint: "Ej. Requena, Valencia",
+                      isOptional: true,
                     ),
                     const SizedBox(height: 40),
                     SizedBox(
@@ -158,6 +159,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required String label,
     required IconData icon,
     String? hint,
+    bool isOptional = false,
   }) {
     return TextFormField(
       controller: controller,
@@ -172,7 +174,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         fillColor: const Color(0xFFFCFBF6),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) {
+        if (!isOptional && (value == null || value.isEmpty)) {
           return 'Campo obligatorio';
         }
         return null;

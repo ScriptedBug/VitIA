@@ -113,6 +113,8 @@ class _LoginFormPageState extends State<LoginFormPage> {
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: "Correo electrónico",
+                    prefixIcon:
+                        Icon(Icons.email_outlined, color: _authMainColor),
                     filled: true,
                     fillColor: _authFieldColor,
                     // Bordes estilizados
@@ -140,6 +142,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
                   style: TextStyle(color: _authMainColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: "Contraseña",
+                    prefixIcon: Icon(Icons.lock_outline, color: _authMainColor),
                     filled: true,
                     fillColor: _authFieldColor,
                     border: OutlineInputBorder(
