@@ -32,6 +32,7 @@ class _HomepageState extends State<HomePage> {
   bool _isLoadingStatus = true;
   String _userName = "Usuario";
   String _userLocation = "";
+  String? _userPhotoUrl; // Nueva variable para la foto
   late ApiClient _apiClient;
 
   // CAMBIO: Convertimos _screens en un método get para poder acceder a setState y lógica de instancia
@@ -39,6 +40,8 @@ class _HomepageState extends State<HomePage> {
         InicioScreen(
           userName: _userName,
           location: _userLocation,
+          userPhotoUrl: _userPhotoUrl, // Pasamos la foto
+          apiClient: _apiClient,
           onProfileTap: () async {
             final result = await Navigator.push(
               context,
@@ -108,6 +111,7 @@ class _HomepageState extends State<HomePage> {
           setState(() {
             _userName = userData['nombre'] ?? "Usuario";
             _userLocation = userData['ubicacion'] ?? "";
+            _userPhotoUrl = userData['path_foto_perfil']; // Cargar foto
           });
         }
       } catch (e) {

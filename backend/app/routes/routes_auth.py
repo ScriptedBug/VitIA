@@ -12,13 +12,16 @@ from ..config import settings # O donde tengas tus claves
 import base64
 
 # Inicializar ImageKit
+from imagekitio.models.UploadFileRequestOptions import UploadFileRequestOptions
+
+# Inicializar ImageKit
 imagekit = ImageKit(
     public_key=os.getenv("IMAGEKIT_PUBLIC_KEY"),
     private_key=os.getenv("IMAGEKIT_PRIVATE_KEY"),
     url_endpoint=os.getenv("IMAGEKIT_URL_ENDPOINT")
 )
 
-from .. import crud, models, schemas, auth
+from .. import crud, models, schemas, auth, security
 from ..database import get_db
 
 router = APIRouter(
@@ -51,28 +54,31 @@ def register_user(
         raise HTTPException(status_code=400, detail="El email ya está registrado")
 
     # B. Subir foto a ImageKit (si el usuario envió una)
+    # B. Subir foto a ImageKit (si el usuario envió una)
     url_foto = None
+    print(f"DEBUG: Foto recibida object: {foto}")
     if foto:
         try:
+            print(f"DEBUG: Iniciando proceso de subida para: {foto.filename}")
             # Leer el archivo
             file_content = foto.file.read()
             # Convertir a base64 para ImageKit
             file_base64 = base64.b64encode(file_content).decode("utf-8")
             
             # Subir
+            print("DEBUG: Enviando a ImageKit...")
             upload_info = imagekit.upload_file(
                 file=file_base64,
                 file_name=f"perfil_{email}.jpg", # Nombre único
-                options={
-                    "folder": "/fotos_perfil/", # Carpeta ordenada
-                    "is_private_file": False
-                }
+                options=UploadFileRequestOptions(
+                    folder="/fotos_perfil/", # Carpeta ordenada
+                    is_private_file=False
+                )
             )
             url_foto = upload_info.url
+            print(f"DEBUG: Subida EXITOSA. URL: {url_foto}")
         except Exception as e:
-            print(f"Error subiendo foto: {e}")
-            # Opcional: ¿Quieres fallar si la foto falla? 
-            # Si no, simplemente seguimos sin foto.
+            print(f"DEBUG: ERROR CRÍTICO subiendo foto: {e}")
             pass
 
     # C. Crear el objeto UsuarioCreate manualmente para pasarlo al CRUD
@@ -105,7 +111,7 @@ def login_for_access_token(
     user = crud.get_user_by_email(db, email=form_data.username)
     
     # Verifica que el usuario exista y la contraseña sea correcta
-    if not user or not auth.verify_password(form_data.password, user.password_hash):
+    if not user or not security.verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email o contraseña incorrectos",

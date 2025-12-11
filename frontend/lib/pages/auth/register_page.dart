@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io'; // Importar File
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart'; // Importar ImagePicker
+import 'package:flutter/foundation.dart'; // kIsWeb
 import '../../core/services/api_config.dart';
 import '../main_layout/home_page.dart';
 import 'login_page.dart';
@@ -27,27 +30,57 @@ class _RegisterPageState extends State<RegisterPage> {
   // Blanco cálido VitIA: #FFFFEFB
   final Color _authFieldColor = const Color(0xFFFFFFEB);
 
+  // Variables para la imagen
+  XFile? _pickedFile; // Cambiado a XFile para compatibilidad Web
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? picked =
+          await _picker.pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        setState(() {
+          _pickedFile = picked;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+    }
+  }
+
   Future<void> register() async {
     final baseUrl = getBaseUrl();
     final registerUrl = Uri.parse("$baseUrl/auth/register");
 
     try {
-      // 1. Petición de Registro
-      final response = await http.post(
-        registerUrl,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": emailCtrl.text.trim(),
-          "nombre": nombreCtrl.text.trim(),
-          "apellidos": apellidosCtrl.text.trim(),
-          "ubicacion": ubicacionCtrl.text.trim(),
-          "password": passCtrl.text.trim(),
-        }),
-      );
+      // 1. Petición de Registro (Multipart)
+      var request = http.MultipartRequest('POST', registerUrl);
+
+      // Campos de texto
+      request.fields['email'] = emailCtrl.text.trim();
+      request.fields['password'] = passCtrl.text.trim();
+      request.fields['nombre'] = nombreCtrl.text.trim();
+      request.fields['apellidos'] = apellidosCtrl.text.trim();
+      request.fields['ubicacion'] = ubicacionCtrl.text.trim();
+
+      // Archivo (si existe)
+      if (_pickedFile != null) {
+        // En Web y Mobile: leemos bytes para ser consistentes
+        final bytes = await _pickedFile!.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes(
+          'foto',
+          bytes,
+          filename: _pickedFile!.name,
+        ));
+      }
+
+      // Enviar
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
 
       if (!mounted) return;
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         // PASO 2: Iniciar sesión automáticamente para obtener el Token
         final loginUrl = Uri.parse("$baseUrl/auth/token");
         final loginResponse = await http.post(
@@ -109,6 +142,17 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider? imageProvider;
+    if (_pickedFile != null) {
+      if (kIsWeb) {
+        // Blob URL
+        imageProvider = NetworkImage(_pickedFile!.path);
+      } else {
+        // File path
+        imageProvider = FileImage(File(_pickedFile!.path));
+      }
+    }
+
     return Scaffold(
       backgroundColor: _authMainColor, // Fondo color Vino VitIA
       appBar: AppBar(
@@ -134,7 +178,36 @@ class _RegisterPageState extends State<RegisterPage> {
                       color: Colors.white,
                       fontFamily: 'Lora'),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
+
+                // --- SELECTOR DE FOTO ---
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: _authFieldColor,
+                        backgroundImage: imageProvider,
+                        child: _pickedFile == null
+                            ? Icon(Icons.person,
+                                size: 50, color: _authMainColor)
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.camera_alt,
+                              size: 18, color: _authMainColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
 
                 // --- Campo de Nombre ---
                 TextField(
@@ -313,7 +386,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
-      // <<< BARRA DE NAVEGACIÓN SIMULADA ELIMINADA >>>
     );
   }
 }

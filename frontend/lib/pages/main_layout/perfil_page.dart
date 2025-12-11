@@ -19,6 +19,7 @@ class PerfilPage extends StatefulWidget {
 class _PerfilPageState extends State<PerfilPage> {
   String _nombreUser = "Modificar";
   String _ubicacionUser = "Perfil";
+  String? _userPhotoUrl; // Variable para foto
   bool _profileUpdated = false;
 
   @override
@@ -26,7 +27,6 @@ class _PerfilPageState extends State<PerfilPage> {
     super.initState();
     _loadProfileHeader();
   }
-// ... (skipping unchanged parts)
 
   Future<void> _loadProfileHeader() async {
     try {
@@ -35,6 +35,7 @@ class _PerfilPageState extends State<PerfilPage> {
         setState(() {
           _nombreUser = "${userData['nombre']} ${userData['apellidos']}";
           _ubicacionUser = userData['ubicacion'] ?? "Sin ubicación";
+          _userPhotoUrl = userData['path_foto_perfil']; // Cargar URL
         });
       }
     } catch (_) {}
@@ -153,7 +154,10 @@ class _PerfilPageState extends State<PerfilPage> {
             CircleAvatar(
               radius: 50,
               backgroundImage:
-                  const AssetImage('assets/home/avatar_placeholder.png'),
+                  _userPhotoUrl != null ? NetworkImage(_userPhotoUrl!) : null,
+              child: _userPhotoUrl == null
+                  ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                  : null,
               backgroundColor: Colors.grey.shade200,
             ),
             const SizedBox(height: 15),

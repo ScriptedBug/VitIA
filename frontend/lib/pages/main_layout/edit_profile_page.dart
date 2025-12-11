@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart'; // kIsWeb
 
 class EditProfilePage extends StatefulWidget {
   final ApiClient apiClient;
@@ -19,6 +22,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _apellidosController = TextEditingController();
   final TextEditingController _ubicacionController = TextEditingController();
 
+  // Imagen
+  XFile? _imageFile; // Cambiado a XFile para compatibilidad Web
+  String? _currentPhotoUrl;
+  final ImagePicker _picker = ImagePicker();
+
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -36,6 +44,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _nombreController.text = userData['nombre'] ?? '';
           _apellidosController.text = userData['apellidos'] ?? '';
           _ubicacionController.text = userData['ubicacion'] ?? '';
+          _currentPhotoUrl = userData['path_foto_perfil'];
           _isLoading = false;
         });
       }
@@ -49,11 +58,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = pickedFile; // Guardamos XFile directamente
+        });
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+    }
+  }
+
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
     try {
+      // 1. Subir foto si hay una nueva seleccionada
+      if (_imageFile != null) {
+        // _imageFile ya es XFile
+        await widget.apiClient.uploadAvatar(_imageFile!);
+      }
+
+      // 2. Actualizar datos de texto
       final Map<String, dynamic> updates = {
         "nombre": _nombreController.text.trim(),
         "apellidos": _apellidosController.text.trim(),
@@ -89,6 +119,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider? imageProvider;
+    if (_imageFile != null) {
+      if (kIsWeb) {
+        // En Web, path es un blob URL, usamos NetworkImage
+        imageProvider = NetworkImage(_imageFile!.path);
+      } else {
+        // En Móvil, path es ruta de archivo, usamos FileImage
+        imageProvider = FileImage(File(_imageFile!.path));
+      }
+    } else if (_currentPhotoUrl != null) {
+      imageProvider = NetworkImage(_currentPhotoUrl!);
+    } else {
+      imageProvider = null;
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -108,6 +153,42 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // --- SELECCION DE FOTO ---
+                    Center(
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: const Color(0xFFF5F5F5),
+                              backgroundImage: imageProvider,
+                              child: imageProvider == null
+                                  ? const Icon(Icons.person, size: 50)
+                                  : null,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF142018),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
                     _buildTextField(
                       controller: _nombreController,
                       label: "Nombre",

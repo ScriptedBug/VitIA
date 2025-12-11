@@ -1,12 +1,25 @@
 # --- Archivo NUEVO: /app/routes/routes_user.py ---
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
+import os
+import base64
+from imagekitio import ImageKit
 
 # Importaciones relativas
 from .. import crud, models, schemas
 from ..database import get_db
 from ..auth import get_current_user  # Importamos nuestra dependencia de autenticación
+
+# Inicializar ImageKit (Reutilizando configuración)
+from imagekitio.models.UploadFileRequestOptions import UploadFileRequestOptions
+
+# Inicializar ImageKit (Reutilizando configuración)
+imagekit = ImageKit(
+    public_key=os.getenv("IMAGEKIT_PUBLIC_KEY"),
+    private_key=os.getenv("IMAGEKIT_PRIVATE_KEY"),
+    url_endpoint=os.getenv("IMAGEKIT_URL_ENDPOINT")
+)
 
 router = APIRouter(
     prefix="/users",
@@ -76,3 +89,46 @@ def delete_users_me(
     """
     deleted_user = crud.delete_user(db, id_usuario=current_user.id_usuario)
     return deleted_user
+
+
+@router.post("/me/avatar", response_model=schemas.Usuario, summary="Subir o actualizar foto de perfil")
+def upload_avatar_me(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    """
+    Sube una nueva foto de perfil a ImageKit y actualiza la URL en el usuario.
+    """
+    if not file:
+        raise HTTPException(status_code=400, detail="No se ha enviado ningún archivo")
+
+    try:
+        # 1. Leer y codificar archivo
+        file_content = file.file.read()
+        file_base64 = base64.b64encode(file_content).decode("utf-8")
+        
+        # 2. Subir a ImageKit
+        upload_info = imagekit.upload_file(
+            file=file_base64,
+            file_name=f"perfil_{current_user.email}.jpg", # Sobreescribir o versionar
+            options=UploadFileRequestOptions(
+                folder="/fotos_perfil/",
+                is_private_file=False,
+                use_unique_file_name=True 
+            )
+        )
+        
+        # 3. Obtener URL
+        new_url = upload_info.url
+        
+        # 4. Actualizar usuario en BD
+        # Usamos crud.update_user con un esquema parcial
+        update_data = schemas.UsuarioUpdate(path_foto_perfil=new_url)
+        updated_user = crud.update_user(db=db, db_user=current_user, user_update=update_data)
+        
+        return updated_user
+        
+    except Exception as e:
+        print(f"Error subiendo avatar: {e}")
+        raise HTTPException(status_code=500, detail="Error al subir la imagen")

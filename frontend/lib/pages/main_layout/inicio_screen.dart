@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/services/weather_service.dart';
 import '../../widgets/weather_section.dart';
 import '../../widgets/vitia_header.dart';
-import '../../widgets/circle_border_container.dart';
+import '../tutorial/tutorial_page.dart';
+import '../../core/api_client.dart';
 
 class InicioScreen extends StatefulWidget {
   // Convert to Stateful
   final String userName;
   final String location;
+  final String? userPhotoUrl; // Nuevo campo
   final VoidCallback? onProfileTap;
+  final ApiClient apiClient;
 
   const InicioScreen({
     super.key,
     required this.userName,
     required this.location,
+    this.userPhotoUrl,
     this.onProfileTap,
+    required this.apiClient,
   });
 
   @override
@@ -65,104 +71,119 @@ class _InicioScreenState extends State<InicioScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-
-              // 2. HEADER UNIFICADO (Saludo + Avatar)
-              VitiaHeader(
-                title: '¡Hola, ${widget.userName}!',
-                actionIcon: GestureDetector(
-                  onTap: widget.onProfileTap,
-                  child: const CircleBorderContainer(),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // 3. ILUSTRACIÓN VIÑEDO
-              // El usuario dijo "he descargado la foto... assets/home/"
-              // Asumimos 'assets/home/ilustracion_vinedo.png' (Yo la copié antes)
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Image.asset(
-                    'assets/home/ilustracion_home.png',
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // 4. UBICACIÓN
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                color: Colors.transparent,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.location_on_outlined,
-                        color: Colors.black87),
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.location.isNotEmpty
-                          ? "${widget.location}."
-                          : "Sin ubicación definida.",
-                      style:
-                          const TextStyle(fontSize: 16, color: Colors.black87),
+      body: Padding(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        child: Column(
+          children: [
+            // 2. HEADER UNIFICADO (FIJO)
+            VitiaHeader(
+              title: '', // Título vaciado para moverlo al body
+              leading: IconButton(
+                icon: const Icon(Icons.menu_book_outlined, color: Colors.black),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TutorialPage(
+                        apiClient: widget.apiClient,
+                        isCompulsory: false,
+                        onFinished: () => Navigator.pop(context),
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    // Icono de edición eliminado
+                  );
+                },
+                tooltip: "Tutorial",
+              ),
+              userPhotoUrl: widget.userPhotoUrl, // Pasamos la URL
+              onProfileTap: widget.onProfileTap,
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 10),
+
+                    // TEXTO HOLA (Movido aquí)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Text(
+                        '¡Hola, ${widget.userName.split(' ')[0]}!',
+                        style: GoogleFonts.lora(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF1E2623),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // 3. ILUSTRACIÓN VIÑEDO
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Image.asset(
+                          'assets/home/ilustracion_home.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // 4. UBICACIÓN
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      color: Colors.transparent,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.location_on_outlined,
+                              color: Colors.black87),
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.location.isNotEmpty
+                                ? "${widget.location}."
+                                : "Sin ubicación definida.",
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.black87),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
+                    ),
+
+                    // 5. SECCIÓN TIEMPO
+                    if (_weatherData != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20.0),
+                        child: WeatherSection(weatherData: _weatherData),
+                      )
+                    else if (_weatherError != null)
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(_weatherError!,
+                            style: const TextStyle(color: Colors.red)),
+                      )
+                    else if (!_isLoadingWeather && widget.location.isNotEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text("Información del tiempo no disponible."),
+                      ),
+
+                    const SizedBox(height: 30),
+
+                    const SizedBox(
+                        height:
+                            140), // Espacio aumentado para el navbar flotante
                   ],
                 ),
               ),
-
-              // 5. SECCIÓN TIEMPO (NUEVO)
-              if (_weatherData != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 20.0),
-                  child: WeatherSection(weatherData: _weatherData),
-                )
-              else if (_weatherError != null)
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Text(_weatherError!,
-                      style: const TextStyle(color: Colors.red)),
-                )
-              else if (!_isLoadingWeather && widget.location.isNotEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: Text("Información del tiempo no disponible."),
-                ),
-
-              const SizedBox(height: 30),
-
-              // 5. DATOS ESTÁTICOS (MOCKUP) - Cepas / Hectáreas
-              // El usuario dijo "obvia todo lo de estado del viñedo", pero quizás
-              // quiera ver los datos inferiores. Los pondré como placeholder estático.
-              // 5. DATOS ESTÁTICOS (Cepas / Hectáreas) ELIMINADO
-              // Padding(
-              //   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              //   child: Row(
-              //     children: [
-              //       Expanded(
-              //         child: _buildInfoCard("300 Cepas", "4 Variedades"),
-              //       ),
-              //       const SizedBox(width: 15),
-              //       Expanded(
-              //         child: _buildInfoCard("1,6 hectáreas", "Desde 1982"),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-
-              const SizedBox(height: 100), // Espacio para el navbar
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

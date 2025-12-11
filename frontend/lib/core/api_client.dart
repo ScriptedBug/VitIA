@@ -302,4 +302,24 @@ class ApiClient {
       rethrow;
     }
   }
+
+  // Subir foto de perfil `/users/me/avatar`
+  Future<void> uploadAvatar(XFile imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+
+      FormData formData = FormData.fromMap({
+        "file": MultipartFile.fromBytes(
+          bytes,
+          filename: imageFile.name,
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      });
+
+      await _dio.post('/users/me/avatar', data: formData);
+    } catch (e) {
+      print("Error al subir avatar: $e");
+      rethrow;
+    }
+  }
 }

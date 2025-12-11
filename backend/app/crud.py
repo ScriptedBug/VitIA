@@ -1,7 +1,7 @@
 # --- En tu archivo /app/crud.py ---
 
 from sqlalchemy.orm import Session
-from . import models, schemas
+from . import models, schemas, security
 from typing import List, Optional
 
 # -----------------------------------------------------
@@ -142,13 +142,13 @@ def get_user_by_email(db: Session, email: str):
     return db.query(models.Usuario).filter(models.Usuario.email == email).first()
 
 def create_user(db: Session, user: schemas.UsuarioCreate, url_foto: str = None):
-    fake_hashed_password = auth.get_password_hash(user.password)
+    fake_hashed_password = security.get_password_hash(user.password)
     
     db_user = models.Usuario(
         nombre=user.nombre,
         apellidos=user.apellidos,
         email=user.email,
-        hashed_password=fake_hashed_password,
+        password_hash=fake_hashed_password,
         ubicacion=user.ubicacion,
         # AÑADE ESTO 👇
         path_foto_perfil=url_foto 

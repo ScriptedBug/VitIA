@@ -1109,7 +1109,8 @@ class _CatalogoPageState extends State<CatalogoPage>
     // Un header personalizado en lugar de AppBar
     return Scaffold(
       backgroundColor: Colors.white, // Fondo general
-      body: SafeArea(
+      body: Padding(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         child: Column(
           children: [
             // 1. HEADER PERSONALIZADO
@@ -1217,7 +1218,8 @@ class _CatalogoPageState extends State<CatalogoPage>
                             ),
 
                       // Espacio final
-                      const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                      // Espacio final aumentado para navbar flotante
+                      const SliverToBoxAdapter(child: SizedBox(height: 160)),
                     ],
                   ),
 
@@ -1272,6 +1274,8 @@ class _CatalogoPageState extends State<CatalogoPage>
                                       ),
                                     )
                                   : ListView.builder(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 150),
                                       itemCount: _filtradasColeccion.length + 1,
                                       itemBuilder: (context, index) {
                                         if (index ==

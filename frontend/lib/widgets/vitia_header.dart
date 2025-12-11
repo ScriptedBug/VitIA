@@ -3,12 +3,18 @@ import 'package:google_fonts/google_fonts.dart';
 
 class VitiaHeader extends StatelessWidget {
   final String title;
+  final Widget? leading; // Nuevo campo
   final Widget? actionIcon;
+  final String? userPhotoUrl;
+  final VoidCallback? onProfileTap;
 
   const VitiaHeader({
     super.key,
     required this.title,
+    this.leading, // Nuevo
     this.actionIcon,
+    this.userPhotoUrl,
+    this.onProfileTap,
   });
 
   @override
@@ -28,7 +34,7 @@ class VitiaHeader extends StatelessWidget {
                   TextSpan(
                     text: 'Vit',
                     style: GoogleFonts.lora(
-                      fontSize: 16, // Original was 16, keep it or adjust?
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       fontStyle: FontStyle.italic,
                       color: Colors.black,
@@ -50,21 +56,40 @@ class VitiaHeader extends StatelessWidget {
           ),
         ),
 
-        // 2. Fila Título + Acción
+        // 2. Fila Título + Avatar/Acción
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: GoogleFonts.lora(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF1E2623),
+              if (leading != null) leading!,
+
+              if (title.isNotEmpty)
+                Text(
+                  title,
+                  style: GoogleFonts.lora(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF1E2623),
+                  ),
                 ),
-              ),
-              if (actionIcon != null) actionIcon!,
+              // Prioridad: 1. actionIcon explícito, 2. Avatar de usuario
+              if (actionIcon != null)
+                actionIcon!
+              else if (onProfileTap != null) // Mostrar avatar si hay callback
+                GestureDetector(
+                  onTap: onProfileTap,
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: userPhotoUrl != null
+                        ? NetworkImage(userPhotoUrl!)
+                        : null,
+                    child: userPhotoUrl == null
+                        ? const Icon(Icons.person, color: Colors.grey)
+                        : null,
+                  ),
+                ),
             ],
           ),
         ),

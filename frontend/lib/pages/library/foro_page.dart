@@ -155,127 +155,142 @@ class _ForoPageState extends State<ForoPage>
       body: Stack(
         children: [
           // CONTENIDO PRINCIPAL SCROLLABLE
-          CustomScrollView(
-            slivers: [
-              // 1. HEADER GRANDE
-              SliverToBoxAdapter(
-                child: VitiaHeader(
+          Padding(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+            child: Column(
+              children: [
+                // 1. HEADER GRANDE (FIJO)
+                VitiaHeader(
                   title: "Comunidad",
                   actionIcon: IconButton(
                     icon: const Icon(Icons.search, size: 28),
                     onPressed: () {},
                   ),
                 ),
-              ),
 
-              // 2. TABS (Botones pastilla)
-              SliverToBoxAdapter(
-                child: Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildTabButton("Todos", 0),
-                      _buildTabButton("Tus hilos", 1),
+                Expanded(
+                  child: CustomScrollView(
+                    slivers: [
+                      // 2. TABS (Botones pastilla)
+                      SliverToBoxAdapter(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Row(
+                            children: [
+                              _buildTabButton("Todos", 0),
+                              _buildTabButton("Tus hilos", 1),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // 3. SECCIÓN POPULARES (Solo si estamos en 'Todos')
+                      if (_selectedTab == 0) ...[
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                            child: Text("Populares",
+                                style: GoogleFonts.lora(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF2A2A2A))),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: 180, // Altura tarjetas populares
+                            child: _isLoading
+                                ? const Center(
+                                    child: CircularProgressIndicator())
+                                : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    // Usamos la misma lista o una filtrada. Aquí dummy para ejemplo visual
+                                    itemCount:
+                                        _publicacionesTodas.take(5).length,
+                                    itemBuilder: (context, index) {
+                                      return _PopularCard(
+                                        post: _publicacionesTodas[index],
+                                        onTap: () async {
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    PostDetailPage(
+                                                        post:
+                                                            _publicacionesTodas[
+                                                                index])),
+                                          );
+                                          if (result == true && mounted) {
+                                            _cargarDatos();
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ],
+
+                      // 4. SECCIÓN RECIENTES (Encabezado)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+                          child: Text("Recientes",
+                              style: GoogleFonts.lora(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF2A2A2A))),
+                        ),
+                      ),
+
+                      // 5. Espaciador para la lista y botón
+                      const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+                      // 6. LISTA VERTICAL (RECIENTES)
+                      _isLoading
+                          ? const SliverToBoxAdapter(
+                              child: SizedBox(
+                                  height: 200,
+                                  child: Center(
+                                      child: CircularProgressIndicator())))
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  return _RecentCard(
+                                    post: activeList[index],
+                                    onTap: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                PostDetailPage(
+                                                    post: activeList[index])),
+                                      );
+                                      if (result == true && mounted) {
+                                        _cargarDatos();
+                                      }
+                                    },
+                                  );
+                                },
+                                childCount: activeList.length,
+                              ),
+                            ),
+
+                      // Espacio extra al final para que no tape el toolbar flotante ni el botón
+                      const SliverToBoxAdapter(child: SizedBox(height: 160)),
                     ],
                   ),
                 ),
-              ),
-
-              // 3. SECCIÓN POPULARES (Solo si estamos en 'Todos')
-              if (_selectedTab == 0) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-                    child: Text("Populares",
-                        style: GoogleFonts.lora(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF2A2A2A))),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 180, // Altura tarjetas populares
-                    child: _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            // Usamos la misma lista o una filtrada. Aquí dummy para ejemplo visual
-                            itemCount: _publicacionesTodas.take(5).length,
-                            itemBuilder: (context, index) {
-                              return _PopularCard(
-                                post: _publicacionesTodas[index],
-                                onTap: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => PostDetailPage(
-                                            post: _publicacionesTodas[index])),
-                                  );
-                                  if (result == true && mounted) {
-                                    _cargarDatos();
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ),
               ],
-
-              // 4. SECCIÓN RECIENTES (Encabezado)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
-                  child: Text("Recientes",
-                      style: GoogleFonts.lora(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2A2A2A))),
-                ),
-              ),
-
-              // 5. Espaciador para la lista y botón
-              const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-              // 6. LISTA VERTICAL (RECIENTES)
-              _isLoading
-                  ? const SliverToBoxAdapter(
-                      child: SizedBox(
-                          height: 200,
-                          child: Center(child: CircularProgressIndicator())))
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return _RecentCard(
-                            post: activeList[index],
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => PostDetailPage(
-                                        post: activeList[index])),
-                              );
-                              if (result == true && mounted) {
-                                _cargarDatos();
-                              }
-                            },
-                          );
-                        },
-                        childCount: activeList.length,
-                      ),
-                    ),
-
-              // Espacio extra al final para que no tape el toolbar flotante ni el botón
-              const SliverToBoxAdapter(child: SizedBox(height: 160)),
-            ],
+            ),
           ),
 
           // BOTÓN FLOTANTE CREAR HILO (Fijo)
