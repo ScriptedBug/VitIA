@@ -1,10 +1,24 @@
 # --- En tu archivo /app/routes/routes_auth.py ---
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from typing import Optional
 
-from .. import crud, schemas, auth, security, models
+# Importar ImageKit (Asegúrate de tener esto configurado como en tus otras rutas)
+from imagekitio import ImageKit
+from ..config import settings # O donde tengas tus claves
+import base64
+
+# Inicializar ImageKit
+imagekit = ImageKit(
+    public_key=os.getenv("IMAGEKIT_PUBLIC_KEY"),
+    private_key=os.getenv("IMAGEKIT_PRIVATE_KEY"),
+    url_endpoint=os.getenv("IMAGEKIT_URL_ENDPOINT")
+)
+
+from .. import crud, models, schemas, auth
 from ..database import get_db
 
 router = APIRouter(
@@ -12,25 +26,67 @@ router = APIRouter(
     tags=["Autenticación"]
 )
 
-@router.post("/register", 
-    response_model=schemas.Usuario, 
-    status_code=status.HTTP_201_CREATED,
-    summary="Registrar un nuevo usuario"
-)
-def register_user(user: schemas.UsuarioCreate, db: Session = Depends(get_db)):
-    """Crea un nuevo usuario en la base de datos."""
-    db_user = crud.get_user_by_email(db, email=user.email)
+@router.post("/register", response_model=schemas.Usuario)
+def register_user(
+    # 1. Recibimos los datos como FORM (ya no como JSON body automático)
+    email: str = Form(...),
+    password: str = Form(...),
+    nombre: str = Form(...),
+    apellidos: str = Form(...),
+    ubicacion: Optional[str] = Form(None),
+    
+    # 2. Recibimos el archivo (Opcional)
+    foto: Optional[UploadFile] = File(None),
+    
+    db: Session = Depends(get_db)
+):
+    """
+    Registro de usuario con foto de perfil opcional.
+    Usa multipart/form-data.
+    """
+    
+    # A. Validar si el email ya existe
+    db_user = crud.get_user_by_email(db, email=email)
     if db_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El correo electrónico ya está registrado"
-        )
-    
-    # Hashea la contraseña antes de guardarla
-    hashed_password = security.get_password_hash(user.password)
-    
-    # Llama a una nueva función CRUD (que crearemos en el paso 2)
-    return crud.create_user(db=db, user=user, hashed_password=hashed_password)
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
+
+    # B. Subir foto a ImageKit (si el usuario envió una)
+    url_foto = None
+    if foto:
+        try:
+            # Leer el archivo
+            file_content = foto.file.read()
+            # Convertir a base64 para ImageKit
+            file_base64 = base64.b64encode(file_content).decode("utf-8")
+            
+            # Subir
+            upload_info = imagekit.upload_file(
+                file=file_base64,
+                file_name=f"perfil_{email}.jpg", # Nombre único
+                options={
+                    "folder": "/fotos_perfil/", # Carpeta ordenada
+                    "is_private_file": False
+                }
+            )
+            url_foto = upload_info.url
+        except Exception as e:
+            print(f"Error subiendo foto: {e}")
+            # Opcional: ¿Quieres fallar si la foto falla? 
+            # Si no, simplemente seguimos sin foto.
+            pass
+
+    # C. Crear el objeto UsuarioCreate manualmente para pasarlo al CRUD
+    # (Hacemos esto para reutilizar tu función crud existente)
+    user_data = schemas.UsuarioCreate(
+        email=email,
+        password=password,
+        nombre=nombre,
+        apellidos=apellidos,
+        ubicacion=ubicacion
+    )
+
+    # D. Guardar en BD
+    return crud.create_user(db=db, user=user_data, url_foto=url_foto)
 
 
 @router.post("/token", 
@@ -49,7 +105,7 @@ def login_for_access_token(
     user = crud.get_user_by_email(db, email=form_data.username)
     
     # Verifica que el usuario exista y la contraseña sea correcta
-    if not user or not security.verify_password(form_data.password, user.password_hash):
+    if not user or not auth.verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email o contraseña incorrectos",

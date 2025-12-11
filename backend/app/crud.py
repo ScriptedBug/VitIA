@@ -141,14 +141,17 @@ def get_user_by_email(db: Session, email: str):
     """Obtiene un usuario por su email."""
     return db.query(models.Usuario).filter(models.Usuario.email == email).first()
 
-def create_user(db: Session, user: schemas.UsuarioCreate, hashed_password: str):
-    """Crea un nuevo usuario con la contraseña ya hasheada."""
+def create_user(db: Session, user: schemas.UsuarioCreate, url_foto: str = None):
+    fake_hashed_password = auth.get_password_hash(user.password)
+    
     db_user = models.Usuario(
-        email=user.email,
         nombre=user.nombre,
         apellidos=user.apellidos,
+        email=user.email,
+        hashed_password=fake_hashed_password,
         ubicacion=user.ubicacion,
-        password_hash=hashed_password
+        # AÑADE ESTO 👇
+        path_foto_perfil=url_foto 
     )
     db.add(db_user)
     db.commit()
