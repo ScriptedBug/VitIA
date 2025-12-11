@@ -436,10 +436,11 @@ class _PopularCardState extends State<_PopularCard> {
               children: [
                 Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 16,
-                      backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/150?img=12'), // Avatar dummy
+                      backgroundColor: Colors.grey.shade300,
+                      child: const Icon(Icons.person,
+                          color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 8),
                     Column(

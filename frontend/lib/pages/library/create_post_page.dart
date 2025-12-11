@@ -15,7 +15,7 @@ class CreatePostPage extends StatefulWidget {
 class _CreatePostPageState extends State<CreatePostPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
-  
+
   late ApiClient _apiClient;
   bool _isPublishing = false;
   XFile? _selectedImage;
@@ -44,9 +44,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   Future<void> _handlePublish() async {
-    if (_titleController.text.trim().isEmpty || _textController.text.trim().isEmpty) {
+    if (_titleController.text.trim().isEmpty ||
+        _textController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, escribe un título y un mensaje.')),
+        const SnackBar(
+            content: Text('Por favor, escribe un título y un mensaje.')),
       );
       return;
     }
@@ -56,11 +58,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
     try {
       // Enviamos el texto y la imagen (si existe)
       await _apiClient.createPublicacion(
-        _titleController.text, 
-        _textController.text,
-        imageFile: _selectedImage
-      );
-      
+          _titleController.text, _textController.text,
+          imageFile: _selectedImage);
+
       if (mounted) {
         Navigator.pop(context, true); // Retorna true para refrescar la lista
       }
@@ -83,7 +83,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
           children: [
             // BARRA SUPERIOR PERSONALIZADA
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -98,24 +99,29 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     ),
                     child: const Text('Cancelar'),
                   ),
-                  
                   ElevatedButton(
                     onPressed: _isPublishing ? null : _handlePublish,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey.shade200,
                       foregroundColor: Colors.black87,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
                     ),
-                    child: _isPublishing 
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Publicar', style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: _isPublishing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('Publicar',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
             ),
-            
+
             const Divider(height: 1),
 
             Expanded(
@@ -128,10 +134,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                         const CircleAvatar(
+                        CircleAvatar(
                           radius: 22,
-                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'), // Avatar dummy
-                          backgroundColor: Colors.grey,
+                          backgroundColor: Colors.grey.shade300,
+                          child: const Icon(Icons.person, color: Colors.white),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -140,7 +146,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             children: [
                               TextField(
                                 controller: _titleController,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                                 decoration: const InputDecoration(
                                   hintText: 'Título de tu publicación...',
                                   border: InputBorder.none,
@@ -152,7 +159,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                               TextField(
                                 controller: _textController,
                                 maxLines: null,
-                                style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                style: const TextStyle(
+                                    fontSize: 16, color: Colors.black87),
                                 decoration: const InputDecoration(
                                   hintText: '¿Qué te gustaría compartir hoy?',
                                   border: InputBorder.none,
@@ -195,7 +203,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(16.0),
                                       child: IconButton(
-                                        icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                                        icon: const Icon(Icons.close,
+                                            color: Colors.white, size: 30),
                                         onPressed: () => Navigator.pop(ctx),
                                       ),
                                     ),
@@ -220,16 +229,18 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           child: Stack(
                             children: [
                               Positioned(
-                                top: 5, right: 5,
+                                top: 5,
+                                right: 5,
                                 child: InkWell(
-                                  onTap: () => setState(() => _selectedImage = null),
+                                  onTap: () =>
+                                      setState(() => _selectedImage = null),
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: const BoxDecoration(
-                                      color: Colors.black54, 
-                                      shape: BoxShape.circle
-                                    ),
-                                    child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle),
+                                    child: const Icon(Icons.close,
+                                        size: 16, color: Colors.white),
                                   ),
                                 ),
                               )
@@ -246,14 +257,20 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+                            border: Border.all(
+                                color: Colors.grey.shade300,
+                                style: BorderStyle.solid),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_photo_alternate_outlined, size: 48, color: Colors.grey.shade400),
+                              Icon(Icons.add_photo_alternate_outlined,
+                                  size: 48, color: Colors.grey.shade400),
                               const SizedBox(height: 8),
-                              Text("Añadir imagen", style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                              Text("Añadir imagen",
+                                  style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ),
@@ -265,27 +282,30 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
             // BARRA DE ACCIONES INFERIOR (Iconos)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => _pickImage(ImageSource.camera), 
-                    icon: const Icon(Icons.camera_alt_outlined, size: 28)
-                  ),
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt_outlined, size: 28)),
                   IconButton(
-                    onPressed: () => _pickImage(ImageSource.gallery), 
-                    icon: const Icon(Icons.photo_outlined, size: 28)
-                  ),
-                  const Spacer(), 
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_outlined, size: 28)),
+                  const Spacer(),
                   TextButton.icon(
                     onPressed: () {},
-                    icon: const Icon(Icons.alternate_email, size: 20, color: Colors.black54),
-                    label: const Text("Etiquetar", style: TextStyle(color: Colors.black54)),
+                    icon: const Icon(Icons.alternate_email,
+                        size: 20, color: Colors.black54),
+                    label: const Text("Etiquetar",
+                        style: TextStyle(color: Colors.black54)),
                   ),
-                   TextButton.icon(
+                  TextButton.icon(
                     onPressed: () {},
-                    icon: const Icon(Icons.location_on_outlined, size: 20, color: Colors.black54),
-                    label: const Text("Ubicación", style: TextStyle(color: Colors.black54)),
+                    icon: const Icon(Icons.location_on_outlined,
+                        size: 20, color: Colors.black54),
+                    label: const Text("Ubicación",
+                        style: TextStyle(color: Colors.black54)),
                   ),
                 ],
               ),
@@ -301,13 +321,15 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   backgroundColor: const Color(0xFF7A7A30), // Color Oliva
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  textStyle: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                   elevation: 0,
                 ),
-                child: _isPublishing 
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Publicar'),
+                child: _isPublishing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Publicar'),
               ),
             ),
           ],

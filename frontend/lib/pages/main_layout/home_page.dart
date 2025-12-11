@@ -30,6 +30,7 @@ class _HomepageState extends State<HomePage> {
   bool _isAuthenticated = false;
   bool _tutorialSuperado = true;
   bool _isLoadingStatus = true;
+  bool _hasShownTutorialSession = false; // Flag para mostrar solo una vez
   String _userName = "Usuario";
   String _userLocation = "";
   String? _userPhotoUrl; // Nueva variable para la foto
@@ -118,15 +119,16 @@ class _HomepageState extends State<HomePage> {
         debugPrint("Error al cargar perfil usuario: $e");
       }
 
-      if (!tutorialStatus) {
+      if (!tutorialStatus && !_hasShownTutorialSession) {
         if (mounted) setState(() => _tutorialSuperado = false);
+        _hasShownTutorialSession = true;
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _showTutorialPage(isInitial: true);
         });
+      } else {
+        if (mounted) setState(() => _tutorialSuperado = true);
       }
-
-      if (mounted) setState(() => _tutorialSuperado = tutorialStatus);
     } on DioException catch (e) {
       debugPrint("Error al cargar datos iniciales: ${e.message}");
       if (mounted) setState(() => _tutorialSuperado = true);
