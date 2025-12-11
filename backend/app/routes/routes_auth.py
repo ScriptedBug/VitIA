@@ -4,7 +4,8 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Union
+from .. import crud, models, schemas, auth
 
 # Importar ImageKit (Asegúrate de tener esto configurado como en tus otras rutas)
 from imagekitio import ImageKit
@@ -31,28 +32,19 @@ router = APIRouter(
 
 @router.post("/register", response_model=schemas.Usuario)
 def register_user(
-    # 1. Recibimos los datos como FORM (ya no como JSON body automático)
     email: str = Form(...),
-    password: str = Form(...),
+    password: str = Form(...), # Contraseña texto plano (ej: "1234")
     nombre: str = Form(...),
     apellidos: str = Form(...),
     ubicacion: Optional[str] = Form(None),
-    
-    # 2. Recibimos el archivo (Opcional)
-    foto: Optional[UploadFile] = File(None),
-    
+    foto: Union[UploadFile, str, None] = File(None),
     db: Session = Depends(get_db)
 ):
-    """
-    Registro de usuario con foto de perfil opcional.
-    Usa multipart/form-data.
-    """
-    
-    # A. Validar si el email ya existe
-    db_user = crud.get_user_by_email(db, email=email)
-    if db_user:
-        raise HTTPException(status_code=400, detail="El email ya está registrado")
+    # 1. Validar email
+    if crud.get_user_by_email(db, email=email):
+        raise HTTPException(status_code=400, detail="Email ya registrado")
 
+<<<<<<< HEAD
     # B. Subir foto a ImageKit (si el usuario envió una)
     # B. Subir foto a ImageKit (si el usuario envió una)
     url_foto = None
@@ -79,19 +71,31 @@ def register_user(
             print(f"DEBUG: Subida EXITOSA. URL: {url_foto}")
         except Exception as e:
             print(f"DEBUG: ERROR CRÍTICO subiendo foto: {e}")
+=======
+    # 2. Subir foto (Tu lógica de ImageKit) ...
+    url_foto = None
+    if foto and isinstance(foto, UploadFile):
+        try:
+             # ... (Tu código de ImageKit aquí) ...
+             # Para resumir, supongamos que obtienes url_foto
+             pass 
+        except Exception:
+>>>>>>> d237f46 (ni idea)
             pass
 
-    # C. Crear el objeto UsuarioCreate manualmente para pasarlo al CRUD
-    # (Hacemos esto para reutilizar tu función crud existente)
+    # 3. ENCRIPTAR CONTRASEÑA (¡EL CAMBIO IMPORTANTE!)
+    hashed_password = auth.get_password_hash(password) # Convertimos "1234" a "$2b$12$..."
+
+    # 4. Crear objeto para el CRUD
     user_data = schemas.UsuarioCreate(
         email=email,
-        password=password,
+        password=hashed_password, # <--- Pasamos la ENCRIPTADA, no la plana
         nombre=nombre,
         apellidos=apellidos,
         ubicacion=ubicacion
     )
 
-    # D. Guardar en BD
+    # 5. Guardar
     return crud.create_user(db=db, user=user_data, url_foto=url_foto)
 
 

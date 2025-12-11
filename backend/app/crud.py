@@ -148,10 +148,10 @@ def create_user(db: Session, user: schemas.UsuarioCreate, url_foto: str = None):
         nombre=user.nombre,
         apellidos=user.apellidos,
         email=user.email,
-        password_hash=fake_hashed_password,
+        hashed_password=fake_hashed_password,
         ubicacion=user.ubicacion,
-        # AÑADE ESTO 👇
-        path_foto_perfil=url_foto 
+        path_foto_perfil=url_foto,
+        tutorial_superado=False # Valor por defecto seguro
     )
     db.add(db_user)
     db.commit()

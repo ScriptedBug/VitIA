@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from passlib.context import CryptContext
 
 from . import schemas, crud, models
 from .database import get_db
@@ -14,6 +15,18 @@ from sqlalchemy.orm import Session
 # Esta es la "URL" que FastAPI usará para saber dónde está el endpoint de login
 # "token" es la URL que crearemos en routes_auth.py
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+# 1. Configuración de encriptación (si no la tienes ya)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# 2. Función para verificar contraseñas (probablemente ya la tengas)
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+# 3. ¡ESTA ES LA QUE TE FALTA! 👇
+def get_password_hash(password):
+    """Encripta una contraseña en texto plano."""
+    return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Crea un nuevo token de acceso JWT."""
