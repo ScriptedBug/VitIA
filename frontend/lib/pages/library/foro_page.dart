@@ -5,6 +5,7 @@ import '../../core/services/user_sesion.dart';
 import 'post_detail_page.dart';
 import 'create_post_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../widgets/vitia_header.dart';
 
 class ForoPage extends StatefulWidget {
   const ForoPage({super.key});
@@ -158,35 +159,11 @@ class _ForoPageState extends State<ForoPage>
             slivers: [
               // 1. HEADER GRANDE
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 60, 20, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // "VitIA" pequeño centrado o arriba
-                      const Center(
-                        child: Text("VitIA",
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2)),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text("Comunidad",
-                              style: GoogleFonts.lora(
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF1A1A1A))),
-                          IconButton(
-                            icon: const Icon(Icons.search, size: 28),
-                            onPressed: () {},
-                          )
-                        ],
-                      ),
-                    ],
+                child: VitiaHeader(
+                  title: "Comunidad",
+                  actionIcon: IconButton(
+                    icon: const Icon(Icons.search, size: 28),
+                    onPressed: () {},
                   ),
                 ),
               ),

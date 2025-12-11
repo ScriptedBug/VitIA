@@ -7,10 +7,14 @@ class UserSession {
   // Clave para guardar en disco
   static const String _tokenKey = 'auth_token';
   static const String _userIdKey = 'auth_user_id';
+  static const String _baseUrlKey = 'api_base_url'; // Nueva clave para la URL
 
   // Getters
   static String? get token => _token;
   static int? get userId => _userId;
+  static String? get baseUrl => _baseUrl;
+
+  static String? _baseUrl;
 
   // --- MÉTODOS ASÍNCRONOS PARA PERSISTENCIA ---
 
@@ -19,6 +23,7 @@ class UserSession {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString(_tokenKey);
     _userId = prefs.getInt(_userIdKey);
+    _baseUrl = prefs.getString(_baseUrlKey); // Cargar URL personalizada
 
     // Devolvemos true si hay token válido
     return _token != null && _token!.isNotEmpty;
@@ -37,10 +42,17 @@ class UserSession {
     await prefs.setInt(_userIdKey, id);
   }
 
+  static Future<void> setBaseUrl(String url) async {
+    _baseUrl = url;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_baseUrlKey, url);
+  }
+
   /// Borra la sesión de memoria y disco (Logout)
   static Future<void> clearSession() async {
     _token = null;
     _userId = null;
+    // IMPORTANTE: No borramos _baseUrl aquí para no obligar a reconfigurar la IP al cerrar sesión
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_userIdKey);

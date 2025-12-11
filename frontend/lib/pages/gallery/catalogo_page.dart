@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:geolocator/geolocator.dart';
 import '../../core/services/user_sesion.dart';
 import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
-import 'detalle_variedad_page.dart';
-import '../../pages/capture/foto_page.dart';
-import '../../pages/main_layout/home_page.dart';
-import 'detalle_coleccion_page.dart';
-import 'user_variety_detail_page.dart'; // <--- NUEVA PÁGINA
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../widgets/vitia_header.dart';
+import 'detalle_variedad_page.dart';
+import 'user_variety_detail_page.dart';
+import 'detalle_coleccion_page.dart';
+import '../capture/foto_page.dart';
 
 class CatalogoPage extends StatefulWidget {
   // ⬅️ CLASE RENOMBRADA A CATÁLOGO
@@ -1115,40 +1113,10 @@ class _CatalogoPageState extends State<CatalogoPage>
         child: Column(
           children: [
             // 1. HEADER PERSONALIZADO
-            const SizedBox(height: 10),
-            Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                // Decoración negra curvada superior (estilo "Isla" o Header)
-                // Como en la imagen parece un texto simple, lo dejamos simple.
-                child: const Text(
-                  "VitIA",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      letterSpacing: 1.0),
-                ),
-              ),
-            ),
-
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Biblioteca",
-                    style: GoogleFonts.lora(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w400, // Letra más fina/elegante
-                      color: const Color(0xFF1E2623),
-                    ),
-                  ),
-                  // IconButton Removed
-                ],
-              ),
+            const VitiaHeader(
+              title: "Biblioteca",
+              actionIcon:
+                  Icon(Icons.search, size: 28), // Placeholder for action
             ),
 
             // 2. TABS PERSONALIZADOS (Pills)

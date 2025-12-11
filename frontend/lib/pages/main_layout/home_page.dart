@@ -1,7 +1,7 @@
 // lib/pages/main_layout/home_page.dart
 
 import 'package:flutter/material.dart';
-import '../../widgets/vitia_logo.dart';
+
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:dio/dio.dart';
 
@@ -39,6 +39,16 @@ class _HomepageState extends State<HomePage> {
         InicioScreen(
           userName: _userName,
           location: _userLocation,
+          onProfileTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => PerfilPage(apiClient: _apiClient)),
+            );
+            if (result == true) {
+              _checkTutorialStatus();
+            }
+          },
         ),
         const FotoPage(),
         // CAMBIO: Ahora pasamos el callback al catálogo
@@ -174,51 +184,6 @@ class _HomepageState extends State<HomePage> {
     );
   }
 
-  void _launchTutorialManual() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (context) => TutorialPage(
-          apiClient: _apiClient,
-          onFinished: () => Navigator.of(context).pop(),
-          isCompulsory: false,
-        ),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBarInicio(BuildContext context) {
-    return AppBar(
-      title: const VitIALogo(fontSize: 28),
-      centerTitle: true,
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.help_outline, size: 26),
-        onPressed: _launchTutorialManual,
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          child: GestureDetector(
-            onTap: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => PerfilPage(apiClient: _apiClient)),
-              );
-              if (result == true) {
-                _checkTutorialStatus();
-              }
-            },
-            child: const Icon(Icons.account_circle, size: 28),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoadingStatus || !_tutorialSuperado) {
@@ -234,7 +199,6 @@ class _HomepageState extends State<HomePage> {
 
     return Scaffold(
       extendBody: true,
-      appBar: currentIndex == 0 ? _buildAppBarInicio(context) : null,
 
       body: _screens[currentIndex],
 

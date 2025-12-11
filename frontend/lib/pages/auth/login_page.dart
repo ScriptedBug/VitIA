@@ -28,10 +28,69 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // Dialogo para cambiar la IP
+  void _showServerConfigDialog(BuildContext context) {
+    // Controlador con la URL actual o la por defecto
+    final TextEditingController urlCtrl = TextEditingController(
+      text: UserSession.baseUrl ?? 'http://192.168.0.105:8000',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Configuración de Servidor"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                  "Introduce la URL completa del backend de desarrollo:"),
+              const SizedBox(height: 10),
+              TextField(
+                controller: urlCtrl,
+                decoration: const InputDecoration(
+                  hintText: "Ej: http://192.168.1.5:8000",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newUrl = urlCtrl.text.trim();
+                if (newUrl.isNotEmpty) {
+                  await UserSession.setBaseUrl(newUrl);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text("IP actualizada correctamente")),
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _authMainColor, // Fondo color Vino VitIA
+      // Botón flotante discreto para configuración
+      floatingActionButton: FloatingActionButton.small(
+        backgroundColor: Colors.white.withOpacity(0.2),
+        elevation: 0,
+        onPressed: () => _showServerConfigDialog(context),
+        child: const Icon(Icons.settings, color: Colors.white),
+      ),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(

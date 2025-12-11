@@ -1,5 +1,6 @@
 // lib/core/services/api_config.dart
 import 'package:flutter/foundation.dart';
+import 'user_sesion.dart';
 
 // La dirección de desarrollo de tu servidor FastAPI/Uvicorn (localhost para Web/Desktop)
 // La dirección de desarrollo de tu servidor FastAPI/Uvicorn (localhost para Web/Desktop)
@@ -12,17 +13,14 @@ const String weatherApiKey =
 
 String getBaseUrl() {
   if (kIsWeb) {
-    // Si corre en un navegador (Web), usa localhost
     return _localHostUrl;
   }
-  /* 
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    return 'http://10.0.2.2:8000'; 
-  } 
-  */
-  // Para iOS o Android físico, la mejor opción sería usar la IP de red:
-  // return 'http://192.168.1.5:8000'; // 🚨 ¡Reemplaza con tu IP real si es necesario!
-  // Para iOS o Android físico, usamos la IP de red local del ordenador:
-  // ASEGÚRATE DE QUE TU BACKEND ESTÉ CORRIENDO CON: uvicorn app.main:app --reload --host 0.0.0.0
-  return 'http://192.168.1.118:8000';
+
+  // 1. Si el usuario configuró una IP manual en el login, usamos esa.
+  if (UserSession.baseUrl != null && UserSession.baseUrl!.isNotEmpty) {
+    return UserSession.baseUrl!;
+  }
+
+  // 2. Fallback: IP harcodeada (útil para primera vez o si se borran datos)
+  return 'http://192.168.0.105:8000';
 }

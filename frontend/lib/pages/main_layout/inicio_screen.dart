@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../core/services/weather_service.dart';
 import '../../widgets/weather_section.dart';
+import '../../widgets/vitia_header.dart';
+import '../../widgets/circle_border_container.dart';
 
 class InicioScreen extends StatefulWidget {
   // Convert to Stateful
   final String userName;
   final String location;
+  final VoidCallback? onProfileTap;
 
   const InicioScreen({
     super.key,
     required this.userName,
     required this.location,
+    this.onProfileTap,
   });
 
   @override
@@ -67,23 +71,12 @@ class _InicioScreenState extends State<InicioScreen> {
             children: [
               const SizedBox(height: 10),
 
-              // 2. SALUDO + AVATAR
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '¡Hola, ${widget.userName}!',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight:
-                            FontWeight.w400, // Fuente tipo serif elegante
-                        fontFamily: 'Serif',
-                        color: Color(0xFF142018),
-                      ),
-                    ),
-                  ],
+              // 2. HEADER UNIFICADO (Saludo + Avatar)
+              VitiaHeader(
+                title: '¡Hola, ${widget.userName}!',
+                actionIcon: GestureDetector(
+                  onTap: widget.onProfileTap,
+                  child: const CircleBorderContainer(),
                 ),
               ),
 
