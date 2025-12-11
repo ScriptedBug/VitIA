@@ -125,7 +125,7 @@ class _InicioScreenState extends State<InicioScreen> {
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                         child: Image.asset(
-                          'assets/home/ilustracion_home.png',
+                          'assets/home/Ilustracion_home.png',
                           fit: BoxFit.contain,
                         ),
                       ),
