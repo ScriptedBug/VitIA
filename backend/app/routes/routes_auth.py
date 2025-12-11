@@ -33,7 +33,7 @@ router = APIRouter(
 @router.post("/register", response_model=schemas.Usuario)
 def register_user(
     email: str = Form(...),
-    password: str = Form(...), # Contraseña texto plano (ej: "1234")
+    password: str = Form(...),
     nombre: str = Form(...),
     apellidos: str = Form(...),
     ubicacion: Optional[str] = Form(None),
@@ -42,60 +42,42 @@ def register_user(
 ):
     # 1. Validar email
     if crud.get_user_by_email(db, email=email):
-        raise HTTPException(status_code=400, detail="Email ya registrado")
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
 
-<<<<<<< HEAD
-    # B. Subir foto a ImageKit (si el usuario envió una)
-    # B. Subir foto a ImageKit (si el usuario envió una)
+    # 2. Subir foto (ImageKit)
     url_foto = None
-    print(f"DEBUG: Foto recibida object: {foto}")
-    if foto:
-        try:
-            print(f"DEBUG: Iniciando proceso de subida para: {foto.filename}")
-            # Leer el archivo
-            file_content = foto.file.read()
-            # Convertir a base64 para ImageKit
-            file_base64 = base64.b64encode(file_content).decode("utf-8")
-            
-            # Subir
-            print("DEBUG: Enviando a ImageKit...")
-            upload_info = imagekit.upload_file(
-                file=file_base64,
-                file_name=f"perfil_{email}.jpg", # Nombre único
-                options=UploadFileRequestOptions(
-                    folder="/fotos_perfil/", # Carpeta ordenada
-                    is_private_file=False
-                )
-            )
-            url_foto = upload_info.url
-            print(f"DEBUG: Subida EXITOSA. URL: {url_foto}")
-        except Exception as e:
-            print(f"DEBUG: ERROR CRÍTICO subiendo foto: {e}")
-=======
-    # 2. Subir foto (Tu lógica de ImageKit) ...
-    url_foto = None
+    # Validamos que 'foto' sea realmente un archivo y no un string vacío
     if foto and isinstance(foto, UploadFile):
         try:
-             # ... (Tu código de ImageKit aquí) ...
-             # Para resumir, supongamos que obtienes url_foto
-             pass 
-        except Exception:
->>>>>>> d237f46 (ni idea)
+            file_content = foto.file.read()
+            file_base64 = base64.b64encode(file_content).decode("utf-8")
+            
+            upload_info = imagekit.upload_file(
+                file=file_base64,
+                file_name=f"perfil_{email}.jpg",
+                options={
+                    "folder": "/fotos_perfil/",
+                    "is_private_file": False
+                }
+            )
+            url_foto = upload_info.url
+        except Exception as e:
+            print(f"Error subiendo foto: {e}")
             pass
 
-    # 3. ENCRIPTAR CONTRASEÑA (¡EL CAMBIO IMPORTANTE!)
-    hashed_password = auth.get_password_hash(password) # Convertimos "1234" a "$2b$12$..."
+    # 3. ENCRIPTAR CONTRASEÑA (Usando auth.py)
+    hashed_password = auth.get_password_hash(password)
 
     # 4. Crear objeto para el CRUD
     user_data = schemas.UsuarioCreate(
         email=email,
-        password=hashed_password, # <--- Pasamos la ENCRIPTADA, no la plana
+        password=hashed_password, # Pasamos la encriptada
         nombre=nombre,
         apellidos=apellidos,
         ubicacion=ubicacion
     )
 
-    # 5. Guardar
+    # 5. Guardar en BD
     return crud.create_user(db=db, user=user_data, url_foto=url_foto)
 
 
