@@ -60,6 +60,8 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
   final PageController _resultPageController = PageController();
   int _currentResultIndex = 0;
 
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
+
   late ApiClient _apiClient;
   final ImagePicker _picker = ImagePicker();
 
@@ -119,6 +121,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
   void dispose() {
     _cameraController?.dispose();
     _resultPageController.dispose();
+    _sheetController.dispose();
     super.dispose();
   }
 
@@ -137,6 +140,14 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       setState(() {
         _capturedPhotos.add(photo);
       });
+      // Expand sheet to show the captured photo
+      if (_sheetController.isAttached) {
+        _sheetController.animateTo(
+          0.5,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
     } catch (e) {
       debugPrint("Error taking photo: $e");
     }
@@ -216,8 +227,8 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       final DateTime now = DateTime.now();
 
       // 1. Analyze ALL photos
-      // Map<VarietyName, List<Pair<Confidence, Photo>>>
-      final Map<String, List<MapEntry<double, XFile>>> grouping = {};
+      // 1. Analyze ALL photos
+      final List<GroupedResult> finalResults = [];
 
       for (var photo in _capturedPhotos) {
         String variety = "Desconocido";
@@ -237,26 +248,17 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
           }
         }
 
-        if (!grouping.containsKey(variety)) {
-          grouping[variety] = [];
-        }
-        grouping[variety]!.add(MapEntry(confidence, photo));
+        // Create individual result for each photo
+        finalResults.add(GroupedResult(
+          variety,
+          confidence,
+          [photo],
+          date: now,
+          location: locationStr,
+          latitude: position?.latitude,
+          longitude: position?.longitude,
+        ));
       }
-
-      // 2. Build Grouped Results
-      final List<GroupedResult> finalResults = [];
-      grouping.forEach((key, list) {
-        // Calculate average confidence or max
-        double avgConf =
-            list.map((e) => e.key).reduce((a, b) => a + b) / list.length;
-        List<XFile> photos = list.map((e) => e.value).toList();
-        finalResults.add(GroupedResult(key, avgConf, photos,
-            date: now,
-            location: locationStr,
-            latitude: position?.latitude,
-            longitude: position?.longitude));
-      });
-      finalResults.sort((a, b) => b.photos.length.compareTo(a.photos.length));
 
       if (mounted) {
         setState(() {
@@ -287,15 +289,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     final currentGroup = _results[_currentResultIndex];
     final nameToSave = currentGroup.variety;
 
-    final photosToSave = currentGroup.photos
-        .where((p) => currentGroup.selectedPaths.contains(p.path))
-        .toList();
-
-    if (photosToSave.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Selecciona al menos una foto para guardar.")));
-      return;
-    }
+    final photosToSave = currentGroup.photos;
 
     setState(() => _isSaving = true);
 
@@ -493,6 +487,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
 
     return DraggableScrollableSheet(
       key: ValueKey(_uiState),
+      controller: _sheetController,
       initialChildSize: initialSize,
       minChildSize: minSize,
       maxChildSize: maxSize,
@@ -680,7 +675,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: Text(
-                      "Grupo ${index + 1} de ${_results.length} - ${group.photos.length} fotos",
+                      "Foto ${index + 1} de ${_results.length}",
                       style: const TextStyle(color: Colors.grey)),
                 ),
 
@@ -709,16 +704,6 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
                       // THE MOSAIC WIDGET
                       MosaicGallery(
                         photos: group.photos,
-                        selectedPaths: group.selectedPaths,
-                        onSelectionChanged: (path, selected) {
-                          setState(() {
-                            if (selected) {
-                              group.selectedPaths.add(path);
-                            } else {
-                              group.selectedPaths.remove(path);
-                            }
-                          });
-                        },
                       ),
 
                       // Bottom Info Overlay
@@ -772,7 +757,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
                                           height: 20,
                                           child: CircularProgressIndicator(
                                               strokeWidth: 2))
-                                      : const Text("Añadir a mi biblioteca"),
+                                      : const Text("Añadir a colección"),
                                 ),
                               ),
 
@@ -854,14 +839,8 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
 
 class MosaicGallery extends StatelessWidget {
   final List<XFile> photos;
-  final Set<String> selectedPaths;
-  final Function(String, bool) onSelectionChanged;
 
-  const MosaicGallery(
-      {super.key,
-      required this.photos,
-      required this.selectedPaths,
-      required this.onSelectionChanged});
+  const MosaicGallery({super.key, required this.photos});
 
   void _showFullScreen(BuildContext context, int initialIndex) {
     showDialog(
@@ -945,7 +924,6 @@ class MosaicGallery extends StatelessWidget {
   }
 
   Widget _img(BuildContext context, XFile file, int index) {
-    final isSelected = selectedPaths.contains(file.path);
     return GestureDetector(
       onTap: () => _showFullScreen(context, index),
       child: Stack(
@@ -957,33 +935,6 @@ class MosaicGallery extends StatelessWidget {
                 ? Image.network(file.path, fit: BoxFit.cover)
                 : Image.file(File(file.path), fit: BoxFit.cover),
           ),
-
-          // Selection Overlay (Active if NOT selected)
-          if (!isSelected) Container(color: Colors.white.withOpacity(0.4)),
-
-          // Checkbox Toggle
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
-              onTap: () => onSelectionChanged(file.path, !isSelected),
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(blurRadius: 4, color: Colors.black26)
-                    ]),
-                child: Icon(
-                  isSelected ? Icons.check_circle : Icons.circle_outlined,
-                  color: isSelected ? const Color(0xFF8B8036) : Colors.grey,
-                  size: 28,
-                ),
-              ),
-            ),
-          )
         ],
       ),
     );
