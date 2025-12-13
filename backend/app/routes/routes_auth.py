@@ -65,13 +65,13 @@ def register_user(
             print(f"Error subiendo foto: {e}")
             pass
 
-    # 3. ENCRIPTAR CONTRASEÑA (Usando auth.py)
-    hashed_password = auth.get_password_hash(password)
+    # 3. ENCRIPTAR CONTRASEÑA (Usando auth.py) - ELIMINADO POR DOBLE HASHING EN CRUD
+    # hashed_password = auth.get_password_hash(password)
 
     # 4. Crear objeto para el CRUD
     user_data = schemas.UsuarioCreate(
         email=email,
-        password=hashed_password, # Pasamos la encriptada
+        password=password, # Pasamos la password PLANA, crud.create_user la encriptará
         nombre=nombre,
         apellidos=apellidos,
         ubicacion=ubicacion
