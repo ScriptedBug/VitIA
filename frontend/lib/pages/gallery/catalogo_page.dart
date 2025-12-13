@@ -59,6 +59,7 @@ class _CatalogoPageState extends State<CatalogoPage>
   // --- NUEVOS CONTROLADORES DE FILTRO ---
   String _currentSort = 'az'; // 'az', 'za'
   String _currentFilterColor = 'all'; // 'all', 'blanca', 'tinta'
+  bool _showSearch = false; // Toggle para mostrar buscador
 
   @override
   void initState() {
@@ -1114,10 +1115,22 @@ class _CatalogoPageState extends State<CatalogoPage>
         child: Column(
           children: [
             // 1. HEADER PERSONALIZADO
-            const VitiaHeader(
+            VitiaHeader(
               title: "Biblioteca",
-              actionIcon:
-                  Icon(Icons.search, size: 28), // Placeholder for action
+              actionIcon: IconButton(
+                icon: Icon(_showSearch ? Icons.close : Icons.search, size: 28),
+                onPressed: () {
+                  setState(() {
+                    _showSearch = !_showSearch;
+                    if (!_showSearch) {
+                      _searchController.clear();
+                      _currentSort = 'az';
+                      _currentFilterColor = 'all';
+                      _filtrar('');
+                    }
+                  });
+                },
+              ),
             ),
 
             // 2. TABS PERSONALIZADOS (Pills)
@@ -1156,8 +1169,23 @@ class _CatalogoPageState extends State<CatalogoPage>
                 ],
               ),
             ),
+            // 3. BUSCADOR ANIMADO (FLOTANTE/VISIBLE AL SCROLLEAR)
+            // 3. BUSCADOR ANIMADO (FLOTANTE/VISIBLE AL SCROLLEAR)
+            ClipRect(
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: SizedBox(
+                  height: _showSearch ? null : 0,
+                  width: double.infinity,
+                  child: _showSearch
+                      ? _buildSearchBarAndFilters()
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ),
 
-            // 3. CONTENIDO (TabBarView con Scroll único para la primera pestaña)
+            // 4. CONTENIDO (TabBarView con Scroll único para la primera pestaña)
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -1165,10 +1193,7 @@ class _CatalogoPageState extends State<CatalogoPage>
                   // --- PESTAÑA 1: TODAS ---
                   CustomScrollView(
                     slivers: [
-                      // 1. Buscador y Filtros (MOVIDO ARRIBA)
-                      SliverToBoxAdapter(
-                        child: _buildSearchBarAndFilters(),
-                      ),
+                      // 1. Buscador y Filtros (ELIMINADO DE AQUÍ)
 
                       // 2. Sección Favoritos (scrollea con la página)
                       SliverToBoxAdapter(
@@ -1239,7 +1264,7 @@ class _CatalogoPageState extends State<CatalogoPage>
                         )
                       : Column(
                           children: [
-                            _buildSearchBarAndFilters(), // Buscador específico de colección
+                            // _buildSearchBarAndFilters(), // ELIMINADO DE AQUÍ (Ya está arriba)
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24.0, vertical: 12.0),

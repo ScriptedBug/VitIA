@@ -20,14 +20,6 @@ class _LoginPageState extends State<LoginPage> {
   // Blanco cálido VitIA: #FFFFEFB
   final Color _authFieldColor = const Color(0xFFFFFFEB);
 
-  // Función placeholder para el login de invitado (o si se quiere implementar)
-  void loginAsGuest(BuildContext context) {
-    // Implementar lógica de invitado si es necesaria
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Funcionalidad de invitado en desarrollo")),
-    );
-  }
-
   // Dialogo para cambiar la IP
   void _showServerConfigDialog(BuildContext context) {
     // Controlador con la URL actual o la por defecto
@@ -100,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 // Título "Bienvenido a VitIA"
                 const Text(
-                  "Bienvenido a",
+                  "Bienvenid@ a",
                   style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -170,18 +162,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
-
-                // --- Entrar como invitado ---
-                TextButton(
-                  onPressed: () => loginAsGuest(context),
-                  child: const Text(
-                    "Entrar como invitado",
-                    style: TextStyle(
-                        color: Colors.white,
-                        decoration: TextDecoration.underline),
-                  ),
-                ),
                 const SizedBox(height: 50),
               ],
             ),
