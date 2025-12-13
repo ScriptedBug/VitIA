@@ -12,12 +12,14 @@ class UserVarietyDetailPage extends StatefulWidget {
   final Map<String, dynamic> varietyInfo;
   final List<Map<String, dynamic>> captures;
   final VoidCallback? onBack; // Callback para volver atrás
+  final bool isFavoritoInicial; // Nuevo
 
   const UserVarietyDetailPage({
     super.key,
     required this.varietyInfo,
     required this.captures,
     this.onBack,
+    this.isFavoritoInicial = false,
   });
 
   @override
@@ -39,9 +41,12 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
   // Custom Cover
   String? _customCoverPath;
 
+  late bool _isFavorito; // Local state
+
   @override
   void initState() {
     super.initState();
+    _isFavorito = widget.isFavoritoInicial;
     _captures = List.from(widget.captures);
     _loadCustomCover(); // Cargar portada guardada
     _apiClient = ApiClient(getBaseUrl());
@@ -68,6 +73,31 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
       _customCoverPath = path;
     });
     // Feedback visual opcional o eliminada si es redundante con el cambio de icono
+  }
+
+  Future<void> _toggleFavorito() async {
+    setState(() {
+      _isFavorito = !_isFavorito;
+    });
+
+    try {
+      final idData = widget.varietyInfo['variedad_original'];
+      if(idData != null && idData['id_variedad'] != null) {
+          final id = idData['id_variedad'];
+          await _apiClient.toggleFavorite(id);
+      } else {
+        // Fallback si no tenemos ID directo (ej: creado localmente sin sincro)
+        debugPrint("No se encontró id_variedad para dar favorito");
+      }
+    } catch (e) {
+      // Revertir si falla
+      setState(() {
+        _isFavorito = !_isFavorito;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al actualizar favoritos')),
+      );
+    }
   }
 
   // REFRESH LOGIC
@@ -222,13 +252,28 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                             ),
 
                             // Title & Region
-                            Text(
-                              widget.varietyInfo['nombre'] ?? 'Sin Nombre',
-                              style: GoogleFonts.lora(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    widget.varietyInfo['nombre'] ?? 'Sin Nombre',
+                                    style: GoogleFonts.lora(
+                                      fontSize: 28, // Reducido de 32 a 28
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _toggleFavorito,
+                                  icon: Icon(
+                                    _isFavorito ? Icons.favorite : Icons.favorite_border,
+                                    color: _isFavorito ? Colors.redAccent : Colors.grey,
+                                    size: 30,
+                                  ),
+                                )
+                              ],
                             ),
                             const SizedBox(height: 8),
                             Row(

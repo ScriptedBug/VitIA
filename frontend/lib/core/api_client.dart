@@ -322,4 +322,28 @@ class ApiClient {
       rethrow;
     }
   }
+
+  // --- FAVORITOS ---
+
+  Future<void> toggleFavorite(int idVariedad) async {
+    try {
+      // POST /variedades/variedades/{id_variedad}/favorito
+      // EL ROUTER YA TIENE PREFIX /variedades Y EL ENDPOINT TIENE /variedades/...
+      await _dio.post('/variedades/variedades/$idVariedad/favorito');
+    } catch (e) {
+      print("Error al cambiar favorito: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getFavorites() async {
+    try {
+      // GET /variedades/users/me/favoritos
+      final response = await _dio.get('/variedades/users/me/favoritos');
+      return response.data as List<dynamic>;
+    } catch (e) {
+      print("Error al obtener favoritos: $e");
+      rethrow;
+    }
+  }
 }

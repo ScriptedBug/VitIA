@@ -4,12 +4,60 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/api_client.dart';
+import '../../core/services/api_config.dart';
+import '../../core/services/user_sesion.dart';
 
-class DetalleVariedadPage extends StatelessWidget {
+class DetalleVariedadPage extends StatefulWidget {
   final Map<String, dynamic> variedad;
   final VoidCallback? onBack; // Nuevo callback para navegación interna
+  final bool isFavoritoInicial; // Para saber si ya es favorito al entrar
 
-  const DetalleVariedadPage({super.key, required this.variedad, this.onBack});
+  const DetalleVariedadPage({
+    super.key, 
+    required this.variedad, 
+    this.onBack,
+    this.isFavoritoInicial = false,
+  });
+
+  @override
+  State<DetalleVariedadPage> createState() => _DetalleVariedadPageState();
+}
+
+class _DetalleVariedadPageState extends State<DetalleVariedadPage> {
+  late bool _isFavorito;
+  late ApiClient _apiClient;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorito = widget.isFavoritoInicial;
+    _apiClient = ApiClient(getBaseUrl());
+    if (UserSession.token != null) {
+      _apiClient.setToken(UserSession.token!);
+    }
+  }
+
+  Future<void> _toggleFavorito() async {
+    setState(() {
+      _isFavorito = !_isFavorito;
+    });
+
+    try {
+      final id = widget.variedad['id'];
+      if (id != null) {
+        await _apiClient.toggleFavorite(id);
+      }
+    } catch (e) {
+      // Revertir si falla
+      setState(() {
+        _isFavorito = !_isFavorito;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al actualizar favoritos')),
+      );
+    }
+  }
 
   // Función ROBUSTA para abrir URLs
   Future<void> _launchURL(String urlString) async {
@@ -35,19 +83,11 @@ class DetalleVariedadPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isBlanca = variedad['tipo'] == 'Blanca';
+    final bool isBlanca = widget.variedad['tipo'] == 'Blanca';
     final colorTema = isBlanca ? Colors.lime.shade700 : Colors.purple.shade900;
 
-    final dynamic morfologia = variedad['morfologia'];
-    final dynamic infoExtra = variedad['info_extra'];
-
-    // DEBUG: Inspect data structure matching new DB format
-    print("--- DEBUG VARIETY DETAIL ---");
-    print("Variedad Complete Map: $variedad");
-    print("Morfologia Type: ${morfologia.runtimeType}");
-    print("Morfologia Content: $morfologia");
-    print("InfoExtra Type: ${infoExtra.runtimeType}");
-    print("----------------------------");
+    final dynamic morfologia = widget.variedad['morfologia'];
+    final dynamic infoExtra = widget.variedad['info_extra'];
 
     // --- ESTILOS DE TEXTO ---
     const TextStyle textoGeneralStyle = TextStyle(
@@ -75,7 +115,7 @@ class DetalleVariedadPage extends StatelessWidget {
           Positioned.fill(
             child: Container(
               color: Colors.black, // Fondo base
-              child: _buildImagen(variedad),
+              child: _buildImagen(widget.variedad),
             ),
           ),
 
@@ -88,8 +128,8 @@ class DetalleVariedadPage extends StatelessWidget {
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () {
-                  if (onBack != null) {
-                    onBack!();
+                  if (widget.onBack != null) {
+                    widget.onBack!();
                   } else {
                     Navigator.pop(context);
                   }
@@ -133,14 +173,29 @@ class DetalleVariedadPage extends StatelessWidget {
                         ),
                       ),
 
-                      // Título y Badges
-                      Text(
-                        variedad['nombre'] ?? 'Detalle',
-                        style: GoogleFonts.lora(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                      // Título y Badges + FAVORITOS
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.variedad['nombre'] ?? 'Detalle',
+                              style: GoogleFonts.lora(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _toggleFavorito,
+                            icon: Icon(
+                              _isFavorito ? Icons.favorite : Icons.favorite_border,
+                              color: _isFavorito ? Colors.redAccent : Colors.grey,
+                              size: 30,
+                            ),
+                          )
+                        ],
                       ),
                       const SizedBox(height: 16),
 
@@ -155,7 +210,7 @@ class DetalleVariedadPage extends StatelessWidget {
                               border: Border.all(color: colorTema),
                             ),
                             child: Text(
-                              (variedad['tipo'] ?? 'Desconocido').toUpperCase(),
+                              (widget.variedad['tipo'] ?? 'Desconocido').toUpperCase(),
                               style: TextStyle(
                                   color: colorTema,
                                   fontWeight: FontWeight.bold,
@@ -171,7 +226,7 @@ class DetalleVariedadPage extends StatelessWidget {
                       // Descripción General
                       _buildSectionTitle("Descripción"),
                       Text(
-                        variedad['descripcion'] ?? "Sin descripción detallada.",
+                        widget.variedad['descripcion'] ?? "Sin descripción detallada.",
                         style: textoGeneralStyle,
                       ),
                       const SizedBox(height: 30),

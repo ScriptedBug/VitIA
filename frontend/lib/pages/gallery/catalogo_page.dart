@@ -39,6 +39,10 @@ class _CatalogoPageState extends State<CatalogoPage>
   // 1. AÑADE ESTAS VARIABLES
   List<Map<String, dynamic>> _variedades = [];
   List<Map<String, dynamic>> _coleccionUsuario = [];
+  
+  // --- FAVORITOS ---
+  Set<int> _favoritosIds = {}; // Para búsqueda rápida O(1)
+  List<Map<String, dynamic>> _listaFavoritos = []; // Objetos completos para el carrusel
 
   List<Map<String, dynamic>> _filtradas = [];
 
@@ -89,6 +93,7 @@ class _CatalogoPageState extends State<CatalogoPage>
     await Future.wait([
       _cargarVariedadesBackend(),
       _cargarColeccionBackend(),
+      _cargarFavoritosBackend(), // <--- Nuevo
     ]);
     setState(() => _isLoading = false);
   }
@@ -96,6 +101,7 @@ class _CatalogoPageState extends State<CatalogoPage>
   Future<void> _cargarSoloBiblioteca() async {
     setState(() => _isLoading = true);
     await _cargarVariedadesBackend();
+    // No cargamos favoritos si no hay usuario, o los cargamos vacíos
     setState(() => _isLoading = false);
   }
 
@@ -224,6 +230,69 @@ class _CatalogoPageState extends State<CatalogoPage>
           const SnackBar(content: Text('No se pudo actualizar tu colección')),
         );
       }
+    }
+  }
+
+  Future<void> _cargarFavoritosBackend() async {
+    try {
+      final lista = await _apiClient!.getFavorites();
+      setState(() {
+        _listaFavoritos = lista
+            .map((item) => {
+                  'id': item['id_variedad'],
+                  'nombre': item['nombre'],
+                  'imagen': (item['links_imagenes'] != null &&
+                          (item['links_imagenes'] as List).isNotEmpty)
+                      ? item['links_imagenes'][0]
+                      : null,
+                  // 'color': item['color'], // Podríamos usarlo para estilo
+                })
+            .toList()
+            .cast<Map<String, dynamic>>();
+
+        _favoritosIds = _listaFavoritos.map((e) => e['id'] as int).toSet();
+      });
+    } catch (e) {
+      debugPrint("Error cargando favoritos: $e");
+    }
+  }
+
+  Future<void> _toggleFavorito(int idVariedad) async {
+    // Optimistic UI Update
+    final bool esFavorito = _favoritosIds.contains(idVariedad);
+
+    setState(() {
+      if (esFavorito) {
+        _favoritosIds.remove(idVariedad);
+        _listaFavoritos.removeWhere((item) => item['id'] == idVariedad);
+      } else {
+        _favoritosIds.add(idVariedad);
+        // Necesitamos el objeto completo para añadirlo a la lista visual de arriba.
+        // Lo buscamos en _variedades (biblioteca) o en _coleccion (si aplica, aunque coleccion agrupa).
+        // Lo más seguro es buscar en _variedades que tiene TODAS.
+        final variedad = _variedades.firstWhere(
+            (element) => element['id'] == idVariedad,
+            orElse: () => {});
+        if (variedad.isNotEmpty) {
+          _listaFavoritos.add({
+             'id': variedad['id'],
+             'nombre': variedad['nombre'],
+             'imagen': variedad['imagen']
+          });
+        }
+      }
+    });
+
+    try {
+      await _apiClient!.toggleFavorite(idVariedad);
+      // Si todo va bien, no hacemos nada más.
+    } catch (e) {
+      // Revertir si falla (opcional, pero recomendado)
+      // Por simplicidad, recargamos todo o mostramos error.
+      debugPrint("Error al dar like: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error al actualizar favoritos")));
+       _cargarFavoritosBackend(); // Revertir al estado real
     }
   }
 
@@ -662,20 +731,48 @@ class _CatalogoPageState extends State<CatalogoPage>
           borderRadius: BorderRadius.circular(20),
           onTap: () async {
             if (isColeccion) {
+              final idVar = variedad['variedad_original'] != null
+                  ? variedad['variedad_original']['id_variedad']
+                  : null;
+              final bool esFav = idVar != null && _favoritosIds.contains(idVar);
+
               final resultado = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      DetalleColeccionPage(coleccionItem: variedad),
+                  builder: (context) => UserVarietyDetailPage(
+                    varietyInfo: variedad,
+                    captures: _mapaVariedadesUsuario[variedad['nombre']] ?? [],
+                    isFavoritoInicial: esFav,
+                    onBack: () {
+                       _cargarFavoritosBackend(); // Refresh favs if changed
+                       Navigator.pop(context);
+                    },
+                  ),
                 ),
               );
-              if (resultado == true) {
-                _cargarColeccionBackend();
-              }
+              // Refresh collections and favs
+              _cargarColeccionBackend();
+              _cargarFavoritosBackend();
             } else {
-              setState(() {
-                _variedadSeleccionada = variedad;
-              });
+              // DETALLE GLOBALES ("Todas")
+              final idVar = variedad['id'];
+              final bool esFav = idVar != null && _favoritosIds.contains(idVar);
+              
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetalleVariedadPage(
+                    variedad: variedad, 
+                    isFavoritoInicial: esFav,
+                    onBack: () {
+                       _cargarFavoritosBackend(); 
+                       Navigator.pop(context);
+                    }
+                  ),
+                ),
+              );
+              // Al volver, refrescamos favoritos por si cambiaron dentro
+              _cargarFavoritosBackend();
             }
           },
           child: Padding(
@@ -689,11 +786,23 @@ class _CatalogoPageState extends State<CatalogoPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header con Corazón (Visual)
-                      const Row(
+                      Row(
                         children: [
-                          Spacer(),
-                          Icon(Icons.favorite_border,
-                              size: 20, color: Colors.black54),
+                          const Spacer(),
+                          InkWell(
+                            onTap: () {
+                              final id = variedad['id'];
+                              if (id != null) _toggleFavorito(id);
+                            },
+                            child: Icon(
+                                _favoritosIds.contains(variedad['id'])
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 24, // Un poco más grande para tocar
+                                color: _favoritosIds.contains(variedad['id'])
+                                    ? Colors.redAccent
+                                    : Colors.black54),
+                          ),
                         ],
                       ),
                       // Nombre con estilo Serif
@@ -845,7 +954,7 @@ class _CatalogoPageState extends State<CatalogoPage>
                 ],
               ),
               Text(
-                "${favoritos.length}",
+                "${_listaFavoritos.length}",
                 style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
             ],
@@ -855,14 +964,10 @@ class _CatalogoPageState extends State<CatalogoPage>
             height: 180, // Altura fija para el scroll horizontal
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: favoritos.length + 1, // +1 para el visual de "corte"
+              itemCount: _listaFavoritos.length, 
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
-                if (index == favoritos.length) {
-                  // Elemento extra p/ efecto visual
-                  return const SizedBox(width: 20);
-                }
-                return _buildFavoritoCard(favoritos[index]);
+                return _buildFavoritoCard(_listaFavoritos[index]);
               },
             ),
           )
@@ -872,32 +977,61 @@ class _CatalogoPageState extends State<CatalogoPage>
   }
 
   Widget _buildFavoritoCard(Map<String, dynamic> item) {
-    return Container(
-      width: 140,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Align(
-            alignment: Alignment.topRight,
-            child: Icon(Icons.favorite, color: Colors.black, size: 18),
-          ),
-          Image.asset(
-            item['imagen']!,
-            height: 80,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(Icons.grass, size: 50),
-          ),
-          Text(
-            item['nombre']!,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-        ],
+    return GestureDetector(
+      onTap: () {
+        // Al tocar la carta entera, vamos al detalle
+        // Necesitamos el objeto completo de la variedad. 
+        // Como item ya tiene lo básico (id, nombre, imagen...),
+        // intentamos buscar el objeto completo en _variedades para tener descripción, etc.
+        final variedadCompleta = _variedades.firstWhere(
+            (v) => v['id'] == item['id'],
+            orElse: () => item); // Si no está, usamos lo que tenemos
+        
+        setState(() {
+          _variedadSeleccionada = variedadCompleta;
+        });
+      },
+      child: Container(
+        width: 140,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+             Align(
+              alignment: Alignment.topRight,
+              child: InkWell(
+                  onTap: () {
+                      if(item['id'] != null) _toggleFavorito(item['id']);
+                  },
+                  child: const Icon(Icons.favorite, color: Colors.redAccent, size: 18)
+              ),
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: item['imagen'] != null
+                ? Image.network(
+                    item['imagen'],
+                    height: 80,
+                    width: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
+                  )
+                : const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
+            ),
+            
+            Text(
+              item['nombre'] ?? 'Sin nombre',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -935,13 +1069,32 @@ class _CatalogoPageState extends State<CatalogoPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header con Corazón (Visual)
-                      const Row(
+                       Row(
                         children: [
-                          Spacer(),
-                          Icon(Icons.favorite,
-                              size: 20,
-                              color: Colors
-                                  .black54), // Filled heart for collection? Or border? User said "viñeta ... igual que en variedades" where we have empty heart. User code had filled heart in collection before. Let's keep filled to distinguish "Owned".
+                          const Spacer(),
+                          // Usamos lógica real tmb aquí si tenemos el ID de variedad
+                          // Nota: item es un grupo, pero item['variedad_original']['id_variedad'] o item['id']...
+                          // Revisemos _cargarColeccionBackend:
+                          // 'variedad_original': variedadData (que tiene id_variedad)
+                          // item['variedad_original']['id_variedad']
+                           InkWell(
+                            onTap: () {
+                               // Necesitamos el ID de la variedad REAL, no de la colección
+                               // En _cargarColeccionBackend guardamos 'variedad_original'
+                               final mapVariedad = item['variedad_original'];
+                               if (mapVariedad != null && mapVariedad['id_variedad'] != null) {
+                                  _toggleFavorito(mapVariedad['id_variedad']);
+                               }
+                            },
+                             child: Icon(
+                                 (item['variedad_original'] != null && _favoritosIds.contains(item['variedad_original']['id_variedad']))
+                                     ? Icons.favorite
+                                     : Icons.favorite_border,
+                                 size: 24, 
+                                 color: (item['variedad_original'] != null && _favoritosIds.contains(item['variedad_original']['id_variedad']))
+                                    ? Colors.redAccent
+                                    : Colors.black54),
+                           ),
                         ],
                       ),
                       Text(
@@ -1068,17 +1221,23 @@ class _CatalogoPageState extends State<CatalogoPage>
   Widget build(BuildContext context) {
     // 1. SI HAY UNA VARIEDAD SELECCIONADA, MOSTRAMOS SU DETALLE (Dentro del Scaffold padre)
     if (_variedadSeleccionada != null) {
+      final id = _variedadSeleccionada!['id'];
+      final bool esFav = id != null && _favoritosIds.contains(id);
+
       // Usamos un WillPopScope (o PopScope) para manejar el botón físico de atrás de Android
       return PopScope(
         canPop: false,
         onPopInvoked: (didPop) {
           if (didPop) return;
           setState(() => _variedadSeleccionada = null);
+          _cargarFavoritosBackend(); // Refrescar por si cambió
         },
         child: DetalleVariedadPage(
           variedad: _variedadSeleccionada!,
+          isFavoritoInicial: esFav,
           onBack: () {
             setState(() => _variedadSeleccionada = null);
+            _cargarFavoritosBackend(); // Refrescar por si cambió
           },
         ),
       );
@@ -1088,6 +1247,11 @@ class _CatalogoPageState extends State<CatalogoPage>
     if (_grupoColeccionSeleccionado != null) {
       final nombre = _grupoColeccionSeleccionado!['nombre'];
       final listaCapturas = _mapaVariedadesUsuario[nombre] ?? [];
+      
+      final idVar = _grupoColeccionSeleccionado!['variedad_original'] != null
+          ? _grupoColeccionSeleccionado!['variedad_original']['id_variedad']
+          : null;
+      final bool esFav = idVar != null && _favoritosIds.contains(idVar);
 
       return PopScope(
         canPop: false,
@@ -1095,13 +1259,16 @@ class _CatalogoPageState extends State<CatalogoPage>
           if (didPop) return;
           setState(() => _grupoColeccionSeleccionado = null);
           _cargarColeccionBackend(); // Refrescar al volver
+          _cargarFavoritosBackend();
         },
         child: UserVarietyDetailPage(
           varietyInfo: _grupoColeccionSeleccionado!,
           captures: listaCapturas,
+          isFavoritoInicial: esFav,
           onBack: () {
             setState(() => _grupoColeccionSeleccionado = null);
             _cargarColeccionBackend();
+            _cargarFavoritosBackend();
           },
         ),
       );
