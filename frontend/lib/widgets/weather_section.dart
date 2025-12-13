@@ -72,9 +72,13 @@ class WeatherSection extends StatelessWidget {
                 children: [
                   const Icon(Icons.location_on_outlined, size: 20),
                   const SizedBox(width: 5),
-                  Text(
-                    locName,
-                    style: GoogleFonts.ibmPlexSans(fontSize: 14),
+                  Expanded(
+                    child: Text(
+                      locName,
+                      style: GoogleFonts.ibmPlexSans(fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                   const SizedBox(width: 5),
                 ],

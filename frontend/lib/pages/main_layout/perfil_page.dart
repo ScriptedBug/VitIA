@@ -17,10 +17,11 @@ class PerfilPage extends StatefulWidget {
 }
 
 class _PerfilPageState extends State<PerfilPage> {
-  String _nombreUser = "Modificar";
-  String _ubicacionUser = "Perfil";
+  String _nombreUser = "";
+  String _ubicacionUser = "";
   String? _userPhotoUrl; // Variable para foto
   bool _profileUpdated = false;
+  bool _isLoading = true; // <--- Nuevo estado de carga
 
   @override
   void initState() {
@@ -38,7 +39,14 @@ class _PerfilPageState extends State<PerfilPage> {
           _userPhotoUrl = userData['path_foto_perfil']; // Cargar URL
         });
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void logout(BuildContext context) async {
@@ -151,21 +159,25 @@ class _PerfilPageState extends State<PerfilPage> {
         child: Column(
           children: [
             // --- Encabezado ---
-            CircleAvatar(
-              radius: 50,
-              backgroundImage:
-                  _userPhotoUrl != null ? NetworkImage(_userPhotoUrl!) : null,
-              child: _userPhotoUrl == null
-                  ? const Icon(Icons.person, size: 50, color: Colors.grey)
-                  : null,
-              backgroundColor: Colors.grey.shade200,
-            ),
-            const SizedBox(height: 15),
-            Text(
-              _nombreUser,
-              style: GoogleFonts.lora(fontSize: 28),
-              textAlign: TextAlign.center,
-            ),
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else ...[
+              CircleAvatar(
+                radius: 50,
+                backgroundImage:
+                    _userPhotoUrl != null ? NetworkImage(_userPhotoUrl!) : null,
+                child: _userPhotoUrl == null
+                    ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                    : null,
+                backgroundColor: Colors.grey.shade200,
+              ),
+              const SizedBox(height: 15),
+              Text(
+                _nombreUser.isEmpty ? "Usuario" : _nombreUser,
+                style: GoogleFonts.lora(fontSize: 28),
+                textAlign: TextAlign.center,
+              ),
+            ],
             // Eliminado el icono de Lápiz al lado del nombre (User Request)
 
             const SizedBox(height: 40),
