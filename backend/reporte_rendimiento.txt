@@ -10,206 +10,206 @@
   --------------------------------------------------------------------------------------------------------------------------------
   ARCHIVO                      | ESPERADO           | DETECTADO          |  COINCIDE  |  CONF.   |   TIEMPO   |    ESTADO   
   --------------------------------------------------------------------------------------------------------------------------------
-  ahmerbounamer1.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  95.7%   |   242 ms   |    ✅ PASS   
-  ahmerbounamer2.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  96.5%   |   174 ms   |    ✅ PASS   
-  ahmerbounamer3.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  99.2%   |   132 ms   |    ✅ PASS   
-  aledo1.jpg                   | Aledo              | Aledo              |    ✅ SI    |  96.5%   |   164 ms   |    ✅ PASS   
-  aledo2.jpg                   | Aledo              | Aledo              |    ✅ SI    |  81.8%   |   193 ms   |    ✅ PASS   
-  aledo3.jpg                   | Aledo              | Aledo              |    ✅ SI    |  92.3%   |   169 ms   |    ✅ PASS   
-  fernandella1.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  79.2%   |   186 ms   |    ✅ PASS   
-  fernandella2.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  90.4%   |   201 ms   |    ✅ PASS   
-  fernandella3.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  98.2%   |   182 ms   |    ✅ PASS   
-  jacquet1.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  87.0%   |   181 ms   |    ✅ PASS   
-  jacquet2.jpg                 | Jacquet            | Desconocido        |    ❌ NO    |   0.0%   |   185 ms   |    ❌ FAIL   
-  jacquet3.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  96.0%   |   142 ms   |    ✅ PASS   
-  merseguera1.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  86.0%   |   173 ms   |    ✅ PASS   
-  merseguera2.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  75.2%   |   175 ms   |    ✅ PASS   
-  merseguera3.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  96.0%   |   122 ms   |    ✅ PASS   
-  moscatells1.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  69.0%   |   125 ms   |    ✅ PASS   
-  moscatells2.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  87.7%   |   125 ms   |    ✅ PASS   
-  moscatells3.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  82.1%   |   150 ms   |    ✅ PASS   
-  plantafinapedralba1.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  73.3%   |   166 ms   |    ✅ PASS   
-  plantafinapedralba2.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  53.7%   |   167 ms   |    ✅ PASS   
-  plantafinapedralba3.jpg      | Planta fina de pedralba | Valenci negre      |    ❌ NO    |  68.7%   |   172 ms   |    ❌ FAIL   
-  roseti1.jpg                  | Roseti             | Roseti             |    ✅ SI    |  84.3%   |   168 ms   |    ✅ PASS   
-  roseti2.jpg                  | Roseti             | Roseti             |    ✅ SI    |  55.2%   |   126 ms   |    ✅ PASS   
-  roseti3.jpg                  | Roseti             | Roseti             |    ✅ SI    |  94.0%   |   136 ms   |    ✅ PASS   
-  trepadell1.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  98.8%   |   147 ms   |    ✅ PASS   
-  trepadell2.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  69.7%   |   117 ms   |    ✅ PASS   
-  trepadell3.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  80.8%   |   133 ms   |    ✅ PASS   
-  chardonay1.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  98.9%   |   113 ms   |    ✅ PASS   
-  chardonay2.jpg               | Chardonay          | Merseguera         |    ❌ NO    |  44.6%   |   146 ms   |    ❌ FAIL   
-  chardonay3.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  93.8%   |   156 ms   |    ✅ PASS   
-  tintorera1.jpg               | Tintorera          | Planta fina de pedralba |    ❌ NO    |  68.7%   |   132 ms   |    ❌ FAIL   
-  tintorera2.jpg               | Tintorera          | Desconocido        |    ❌ NO    |   0.0%   |   140 ms   |    ❌ FAIL   
-  tintorera3.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  99.6%   |   144 ms   |    ✅ PASS   
-  monastrell1.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  95.1%   |   179 ms   |    ✅ PASS   
-  monastrell2.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  94.2%   |   168 ms   |    ✅ PASS   
-  monastrell3.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  74.1%   |   168 ms   |    ✅ PASS   
-  cabernetsauvignon1.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  98.2%   |   191 ms   |    ✅ PASS   
-  cabernetsauvignon2.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  75.3%   |   177 ms   |    ✅ PASS   
-  cabernetsauvignon3.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  85.3%   |   188 ms   |    ✅ PASS   
-  decuerno1.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  79.5%   |   208 ms   |    ✅ PASS   
-  decuerno2.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  94.1%   |   114 ms   |    ✅ PASS   
-  decuerno3.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  98.8%   |   107 ms   |    ✅ PASS   
-  garnacha1.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  99.1%   |   140 ms   |    ✅ PASS   
-  garnacha2.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  66.7%   |   177 ms   |    ✅ PASS   
-  garnacha3.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  99.4%   |   157 ms   |    ✅ PASS   
-  merlot1.jpg                  | Merlot             | Merlot             |    ✅ SI    |  97.7%   |   137 ms   |    ✅ PASS   
-  merlot2.jpg                  | Merlot             | Merlot             |    ✅ SI    |  98.1%   |   138 ms   |    ✅ PASS   
-  merlot3.jpg                  | Merlot             | Merlot             |    ✅ SI    |  96.3%   |   147 ms   |    ✅ PASS   
-  valencinegre1.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  67.6%   |   102 ms   |    ✅ PASS   
-  valencinegre2.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  98.5%   |   124 ms   |    ✅ PASS   
-  valencinegre3.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  47.8%   |   105 ms   | ⚠️ LOW CONF 
-  valenciblanc1.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  99.8%   |   188 ms   |    ✅ PASS   
-  valenciblanc2.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  57.7%   |   110 ms   |    ✅ PASS   
-  valenciblanc3.jpg            | Valensi blanc      | Desconocido        |    ❌ NO    |   0.0%   |   170 ms   |    ❌ FAIL   
-  raimtotssants1.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  99.5%   |   170 ms   |    ✅ PASS   
-  raimtotssants2.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  90.4%   |   138 ms   |    ✅ PASS   
-  raimtotssants3.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  99.4%   |   152 ms   |    ✅ PASS   
+  ahmerbounamer1.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  92.7%   |   172 ms   |    ✅ PASS   
+  ahmerbounamer2.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  97.6%   |   108 ms   |    ✅ PASS   
+  ahmerbounamer3.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  99.6%   |   73 ms    |    ✅ PASS   
+  aledo1.jpg                   | Aledo              | Aledo              |    ✅ SI    |  97.9%   |   109 ms   |    ✅ PASS   
+  aledo2.jpg                   | Aledo              | Aledo              |    ✅ SI    |  89.5%   |   105 ms   |    ✅ PASS   
+  aledo3.jpg                   | Aledo              | Aledo              |    ✅ SI    |  93.7%   |   104 ms   |    ✅ PASS   
+  fernandella1.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  84.8%   |   105 ms   |    ✅ PASS   
+  fernandella2.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  64.2%   |   105 ms   |    ✅ PASS   
+  fernandella3.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  93.0%   |   98 ms    |    ✅ PASS   
+  jacquet1.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  81.4%   |   105 ms   |    ✅ PASS   
+  jacquet2.jpg                 | Jacquet            | Desconocido        |    ❌ NO    |   0.0%   |   104 ms   |    ❌ FAIL   
+  jacquet3.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  95.7%   |   66 ms    |    ✅ PASS   
+  merseguera1.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  95.2%   |   94 ms    |    ✅ PASS   
+  merseguera2.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  96.4%   |   95 ms    |    ✅ PASS   
+  merseguera3.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  97.2%   |   68 ms    |    ✅ PASS   
+  moscatells1.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  71.5%   |   70 ms    |    ✅ PASS   
+  moscatells2.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  80.5%   |   65 ms    |    ✅ PASS   
+  moscatells3.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  78.5%   |   73 ms    |    ✅ PASS   
+  plantafinapedralba1.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  63.8%   |   102 ms   |    ✅ PASS   
+  plantafinapedralba2.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  93.3%   |   96 ms    |    ✅ PASS   
+  plantafinapedralba3.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  79.0%   |   101 ms   |    ✅ PASS   
+  roseti1.jpg                  | Roseti             | Roseti             |    ✅ SI    |  99.3%   |   107 ms   |    ✅ PASS   
+  roseti2.jpg                  | Roseti             | Roseti             |    ✅ SI    |  87.9%   |   70 ms    |    ✅ PASS   
+  roseti3.jpg                  | Roseti             | Roseti             |    ✅ SI    |  80.7%   |   68 ms    |    ✅ PASS   
+  trepadell1.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  94.7%   |   83 ms    |    ✅ PASS   
+  trepadell2.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  54.6%   |   65 ms    |    ✅ PASS   
+  trepadell3.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  95.5%   |   73 ms    |    ✅ PASS   
+  chardonay1.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  97.7%   |   72 ms    |    ✅ PASS   
+  chardonay2.jpg               | Chardonay          | Merseguera         |    ❌ NO    |  93.7%   |   81 ms    |    ❌ FAIL   
+  chardonay3.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  97.8%   |   75 ms    |    ✅ PASS   
+  tintorera1.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  91.1%   |   74 ms    |    ✅ PASS   
+  tintorera2.jpg               | Tintorera          | Desconocido        |    ❌ NO    |   0.0%   |   68 ms    |    ❌ FAIL   
+  tintorera3.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  99.6%   |   66 ms    |    ✅ PASS   
+  monastrell1.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  97.0%   |   108 ms   |    ✅ PASS   
+  monastrell2.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  97.8%   |   99 ms    |    ✅ PASS   
+  monastrell3.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  84.5%   |   101 ms   |    ✅ PASS   
+  cabernetsauvignon1.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  97.5%   |   100 ms   |    ✅ PASS   
+  cabernetsauvignon2.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  97.7%   |   99 ms    |    ✅ PASS   
+  cabernetsauvignon3.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  98.6%   |   71 ms    |    ✅ PASS   
+  decuerno1.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  88.6%   |   107 ms   |    ✅ PASS   
+  decuerno2.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  93.1%   |   62 ms    |    ✅ PASS   
+  decuerno3.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  99.3%   |   59 ms    |    ✅ PASS   
+  garnacha1.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  100.0%  |   72 ms    |    ✅ PASS   
+  garnacha2.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  87.1%   |   68 ms    |    ✅ PASS   
+  garnacha3.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  97.8%   |   69 ms    |    ✅ PASS   
+  merlot1.jpg                  | Merlot             | Merlot             |    ✅ SI    |  97.0%   |   64 ms    |    ✅ PASS   
+  merlot2.jpg                  | Merlot             | Merlot             |    ✅ SI    |  97.5%   |   69 ms    |    ✅ PASS   
+  merlot3.jpg                  | Merlot             | Merlot             |    ✅ SI    |  98.5%   |   69 ms    |    ✅ PASS   
+  valencinegre1.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  91.3%   |   56 ms    |    ✅ PASS   
+  valencinegre2.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  98.3%   |   72 ms    |    ✅ PASS   
+  valencinegre3.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  86.7%   |   46 ms    |    ✅ PASS   
+  valenciblanc1.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  99.3%   |   106 ms   |    ✅ PASS   
+  valenciblanc2.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  57.5%   |   70 ms    |    ✅ PASS   
+  valenciblanc3.jpg            | Valensi blanc      | Desconocido        |    ❌ NO    |   0.0%   |   108 ms   |    ❌ FAIL   
+  raimtotssants1.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  97.4%   |   114 ms   |    ✅ PASS   
+  raimtotssants2.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  93.8%   |   66 ms    |    ✅ PASS   
+  raimtotssants3.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  96.8%   |   70 ms    |    ✅ PASS   
   --------------------------------------------------------------------------------------------------------------------------------
-     🎯 Precisión (Calidad):  87.7% (50/57)
-     🔍 Identif.  (Flexible): 89.5% (51/57)
+     🎯 Precisión (Calidad):  93.0% (53/57)
+     🔍 Identif.  (Flexible): 93.0% (53/57)
 
   📍 Stress: Baja Luminosidad
   --------------------------------------------------------------------------------------------------------------------------------
   ARCHIVO                      | ESPERADO           | DETECTADO          |  COINCIDE  |  CONF.   |   TIEMPO   |    ESTADO   
   --------------------------------------------------------------------------------------------------------------------------------
-  ahmerbounamer1.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  97.6%   |   167 ms   |    ✅ PASS   
-  ahmerbounamer2.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  94.7%   |   179 ms   |    ✅ PASS   
-  ahmerbounamer3.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  97.2%   |   130 ms   |    ✅ PASS   
-  aledo1.jpg                   | Aledo              | Aledo              |    ✅ SI    |  98.0%   |   184 ms   |    ✅ PASS   
-  aledo2.jpg                   | Aledo              | Aledo              |    ✅ SI    |  88.3%   |   176 ms   |    ✅ PASS   
-  aledo3.jpg                   | Aledo              | Aledo              |    ✅ SI    |  93.6%   |   167 ms   |    ✅ PASS   
-  fernandella1.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  84.1%   |   185 ms   |    ✅ PASS   
-  fernandella2.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  94.6%   |   174 ms   |    ✅ PASS   
-  fernandella3.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  98.7%   |   167 ms   |    ✅ PASS   
-  jacquet1.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  83.2%   |   172 ms   |    ✅ PASS   
-  jacquet2.jpg                 | Jacquet            | Desconocido        |    ❌ NO    |   0.0%   |   162 ms   |    ❌ FAIL   
-  jacquet3.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  93.1%   |   133 ms   |    ✅ PASS   
-  merseguera1.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  78.2%   |   160 ms   |    ✅ PASS   
-  merseguera2.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  90.9%   |   162 ms   |    ✅ PASS   
-  merseguera3.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  96.7%   |   128 ms   |    ✅ PASS   
-  moscatells1.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  44.0%   |   121 ms   |    ✅ PASS   
-  moscatells2.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  86.6%   |   118 ms   |    ✅ PASS   
-  moscatells3.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  76.3%   |   122 ms   |    ✅ PASS   
-  plantafinapedralba1.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  31.1%   |   161 ms   | ⚠️ LOW CONF 
-  plantafinapedralba2.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  53.6%   |   162 ms   |    ✅ PASS   
-  plantafinapedralba3.jpg      | Planta fina de pedralba | Valenci negre      |    ❌ NO    |  80.4%   |   175 ms   |    ❌ FAIL   
-  roseti1.jpg                  | Roseti             | Roseti             |    ✅ SI    |  83.9%   |   170 ms   |    ✅ PASS   
-  roseti2.jpg                  | Roseti             | Aledo              |    ❌ NO    |  43.1%   |   129 ms   |    ❌ FAIL   
-  roseti3.jpg                  | Roseti             | Roseti             |    ✅ SI    |  87.6%   |   121 ms   |    ✅ PASS   
-  trepadell1.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  93.0%   |   115 ms   |    ✅ PASS   
-  trepadell2.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  62.2%   |   112 ms   |    ✅ PASS   
-  trepadell3.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  60.6%   |   122 ms   |    ✅ PASS   
-  chardonay1.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  99.2%   |   113 ms   |    ✅ PASS   
-  chardonay2.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  52.3%   |   139 ms   |    ✅ PASS   
-  chardonay3.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  93.8%   |   125 ms   |    ✅ PASS   
-  tintorera1.jpg               | Tintorera          | Planta fina de pedralba |    ❌ NO    |  69.4%   |   149 ms   |    ❌ FAIL   
-  tintorera2.jpg               | Tintorera          | Ahmer Bounamer     |    ❌ NO    |  34.7%   |   121 ms   |    ❌ FAIL   
-  tintorera3.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  99.0%   |   127 ms   |    ✅ PASS   
-  monastrell1.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  95.7%   |   172 ms   |    ✅ PASS   
-  monastrell2.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  93.5%   |   170 ms   |    ✅ PASS   
-  monastrell3.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  75.3%   |   164 ms   |    ✅ PASS   
-  cabernetsauvignon1.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  37.3%   |   160 ms   | ⚠️ LOW CONF 
-  cabernetsauvignon2.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  82.6%   |   235 ms   |    ✅ PASS   
-  cabernetsauvignon3.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  83.0%   |   134 ms   |    ✅ PASS   
-  decuerno1.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  54.4%   |   161 ms   |    ✅ PASS   
-  decuerno2.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  97.7%   |   119 ms   |    ✅ PASS   
-  decuerno3.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  98.2%   |   118 ms   |    ✅ PASS   
-  garnacha1.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  98.9%   |   124 ms   |    ✅ PASS   
-  garnacha2.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  88.3%   |   123 ms   |    ✅ PASS   
-  garnacha3.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  99.3%   |   126 ms   |    ✅ PASS   
-  merlot1.jpg                  | Merlot             | Merlot             |    ✅ SI    |  97.6%   |   158 ms   |    ✅ PASS   
-  merlot2.jpg                  | Merlot             | Merlot             |    ✅ SI    |  98.8%   |   124 ms   |    ✅ PASS   
-  merlot3.jpg                  | Merlot             | Merlot             |    ✅ SI    |  96.3%   |   126 ms   |    ✅ PASS   
-  valencinegre1.jpg            | Valenci negre      | Desconocido        |    ❌ NO    |   0.0%   |   106 ms   |    ❌ FAIL   
-  valencinegre2.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  97.6%   |   125 ms   |    ✅ PASS   
-  valencinegre3.jpg            | Valenci negre      | Cabernet-Sauvignon |    ❌ NO    |  41.2%   |   148 ms   |    ❌ FAIL   
-  valenciblanc1.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  99.7%   |   161 ms   |    ✅ PASS   
-  valenciblanc2.jpg            | Valensi blanc      | Desconocido        |    ❌ NO    |   0.0%   |   90 ms    |    ❌ FAIL   
-  valenciblanc3.jpg            | Valensi blanc      | Desconocido        |    ❌ NO    |   0.0%   |   163 ms   |    ❌ FAIL   
-  raimtotssants1.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  98.8%   |   159 ms   |    ✅ PASS   
-  raimtotssants2.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  93.3%   |   120 ms   |    ✅ PASS   
-  raimtotssants3.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  92.4%   |   124 ms   |    ✅ PASS   
+  ahmerbounamer1.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  94.9%   |   107 ms   |    ✅ PASS   
+  ahmerbounamer2.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  96.8%   |   109 ms   |    ✅ PASS   
+  ahmerbounamer3.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  98.8%   |   67 ms    |    ✅ PASS   
+  aledo1.jpg                   | Aledo              | Aledo              |    ✅ SI    |  97.8%   |   96 ms    |    ✅ PASS   
+  aledo2.jpg                   | Aledo              | Aledo              |    ✅ SI    |  89.6%   |   98 ms    |    ✅ PASS   
+  aledo3.jpg                   | Aledo              | Aledo              |    ✅ SI    |  96.8%   |   106 ms   |    ✅ PASS   
+  fernandella1.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  78.5%   |   107 ms   |    ✅ PASS   
+  fernandella2.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  72.5%   |   101 ms   |    ✅ PASS   
+  fernandella3.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  91.7%   |   100 ms   |    ✅ PASS   
+  jacquet1.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  63.1%   |   97 ms    |    ✅ PASS   
+  jacquet2.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  96.7%   |   99 ms    |    ✅ PASS   
+  jacquet3.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  86.1%   |   72 ms    |    ✅ PASS   
+  merseguera1.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  94.0%   |   96 ms    |    ✅ PASS   
+  merseguera2.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  98.3%   |   98 ms    |    ✅ PASS   
+  merseguera3.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  95.2%   |   70 ms    |    ✅ PASS   
+  moscatells1.jpg              | Moscatell          | Aledo              |    ❌ NO    |  39.0%   |   61 ms    |    ❌ FAIL   
+  moscatells2.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  88.4%   |   72 ms    |    ✅ PASS   
+  moscatells3.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  67.2%   |   66 ms    |    ✅ PASS   
+  plantafinapedralba1.jpg      | Planta fina de pedralba | Trepadell          |    ❌ NO    |  67.2%   |   105 ms   |    ❌ FAIL   
+  plantafinapedralba2.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  95.3%   |   95 ms    |    ✅ PASS   
+  plantafinapedralba3.jpg      | Planta fina de pedralba | Valenci negre      |    ❌ NO    |  67.0%   |   103 ms   |    ❌ FAIL   
+  roseti1.jpg                  | Roseti             | Roseti             |    ✅ SI    |  98.5%   |   101 ms   |    ✅ PASS   
+  roseti2.jpg                  | Roseti             | Roseti             |    ✅ SI    |  73.4%   |   78 ms    |    ✅ PASS   
+  roseti3.jpg                  | Roseti             | Aledo              |    ❌ NO    |  71.9%   |   71 ms    |    ❌ FAIL   
+  trepadell1.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  92.1%   |   57 ms    |    ✅ PASS   
+  trepadell2.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  61.1%   |   66 ms    |    ✅ PASS   
+  trepadell3.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  79.7%   |   76 ms    |    ✅ PASS   
+  chardonay1.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  96.9%   |   61 ms    |    ✅ PASS   
+  chardonay2.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  79.8%   |   71 ms    |    ✅ PASS   
+  chardonay3.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  97.0%   |   73 ms    |    ✅ PASS   
+  tintorera1.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  77.2%   |   74 ms    |    ✅ PASS   
+  tintorera2.jpg               | Tintorera          | Desconocido        |    ❌ NO    |   0.0%   |   68 ms    |    ❌ FAIL   
+  tintorera3.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  99.4%   |   62 ms    |    ✅ PASS   
+  monastrell1.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  96.5%   |   94 ms    |    ✅ PASS   
+  monastrell2.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  96.1%   |   96 ms    |    ✅ PASS   
+  monastrell3.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  74.5%   |   92 ms    |    ✅ PASS   
+  cabernetsauvignon1.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  94.2%   |   91 ms    |    ✅ PASS   
+  cabernetsauvignon2.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  97.9%   |   92 ms    |    ✅ PASS   
+  cabernetsauvignon3.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  98.7%   |   72 ms    |    ✅ PASS   
+  decuerno1.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  80.0%   |   95 ms    |    ✅ PASS   
+  decuerno2.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  96.8%   |   63 ms    |    ✅ PASS   
+  decuerno3.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  99.0%   |   60 ms    |    ✅ PASS   
+  garnacha1.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  99.9%   |   69 ms    |    ✅ PASS   
+  garnacha2.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  95.4%   |   68 ms    |    ✅ PASS   
+  garnacha3.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  98.6%   |   70 ms    |    ✅ PASS   
+  merlot1.jpg                  | Merlot             | Merlot             |    ✅ SI    |  93.8%   |   65 ms    |    ✅ PASS   
+  merlot2.jpg                  | Merlot             | Merlot             |    ✅ SI    |  99.1%   |   67 ms    |    ✅ PASS   
+  merlot3.jpg                  | Merlot             | Merlot             |    ✅ SI    |  98.5%   |   63 ms    |    ✅ PASS   
+  valencinegre1.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  83.5%   |   41 ms    |    ✅ PASS   
+  valencinegre2.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  97.9%   |   62 ms    |    ✅ PASS   
+  valencinegre3.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  64.5%   |   40 ms    |    ✅ PASS   
+  valenciblanc1.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  99.3%   |   94 ms    |    ✅ PASS   
+  valenciblanc2.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  58.6%   |   42 ms    |    ✅ PASS   
+  valenciblanc3.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  85.5%   |   94 ms    |    ✅ PASS   
+  raimtotssants1.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  97.8%   |   97 ms    |    ✅ PASS   
+  raimtotssants2.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  92.2%   |   60 ms    |    ✅ PASS   
+  raimtotssants3.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  82.8%   |   67 ms    |    ✅ PASS   
   --------------------------------------------------------------------------------------------------------------------------------
-     🎯 Precisión (Calidad):  80.7% (46/57)
-     🔍 Identif.  (Flexible): 84.2% (48/57)
+     🎯 Precisión (Calidad):  91.2% (52/57)
+     🔍 Identif.  (Flexible): 91.2% (52/57)
 
   📍 Stress: Rotación 45°
   --------------------------------------------------------------------------------------------------------------------------------
   ARCHIVO                      | ESPERADO           | DETECTADO          |  COINCIDE  |  CONF.   |   TIEMPO   |    ESTADO   
   --------------------------------------------------------------------------------------------------------------------------------
-  ahmerbounamer1.jpg           | Ahmer Bounamer     | Raim de tots sants |    ❌ NO    |  36.8%   |   292 ms   |    ❌ FAIL   
-  ahmerbounamer2.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  62.7%   |   331 ms   |    ✅ PASS   
-  ahmerbounamer3.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  89.1%   |   219 ms   |    ✅ PASS   
-  aledo1.jpg                   | Aledo              | Aledo              |    ✅ SI    |  38.0%   |   308 ms   | ⚠️ LOW CONF 
-  aledo2.jpg                   | Aledo              | Aledo              |    ✅ SI    |  27.7%   |   308 ms   | ⚠️ LOW CONF 
-  aledo3.jpg                   | Aledo              | Desconocido        |    ❌ NO    |   0.0%   |   336 ms   |    ❌ FAIL   
-  fernandella1.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  58.9%   |   321 ms   |    ✅ PASS   
-  fernandella2.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  73.2%   |   317 ms   |    ✅ PASS   
-  fernandella3.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  45.0%   |   329 ms   |    ✅ PASS   
-  jacquet1.jpg                 | Jacquet            | Monastrell         |    ❌ NO    |  66.7%   |   305 ms   |    ❌ FAIL   
-  jacquet2.jpg                 | Jacquet            | Merseguera         |    ❌ NO    |  36.8%   |   329 ms   |    ❌ FAIL   
-  jacquet3.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  78.1%   |   225 ms   |    ✅ PASS   
-  merseguera1.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  68.0%   |   321 ms   |    ✅ PASS   
-  merseguera2.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  65.9%   |   331 ms   |    ✅ PASS   
-  merseguera3.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  52.1%   |   249 ms   |    ✅ PASS   
-  moscatells1.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  52.2%   |   224 ms   |    ✅ PASS   
-  moscatells2.jpg              | Moscatell          | Chardonay          |    ❌ NO    |  53.2%   |   337 ms   |    ❌ FAIL   
-  moscatells3.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  44.1%   |   232 ms   |    ✅ PASS   
-  plantafinapedralba1.jpg      | Planta fina de pedralba | Aledo              |    ❌ NO    |  26.8%   |   302 ms   |    ❌ FAIL   
-  plantafinapedralba2.jpg      | Planta fina de pedralba | Chardonay          |    ❌ NO    |  52.8%   |   310 ms   |    ❌ FAIL   
-  plantafinapedralba3.jpg      | Planta fina de pedralba | Valenci negre      |    ❌ NO    |  25.2%   |   323 ms   |    ❌ FAIL   
-  roseti1.jpg                  | Roseti             | Roseti             |    ✅ SI    |  68.0%   |   312 ms   |    ✅ PASS   
-  roseti2.jpg                  | Roseti             | Aledo              |    ❌ NO    |  61.9%   |   230 ms   |    ❌ FAIL   
-  roseti3.jpg                  | Roseti             | Desconocido        |    ❌ NO    |   0.0%   |   217 ms   |    ❌ FAIL   
-  trepadell1.jpg               | Trepadell          | Desconocido        |    ❌ NO    |   0.0%   |   213 ms   |    ❌ FAIL   
-  trepadell2.jpg               | Trepadell          | Desconocido        |    ❌ NO    |   0.0%   |   227 ms   |    ❌ FAIL   
-  trepadell3.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  79.1%   |   223 ms   |    ✅ PASS   
-  chardonay1.jpg               | Chardonay          | Desconocido        |    ❌ NO    |   0.0%   |   229 ms   |    ❌ FAIL   
-  chardonay2.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  87.6%   |   226 ms   |    ✅ PASS   
-  chardonay3.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  58.6%   |   209 ms   |    ✅ PASS   
-  tintorera1.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  60.9%   |   245 ms   |    ✅ PASS   
-  tintorera2.jpg               | Tintorera          | Desconocido        |    ❌ NO    |   0.0%   |   214 ms   |    ❌ FAIL   
-  tintorera3.jpg               | Tintorera          | Monastrell         |    ❌ NO    |  81.7%   |   226 ms   |    ❌ FAIL   
-  monastrell1.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  25.6%   |   306 ms   | ⚠️ LOW CONF 
-  monastrell2.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  75.4%   |   395 ms   |    ✅ PASS   
-  monastrell3.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  91.2%   |   373 ms   |    ✅ PASS   
-  cabernetsauvignon1.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  30.2%   |   318 ms   | ⚠️ LOW CONF 
-  cabernetsauvignon2.jpg       | Cabernet-Sauvignon | Fernandella        |    ❌ NO    |  43.5%   |   491 ms   |    ❌ FAIL   
-  cabernetsauvignon3.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  66.3%   |   212 ms   |    ✅ PASS   
-  decuerno1.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  53.1%   |   309 ms   |    ✅ PASS   
-  decuerno2.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  93.8%   |   212 ms   |    ✅ PASS   
-  decuerno3.jpg                | De Cuerno          | Aledo              |    ❌ NO    |  70.4%   |   207 ms   |    ❌ FAIL   
-  garnacha1.jpg                | Garnacha           | Monastrell         |    ❌ NO    |  33.0%   |   228 ms   |    ❌ FAIL   
-  garnacha2.jpg                | Garnacha           | Chardonay          |    ❌ NO    |  57.6%   |   212 ms   |    ❌ FAIL   
-  garnacha3.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  26.3%   |   208 ms   | ⚠️ LOW CONF 
-  merlot1.jpg                  | Merlot             | Desconocido        |    ❌ NO    |   0.0%   |   210 ms   |    ❌ FAIL   
-  merlot2.jpg                  | Merlot             | Merlot             |    ✅ SI    |  61.8%   |   219 ms   |    ✅ PASS   
-  merlot3.jpg                  | Merlot             | Merlot             |    ✅ SI    |  27.8%   |   247 ms   | ⚠️ LOW CONF 
-  valencinegre1.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  36.0%   |   155 ms   | ⚠️ LOW CONF 
-  valencinegre2.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  83.1%   |   210 ms   |    ✅ PASS   
-  valencinegre3.jpg            | Valenci negre      | Raim de tots sants |    ❌ NO    |  56.0%   |   118 ms   |    ❌ FAIL   
-  valenciblanc1.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  94.3%   |   308 ms   |    ✅ PASS   
-  valenciblanc2.jpg            | Valensi blanc      | Merseguera         |    ❌ NO    |  39.9%   |   141 ms   |    ❌ FAIL   
-  valenciblanc3.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  32.7%   |   329 ms   | ⚠️ LOW CONF 
-  raimtotssants1.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  74.5%   |   316 ms   |    ✅ PASS   
-  raimtotssants2.jpg           | Raim de tots sants | Desconocido        |    ❌ NO    |   0.0%   |   232 ms   |    ❌ FAIL   
-  raimtotssants3.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  88.4%   |   214 ms   |    ✅ PASS   
+  ahmerbounamer1.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  47.4%   |   198 ms   |    ✅ PASS   
+  ahmerbounamer2.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  97.1%   |   192 ms   |    ✅ PASS   
+  ahmerbounamer3.jpg           | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  97.7%   |   127 ms   |    ✅ PASS   
+  aledo1.jpg                   | Aledo              | Aledo              |    ✅ SI    |  89.6%   |   187 ms   |    ✅ PASS   
+  aledo2.jpg                   | Aledo              | Aledo              |    ✅ SI    |  33.8%   |   195 ms   | ⚠️ LOW CONF 
+  aledo3.jpg                   | Aledo              | Aledo              |    ✅ SI    |  61.9%   |   223 ms   |    ✅ PASS   
+  fernandella1.jpg             | Fernandella        | Desconocido        |    ❌ NO    |   0.0%   |   187 ms   |    ❌ FAIL   
+  fernandella2.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  31.6%   |   196 ms   | ⚠️ LOW CONF 
+  fernandella3.jpg             | Fernandella        | Fernandella        |    ✅ SI    |  69.6%   |   202 ms   |    ✅ PASS   
+  jacquet1.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  41.6%   |   190 ms   |    ✅ PASS   
+  jacquet2.jpg                 | Jacquet            | Planta fina de pedralba |    ❌ NO    |  37.0%   |   191 ms   |    ❌ FAIL   
+  jacquet3.jpg                 | Jacquet            | Jacquet            |    ✅ SI    |  81.4%   |   131 ms   |    ✅ PASS   
+  merseguera1.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  90.5%   |   212 ms   |    ✅ PASS   
+  merseguera2.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  90.9%   |   182 ms   |    ✅ PASS   
+  merseguera3.jpg              | Merseguera         | Merseguera         |    ✅ SI    |  92.0%   |   130 ms   |    ✅ PASS   
+  moscatells1.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  77.8%   |   123 ms   |    ✅ PASS   
+  moscatells2.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  85.3%   |   121 ms   |    ✅ PASS   
+  moscatells3.jpg              | Moscatell          | Moscatell          |    ✅ SI    |  81.1%   |   124 ms   |    ✅ PASS   
+  plantafinapedralba1.jpg      | Planta fina de pedralba | Aledo              |    ❌ NO    |  55.7%   |   183 ms   |    ❌ FAIL   
+  plantafinapedralba2.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  79.2%   |   191 ms   |    ✅ PASS   
+  plantafinapedralba3.jpg      | Planta fina de pedralba | Planta fina de pedralba |    ✅ SI    |  55.8%   |   189 ms   |    ✅ PASS   
+  roseti1.jpg                  | Roseti             | Roseti             |    ✅ SI    |  99.3%   |   187 ms   |    ✅ PASS   
+  roseti2.jpg                  | Roseti             | Aledo              |    ❌ NO    |  71.3%   |   126 ms   |    ❌ FAIL   
+  roseti3.jpg                  | Roseti             | Planta fina de pedralba |    ❌ NO    |  39.8%   |   121 ms   |    ❌ FAIL   
+  trepadell1.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  88.4%   |   125 ms   |    ✅ PASS   
+  trepadell2.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  38.0%   |   114 ms   | ⚠️ LOW CONF 
+  trepadell3.jpg               | Trepadell          | Trepadell          |    ✅ SI    |  55.1%   |   126 ms   |    ✅ PASS   
+  chardonay1.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  45.4%   |   123 ms   |    ✅ PASS   
+  chardonay2.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  96.7%   |   131 ms   |    ✅ PASS   
+  chardonay3.jpg               | Chardonay          | Chardonay          |    ✅ SI    |  72.1%   |   122 ms   |    ✅ PASS   
+  tintorera1.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  81.0%   |   125 ms   |    ✅ PASS   
+  tintorera2.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  35.7%   |   119 ms   | ⚠️ LOW CONF 
+  tintorera3.jpg               | Tintorera          | Tintorera          |    ✅ SI    |  27.8%   |   125 ms   | ⚠️ LOW CONF 
+  monastrell1.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  82.7%   |   179 ms   |    ✅ PASS   
+  monastrell2.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  58.3%   |   192 ms   |    ✅ PASS   
+  monastrell3.jpg              | Monastrell         | Monastrell         |    ✅ SI    |  66.3%   |   185 ms   |    ✅ PASS   
+  cabernetsauvignon1.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  55.7%   |   184 ms   |    ✅ PASS   
+  cabernetsauvignon2.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  91.9%   |   187 ms   |    ✅ PASS   
+  cabernetsauvignon3.jpg       | Cabernet-Sauvignon | Cabernet-Sauvignon |    ✅ SI    |  89.3%   |   125 ms   |    ✅ PASS   
+  decuerno1.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  54.0%   |   188 ms   |    ✅ PASS   
+  decuerno2.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  81.4%   |   123 ms   |    ✅ PASS   
+  decuerno3.jpg                | De Cuerno          | De Cuerno          |    ✅ SI    |  74.2%   |   120 ms   |    ✅ PASS   
+  garnacha1.jpg                | Garnacha           | Garnacha           |    ✅ SI    |  94.3%   |   124 ms   |    ✅ PASS   
+  garnacha2.jpg                | Garnacha           | Chardonay          |    ❌ NO    |  78.0%   |   125 ms   |    ❌ FAIL   
+  garnacha3.jpg                | Garnacha           | Merseguera         |    ❌ NO    |  52.6%   |   116 ms   |    ❌ FAIL   
+  merlot1.jpg                  | Merlot             | Desconocido        |    ❌ NO    |   0.0%   |   121 ms   |    ❌ FAIL   
+  merlot2.jpg                  | Merlot             | Merlot             |    ✅ SI    |  65.2%   |   119 ms   |    ✅ PASS   
+  merlot3.jpg                  | Merlot             | Merlot             |    ✅ SI    |  72.5%   |   127 ms   |    ✅ PASS   
+  valencinegre1.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  62.2%   |   71 ms    |    ✅ PASS   
+  valencinegre2.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  99.6%   |   114 ms   |    ✅ PASS   
+  valencinegre3.jpg            | Valenci negre      | Valenci negre      |    ✅ SI    |  69.6%   |   50 ms    |    ✅ PASS   
+  valenciblanc1.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  99.3%   |   180 ms   |    ✅ PASS   
+  valenciblanc2.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  84.0%   |   67 ms    |    ✅ PASS   
+  valenciblanc3.jpg            | Valensi blanc      | Valensi blanc      |    ✅ SI    |  72.2%   |   177 ms   |    ✅ PASS   
+  raimtotssants1.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  81.5%   |   184 ms   |    ✅ PASS   
+  raimtotssants2.jpg           | Raim de tots sants | Ahmer Bounamer     |    ❌ NO    |  25.0%   |   122 ms   |    ❌ FAIL   
+  raimtotssants3.jpg           | Raim de tots sants | Raim de tots sants |    ✅ SI    |  80.7%   |   126 ms   |    ✅ PASS   
   --------------------------------------------------------------------------------------------------------------------------------
-     🎯 Precisión (Calidad):  45.6% (26/57)
-     🔍 Identif.  (Flexible): 59.6% (34/57)
+     🎯 Precisión (Calidad):  75.4% (43/57)
+     🔍 Identif.  (Flexible): 84.2% (48/57)
 
   ................................................................................................................................
   ⏱️  ANÁLISIS DE TIEMPOS DE RESPUESTA:
-     🔹 Promedios:  NORMAL: 155ms | BRILLO: 145ms | ROTACION: 266ms
-     🚀 Más rápido: 90ms (DATASET_ALTA_CALIDAD | valenciblanc2.jpg | BRILLO)
-     🐌 Más lento:  491ms (DATASET_ALTA_CALIDAD | cabernetsauvignon2.jpg | ROTACION)
+     🔹 Promedios:  NORMAL: 85ms | BRILLO: 80ms | ROTACION: 150ms
+     🚀 Más rápido: 40ms (DATASET_ALTA_CALIDAD | valencinegre3.jpg | BRILLO)
+     🐌 Más lento:  223ms (DATASET_ALTA_CALIDAD | aledo3.jpg | ROTACION)
   ................................................................................................................................
 📊 RENDIMIENTO 'DATASET_ALTA_CALIDAD':
-   ✅ Estricto (Pasa Umbral): 71.35%
-   ⚠️ Flexible (Sabe qué es): 77.78%
+   ✅ Estricto (Pasa Umbral): 86.55%
+   ⚠️ Flexible (Sabe qué es): 89.47%
 ==================================================================================================================================
 
 📦 GRUPO DE DATOS: DATASET_BAJA_CALIDAD
@@ -219,83 +219,83 @@
   --------------------------------------------------------------------------------------------------------------------------------
   ARCHIVO                      | ESPERADO           | DETECTADO          |  COINCIDE  |  CONF.   |   TIEMPO   |    ESTADO   
   --------------------------------------------------------------------------------------------------------------------------------
-  LQahmer1.JPG                 | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  28.9%   |   115 ms   | ⚠️ LOW CONF 
-  LQmerseguera1.JPG            | Merseguera         | Merseguera         |    ✅ SI    |  32.4%   |   94 ms    | ⚠️ LOW CONF 
-  LQmerseguera2.JPG            | Merseguera         | Roseti             |    ❌ NO    |  41.1%   |   114 ms   |    ❌ FAIL   
-  LQmonastrell1.JPG            | Monastrell         | Garnacha           |    ❌ NO    |  64.9%   |   69 ms    |    ❌ FAIL   
-  LQmoscatell1.JPG             | Moscatell          | Moscatell          |    ✅ SI    |  60.5%   |   60 ms    |    ✅ PASS   
-  LQmoscatell2.JPG             | Moscatell          | Moscatell          |    ✅ SI    |  78.1%   |   97 ms    |    ✅ PASS   
-  LQmoscatell3.JPG             | Moscatell          | Desconocido        |    ❌ NO    |   0.0%   |   116 ms   |    ❌ FAIL   
-  LQmoscatell4.JPG             | Moscatell          | Aledo              |    ❌ NO    |  69.6%   |   150 ms   |    ❌ FAIL   
-  LQmoscatell5.JPG             | Moscatell          | Aledo              |    ❌ NO    |  27.4%   |   142 ms   |    ❌ FAIL   
-  LQtotsants1.JPG              | Raim de tots sants | Raim de tots sants |    ✅ SI    |  89.1%   |   140 ms   |    ✅ PASS   
-  LQtrepadell1.JPG             | Trepadell          | Monastrell         |    ❌ NO    |  84.3%   |   137 ms   |    ❌ FAIL   
-  LQtrepadell2.JPG             | Trepadell          | Merseguera         |    ❌ NO    |  65.0%   |   102 ms   |    ❌ FAIL   
-  LQvalencinegre1.JPG          | Valenci negre      | Ahmer Bounamer     |    ❌ NO    |  46.2%   |   103 ms   |    ❌ FAIL   
-  LQvalencinegre2.JPG          | Valenci negre      | Ahmer Bounamer     |    ❌ NO    |  53.7%   |   143 ms   |    ❌ FAIL   
-  LQvalensiblanc1.JPG          | Valensi blanc      | Desconocido        |    ❌ NO    |   0.0%   |   96 ms    |    ❌ FAIL   
-  LQvalensiblanc2.JPG          | Valensi blanc      | Moscatell          |    ❌ NO    |  98.4%   |   106 ms   |    ❌ FAIL   
+  LQahmer1.JPG                 | Ahmer Bounamer     | Garnacha           |    ❌ NO    |  32.4%   |   53 ms    |    ❌ FAIL   
+  LQmerseguera1.JPG            | Merseguera         | Aledo              |    ❌ NO    |  35.0%   |   41 ms    |    ❌ FAIL   
+  LQmerseguera2.JPG            | Merseguera         | Aledo              |    ❌ NO    |  53.8%   |   62 ms    |    ❌ FAIL   
+  LQmonastrell1.JPG            | Monastrell         | Garnacha           |    ❌ NO    |  38.3%   |   38 ms    |    ❌ FAIL   
+  LQmoscatell1.JPG             | Moscatell          | Moscatell          |    ✅ SI    |  68.9%   |   28 ms    |    ✅ PASS   
+  LQmoscatell2.JPG             | Moscatell          | Moscatell          |    ✅ SI    |  61.7%   |   54 ms    |    ✅ PASS   
+  LQmoscatell3.JPG             | Moscatell          | Valensi blanc      |    ❌ NO    |  49.0%   |   63 ms    |    ❌ FAIL   
+  LQmoscatell4.JPG             | Moscatell          | Aledo              |    ❌ NO    |  35.5%   |   68 ms    |    ❌ FAIL   
+  LQmoscatell5.JPG             | Moscatell          | Aledo              |    ❌ NO    |  56.5%   |   64 ms    |    ❌ FAIL   
+  LQtotsants1.JPG              | Raim de tots sants | Raim de tots sants |    ✅ SI    |  90.0%   |   68 ms    |    ✅ PASS   
+  LQtrepadell1.JPG             | Trepadell          | Monastrell         |    ❌ NO    |  38.7%   |   59 ms    |    ❌ FAIL   
+  LQtrepadell2.JPG             | Trepadell          | Merseguera         |    ❌ NO    |  33.6%   |   54 ms    |    ❌ FAIL   
+  LQvalencinegre1.JPG          | Valenci negre      | Cabernet-Sauvignon |    ❌ NO    |  57.8%   |   41 ms    |    ❌ FAIL   
+  LQvalencinegre2.JPG          | Valenci negre      | Ahmer Bounamer     |    ❌ NO    |  62.3%   |   69 ms    |    ❌ FAIL   
+  LQvalensiblanc1.JPG          | Valensi blanc      | Moscatell          |    ❌ NO    |  35.6%   |   47 ms    |    ❌ FAIL   
+  LQvalensiblanc2.JPG          | Valensi blanc      | Moscatell          |    ❌ NO    |  95.1%   |   48 ms    |    ❌ FAIL   
   --------------------------------------------------------------------------------------------------------------------------------
      🎯 Precisión (Calidad):  18.8% (3/16)
-     🔍 Identif.  (Flexible): 31.2% (5/16)
+     🔍 Identif.  (Flexible): 18.8% (3/16)
 
   📍 Stress: Baja Luminosidad
   --------------------------------------------------------------------------------------------------------------------------------
   ARCHIVO                      | ESPERADO           | DETECTADO          |  COINCIDE  |  CONF.   |   TIEMPO   |    ESTADO   
   --------------------------------------------------------------------------------------------------------------------------------
-  LQahmer1.JPG                 | Ahmer Bounamer     | Ahmer Bounamer     |    ✅ SI    |  29.3%   |   125 ms   | ⚠️ LOW CONF 
-  LQmerseguera1.JPG            | Merseguera         | Merseguera         |    ✅ SI    |  49.3%   |   100 ms   |    ✅ PASS   
-  LQmerseguera2.JPG            | Merseguera         | Ahmer Bounamer     |    ❌ NO    |  40.7%   |   98 ms    |    ❌ FAIL   
-  LQmonastrell1.JPG            | Monastrell         | Garnacha           |    ❌ NO    |  63.5%   |   68 ms    |    ❌ FAIL   
-  LQmoscatell1.JPG             | Moscatell          | Monastrell         |    ❌ NO    |  86.6%   |   67 ms    |    ❌ FAIL   
-  LQmoscatell2.JPG             | Moscatell          | Moscatell          |    ✅ SI    |  41.8%   |   99 ms    |    ✅ PASS   
-  LQmoscatell3.JPG             | Moscatell          | Desconocido        |    ❌ NO    |   0.0%   |   115 ms   |    ❌ FAIL   
-  LQmoscatell4.JPG             | Moscatell          | Aledo              |    ❌ NO    |  43.6%   |   132 ms   |    ❌ FAIL   
-  LQmoscatell5.JPG             | Moscatell          | Aledo              |    ❌ NO    |  50.4%   |   125 ms   |    ❌ FAIL   
-  LQtotsants1.JPG              | Raim de tots sants | Raim de tots sants |    ✅ SI    |  82.9%   |   194 ms   |    ✅ PASS   
-  LQtrepadell1.JPG             | Trepadell          | Monastrell         |    ❌ NO    |  37.6%   |   140 ms   |    ❌ FAIL   
-  LQtrepadell2.JPG             | Trepadell          | Merseguera         |    ❌ NO    |  42.1%   |   87 ms    |    ❌ FAIL   
-  LQvalencinegre1.JPG          | Valenci negre      | Ahmer Bounamer     |    ❌ NO    |  62.0%   |   87 ms    |    ❌ FAIL   
-  LQvalencinegre2.JPG          | Valenci negre      | Ahmer Bounamer     |    ❌ NO    |  52.4%   |   130 ms   |    ❌ FAIL   
-  LQvalensiblanc1.JPG          | Valensi blanc      | Merseguera         |    ❌ NO    |  56.5%   |   106 ms   |    ❌ FAIL   
-  LQvalensiblanc2.JPG          | Valensi blanc      | Moscatell          |    ❌ NO    |  97.4%   |   109 ms   |    ❌ FAIL   
+  LQahmer1.JPG                 | Ahmer Bounamer     | Merseguera         |    ❌ NO    |  34.7%   |   49 ms    |    ❌ FAIL   
+  LQmerseguera1.JPG            | Merseguera         | Merseguera         |    ✅ SI    |  64.6%   |   35 ms    |    ✅ PASS   
+  LQmerseguera2.JPG            | Merseguera         | Aledo              |    ❌ NO    |  53.4%   |   48 ms    |    ❌ FAIL   
+  LQmonastrell1.JPG            | Monastrell         | Garnacha           |    ❌ NO    |  38.9%   |   36 ms    |    ❌ FAIL   
+  LQmoscatell1.JPG             | Moscatell          | Moscatell          |    ✅ SI    |  78.9%   |   32 ms    |    ✅ PASS   
+  LQmoscatell2.JPG             | Moscatell          | Desconocido        |    ❌ NO    |   0.0%   |   32 ms    |    ❌ FAIL   
+  LQmoscatell3.JPG             | Moscatell          | Valensi blanc      |    ❌ NO    |  64.2%   |   63 ms    |    ❌ FAIL   
+  LQmoscatell4.JPG             | Moscatell          | Aledo              |    ❌ NO    |  58.9%   |   66 ms    |    ❌ FAIL   
+  LQmoscatell5.JPG             | Moscatell          | Aledo              |    ❌ NO    |  69.6%   |   60 ms    |    ❌ FAIL   
+  LQtotsants1.JPG              | Raim de tots sants | Raim de tots sants |    ✅ SI    |  75.7%   |   62 ms    |    ✅ PASS   
+  LQtrepadell1.JPG             | Trepadell          | Desconocido        |    ❌ NO    |   0.0%   |   62 ms    |    ❌ FAIL   
+  LQtrepadell2.JPG             | Trepadell          | Desconocido        |    ❌ NO    |   0.0%   |   44 ms    |    ❌ FAIL   
+  LQvalencinegre1.JPG          | Valenci negre      | Cabernet-Sauvignon |    ❌ NO    |  86.2%   |   42 ms    |    ❌ FAIL   
+  LQvalencinegre2.JPG          | Valenci negre      | Ahmer Bounamer     |    ❌ NO    |  45.2%   |   66 ms    |    ❌ FAIL   
+  LQvalensiblanc1.JPG          | Valensi blanc      | Merseguera         |    ❌ NO    |  81.4%   |   49 ms    |    ❌ FAIL   
+  LQvalensiblanc2.JPG          | Valensi blanc      | Moscatell          |    ❌ NO    |  94.1%   |   50 ms    |    ❌ FAIL   
   --------------------------------------------------------------------------------------------------------------------------------
      🎯 Precisión (Calidad):  18.8% (3/16)
-     🔍 Identif.  (Flexible): 25.0% (4/16)
+     🔍 Identif.  (Flexible): 18.8% (3/16)
 
   📍 Stress: Rotación 45°
   --------------------------------------------------------------------------------------------------------------------------------
   ARCHIVO                      | ESPERADO           | DETECTADO          |  COINCIDE  |  CONF.   |   TIEMPO   |    ESTADO   
   --------------------------------------------------------------------------------------------------------------------------------
-  LQahmer1.JPG                 | Ahmer Bounamer     | Merseguera         |    ❌ NO    |  72.3%   |   120 ms   |    ❌ FAIL   
-  LQmerseguera1.JPG            | Merseguera         | Desconocido        |    ❌ NO    |   0.0%   |   199 ms   |    ❌ FAIL   
-  LQmerseguera2.JPG            | Merseguera         | Merseguera         |    ✅ SI    |  41.8%   |   176 ms   |    ✅ PASS   
-  LQmonastrell1.JPG            | Monastrell         | Desconocido        |    ❌ NO    |   0.0%   |   107 ms   |    ❌ FAIL   
-  LQmoscatell1.JPG             | Moscatell          | Desconocido        |    ❌ NO    |   0.0%   |   92 ms    |    ❌ FAIL   
-  LQmoscatell2.JPG             | Moscatell          | Desconocido        |    ❌ NO    |   0.0%   |   115 ms   |    ❌ FAIL   
-  LQmoscatell3.JPG             | Moscatell          | Planta fina de pedralba |    ❌ NO    |  56.0%   |   160 ms   |    ❌ FAIL   
-  LQmoscatell4.JPG             | Moscatell          | Merseguera         |    ❌ NO    |  29.5%   |   180 ms   |    ❌ FAIL   
-  LQmoscatell5.JPG             | Moscatell          | Aledo              |    ❌ NO    |  32.5%   |   188 ms   |    ❌ FAIL   
-  LQtotsants1.JPG              | Raim de tots sants | Raim de tots sants |    ✅ SI    |  93.1%   |   185 ms   |    ✅ PASS   
-  LQtrepadell1.JPG             | Trepadell          | Desconocido        |    ❌ NO    |   0.0%   |   186 ms   |    ❌ FAIL   
-  LQtrepadell2.JPG             | Trepadell          | Merseguera         |    ❌ NO    |  27.8%   |   124 ms   |    ❌ FAIL   
-  LQvalencinegre1.JPG          | Valenci negre      | Desconocido        |    ❌ NO    |   0.0%   |   107 ms   |    ❌ FAIL   
-  LQvalencinegre2.JPG          | Valenci negre      | Ahmer Bounamer     |    ❌ NO    |  63.9%   |   199 ms   |    ❌ FAIL   
-  LQvalensiblanc1.JPG          | Valensi blanc      | Merseguera         |    ❌ NO    |  29.6%   |   129 ms   |    ❌ FAIL   
-  LQvalensiblanc2.JPG          | Valensi blanc      | Moscatell          |    ❌ NO    |  94.6%   |   160 ms   |    ❌ FAIL   
+  LQahmer1.JPG                 | Ahmer Bounamer     | Merseguera         |    ❌ NO    |  85.3%   |   57 ms    |    ❌ FAIL   
+  LQmerseguera1.JPG            | Merseguera         | Merseguera         |    ✅ SI    |  47.1%   |   50 ms    |    ✅ PASS   
+  LQmerseguera2.JPG            | Merseguera         | Roseti             |    ❌ NO    |  41.1%   |   75 ms    |    ❌ FAIL   
+  LQmonastrell1.JPG            | Monastrell         | Merseguera         |    ❌ NO    |  62.2%   |   50 ms    |    ❌ FAIL   
+  LQmoscatell1.JPG             | Moscatell          | Moscatell          |    ✅ SI    |  80.3%   |   40 ms    |    ✅ PASS   
+  LQmoscatell2.JPG             | Moscatell          | Desconocido        |    ❌ NO    |   0.0%   |   49 ms    |    ❌ FAIL   
+  LQmoscatell3.JPG             | Moscatell          | Valensi blanc      |    ❌ NO    |  86.4%   |   80 ms    |    ❌ FAIL   
+  LQmoscatell4.JPG             | Moscatell          | Desconocido        |    ❌ NO    |   0.0%   |   96 ms    |    ❌ FAIL   
+  LQmoscatell5.JPG             | Moscatell          | Aledo              |    ❌ NO    |  69.7%   |   91 ms    |    ❌ FAIL   
+  LQtotsants1.JPG              | Raim de tots sants | Raim de tots sants |    ✅ SI    |  83.8%   |   94 ms    |    ✅ PASS   
+  LQtrepadell1.JPG             | Trepadell          | Aledo              |    ❌ NO    |  70.4%   |   84 ms    |    ❌ FAIL   
+  LQtrepadell2.JPG             | Trepadell          | Merseguera         |    ❌ NO    |  28.2%   |   66 ms    |    ❌ FAIL   
+  LQvalencinegre1.JPG          | Valenci negre      | Desconocido        |    ❌ NO    |   0.0%   |   54 ms    |    ❌ FAIL   
+  LQvalencinegre2.JPG          | Valenci negre      | Desconocido        |    ❌ NO    |   0.0%   |   101 ms   |    ❌ FAIL   
+  LQvalensiblanc1.JPG          | Valensi blanc      | Merseguera         |    ❌ NO    |  31.5%   |   66 ms    |    ❌ FAIL   
+  LQvalensiblanc2.JPG          | Valensi blanc      | Moscatell          |    ❌ NO    |  93.4%   |   67 ms    |    ❌ FAIL   
   --------------------------------------------------------------------------------------------------------------------------------
-     🎯 Precisión (Calidad):  12.5% (2/16)
-     🔍 Identif.  (Flexible): 12.5% (2/16)
+     🎯 Precisión (Calidad):  18.8% (3/16)
+     🔍 Identif.  (Flexible): 18.8% (3/16)
 
   ................................................................................................................................
   ⏱️  ANÁLISIS DE TIEMPOS DE RESPUESTA:
-     🔹 Promedios:  NORMAL: 112ms | BRILLO: 111ms | ROTACION: 152ms
-     🚀 Más rápido: 60ms (DATASET_BAJA_CALIDAD | LQmoscatell1.JPG | NORMAL)
-     🐌 Más lento:  199ms (DATASET_BAJA_CALIDAD | LQmerseguera1.JPG | ROTACION)
+     🔹 Promedios:  NORMAL: 53ms | BRILLO: 50ms | ROTACION: 70ms
+     🚀 Más rápido: 28ms (DATASET_BAJA_CALIDAD | LQmoscatell1.JPG | NORMAL)
+     🐌 Más lento:  101ms (DATASET_BAJA_CALIDAD | LQvalencinegre2.JPG | ROTACION)
   ................................................................................................................................
 📊 RENDIMIENTO 'DATASET_BAJA_CALIDAD':
-   ✅ Estricto (Pasa Umbral): 16.67%
-   ⚠️ Flexible (Sabe qué es): 22.92%
+   ✅ Estricto (Pasa Umbral): 18.75%
+   ⚠️ Flexible (Sabe qué es): 18.75%
 ==================================================================================================================================
 
 
