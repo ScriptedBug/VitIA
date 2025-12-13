@@ -44,6 +44,9 @@ class FotoPage extends StatefulWidget {
 
 class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
   CameraController? _cameraController;
+  List<CameraDescription> _cameras = [];
+  int _selectedCameraIndex = 0;
+  FlashMode _currentFlashMode = FlashMode.off;
   bool _isCameraInitialized = false;
   bool _useSimulatedCamera = false;
 
@@ -95,25 +98,42 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
 
   Future<void> _initCamera() async {
     try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty) {
+      _cameras = await availableCameras();
+      if (_cameras.isEmpty) {
         if (mounted) setState(() => _useSimulatedCamera = true);
         return;
       }
-      _cameraController = CameraController(
-        cameras[0],
-        ResolutionPreset.high,
-        enableAudio: false,
-      );
+      
+      // Initialize the selected camera
+      await _initCameraWithIndex(_selectedCameraIndex);
+      
+    } catch (e) {
+      debugPrint("Error cámara: $e");
+      if (mounted) setState(() => _useSimulatedCamera = true);
+    }
+  }
+
+  Future<void> _initCameraWithIndex(int index) async {
+    final camera = _cameras[index];
+    _cameraController = CameraController(
+      camera,
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
+
+    try {
       await _cameraController!.initialize();
+      try {
+        await _cameraController!.setFlashMode(_currentFlashMode);
+      } catch (_) {}
       try {
         await _cameraController!
             .lockCaptureOrientation(DeviceOrientation.portraitUp);
       } catch (_) {}
+      
       if (mounted) setState(() => _isCameraInitialized = true);
     } catch (e) {
-      debugPrint("Error cámara: $e");
-      if (mounted) setState(() => _useSimulatedCamera = true);
+      debugPrint("Error initializing camera: $e");
     }
   }
 
@@ -123,6 +143,43 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     _resultPageController.dispose();
     _sheetController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onSwitchCamera() async {
+    if (_cameras.length < 2) return;
+    
+    // Calculate new index
+    int newIndex = (_selectedCameraIndex + 1) % _cameras.length;
+    
+    // Dispose current
+    await _cameraController?.dispose();
+    setState(() {
+      _isCameraInitialized = false;
+      _selectedCameraIndex = newIndex;
+    });
+
+    // Re-init with new index
+    await _initCameraWithIndex(newIndex);
+  }
+
+  Future<void> _onToggleFlash() async {
+    if (!_isCameraInitialized || _cameraController == null) return;
+
+    FlashMode newMode;
+    if (_currentFlashMode == FlashMode.off) {
+      newMode = FlashMode.auto;
+    } else if (_currentFlashMode == FlashMode.auto) {
+      newMode = FlashMode.torch; // Or always
+    } else {
+      newMode = FlashMode.off;
+    }
+
+    try {
+      await _cameraController!.setFlashMode(newMode);
+      setState(() => _currentFlashMode = newMode);
+    } catch (e) {
+      debugPrint("Error toggling flash: $e");
+    }
   }
 
   // --- ACTIONS ---
@@ -198,29 +255,49 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
           if (permission == LocationPermission.whileInUse ||
               permission == LocationPermission.always) {
             // Get position with timeout
-            position = await Geolocator.getCurrentPosition(
-                timeLimit: const Duration(seconds: 5));
+            try {
+              position = await Geolocator.getCurrentPosition(
+                  timeLimit: const Duration(seconds: 5));
+            } catch (e) {
+              debugPrint("Error getting position: $e");
+            }
 
-            // Reverse Geocoding
-            List<Placemark> placemarks = await placemarkFromCoordinates(
-                position.latitude, position.longitude);
-            if (placemarks.isNotEmpty) {
-              final place = placemarks.first;
-              locationStr =
-                  "${place.locality ?? ''}, ${place.administrativeArea ?? ''}"
-                      .trim()
-                      .replaceAll(RegExp(r'^, |,$'), '');
-              if (locationStr.isEmpty) locationStr = "Ubicación guardada";
+            if (position != null) {
+               // Reverse Geocoding
+               try {
+                  List<Placemark> placemarks = await placemarkFromCoordinates(
+                      position.latitude, position.longitude);
+                  
+                  if (placemarks.isNotEmpty) {
+                    final place = placemarks.first;
+                    // Priority: City, Country -> Country -> Unknown
+                    final String city = place.locality ?? place.subAdministrativeArea ?? '';
+                    final String country = place.country ?? '';
+
+                    if (city.isNotEmpty && country.isNotEmpty) {
+                      locationStr = "$city, $country";
+                    } else if (country.isNotEmpty) {
+                      locationStr = country;
+                    } else {
+                      locationStr = "Ubicación detectada";
+                    }
+                  }
+               } catch (e) {
+                 debugPrint("Error reverse geocoding: $e");
+                 // User requested NO coordinates. Fallback to generic message.
+                 locationStr = "Ubicación desconocida"; 
+               }
+               
+               if (locationStr.isEmpty || locationStr == ",") {
+                   locationStr = "Ubicación desconocida";
+               }
             }
           }
         }
       } catch (e) {
-        debugPrint("Location Error: $e");
-        // Fallback for simulation/testing
+        debugPrint("Location Permission/Service Error: $e");
         if (_useSimulatedCamera) {
           locationStr = "Requena, Valencia (Sim)";
-          // Mock coords
-          // position = Position(longitude: -1.1, latitude: 39.4, timestamp: DateTime.now(), accuracy: 1, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0, altitudeAccuracy: 0, headingAccuracy: 0);
         }
       }
 
@@ -266,10 +343,25 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
 
           if (_results.isEmpty) {
             _uiState = 0;
+            if (_sheetController.isAttached) {
+               _sheetController.animateTo(
+                0.15, // Back to capture size
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            }
             ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("No se pudo identificar nada.")));
           } else {
             _uiState = 2;
+             // Animate to result view size
+            if (_sheetController.isAttached) {
+              _sheetController.animateTo(
+                0.65, // Result view size
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.elasticOut,
+              );
+            }
           }
         });
       }
@@ -375,6 +467,14 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
       _results.clear();
       _currentResultIndex = 0;
     });
+    // Animate back to initial capture size
+    if (_sheetController.isAttached) {
+      _sheetController.animateTo(
+        0.15,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   // --- UI COMPONENTS ---
@@ -422,6 +522,10 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
     if (_useSimulatedCamera) {
       return Image.network(_fallbackImage, fit: BoxFit.cover);
     }
+    // Defensive check
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+       return Container(color: Colors.black); 
+    }
     return CameraPreview(_cameraController!);
   }
 
@@ -432,8 +536,16 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.flash_off, color: Colors.white, size: 28),
-            onPressed: () {},
+            icon: Icon(
+              _currentFlashMode == FlashMode.off
+                  ? Icons.flash_off
+                  : _currentFlashMode == FlashMode.auto
+                      ? Icons.flash_auto
+                      : Icons.flash_on,
+              color: Colors.white,
+              size: 28,
+            ),
+            onPressed: _onToggleFlash,
           ),
           GestureDetector(
             onTap: _takePhoto,
@@ -457,7 +569,7 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
           IconButton(
             icon: const Icon(Icons.cameraswitch_outlined,
                 color: Colors.white, size: 28),
-            onPressed: () {},
+            onPressed: _onSwitchCamera,
           ),
         ],
       ),
@@ -465,33 +577,21 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
   }
 
   Widget _buildDraggableSheet() {
-    double minSize = 0.4;
+    double minSize = 0.15;
     double maxSize = 0.85;
-    double initialSize = 0.4;
+    double initialSize = 0.15;
 
-    // Check UI State for sizing
-    if (_uiState == 1) {
-      initialSize = 0.6;
-      minSize = 0.6;
-      maxSize = 0.6;
-    } else if (_uiState == 2) {
-      initialSize = 0.65;
-      minSize = 0.5;
-      maxSize = 1.0;
-    } else {
-      // CAPTURE STATE: Start at 0.2 (sticks out slightly)
-      initialSize = 0.2;
-      minSize = 0.2;
-      maxSize = 1.0;
-    }
+    // Check UI State for initial sizing logic (only for reset/init)
+    // We remove ValueKey so this widget is NOT recreated on state change.
+    // We control the height via the controller in the state methods.
 
     return DraggableScrollableSheet(
-      key: ValueKey(_uiState),
+      // key: ValueKey(_uiState), // REMOVED to prevent recreation hanging the UI
       controller: _sheetController,
-      initialChildSize: initialSize,
+      initialChildSize: initialSize, 
       minChildSize: minSize,
       maxChildSize: maxSize,
-      snap: true, // Enable snap behavior
+      snap: true, 
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
@@ -503,14 +603,10 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
                     blurRadius: 10,
                     offset: Offset(0, -2))
               ]),
-          // Move padding to content or keep here? Keep here but allow sliver to scroll top area?
-          // Actually, if we put handle in scroll view, we need the container to clip?
-          // The container provides the white background.
           child: LayoutBuilder(builder: (context, constraints) {
             return SingleChildScrollView(
               controller: scrollController,
-              physics:
-                  const ClampingScrollPhysics(), // Better for sheet connection
+              physics: const ClampingScrollPhysics(),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   minHeight: constraints.maxHeight,
@@ -518,7 +614,6 @@ class _FotoPageState extends State<FotoPage> with TickerProviderStateMixin {
                 child: Column(
                   children: [
                     const SizedBox(height: 12),
-                    // HANDLE IS NOW PART OF SCROLLABLE CONTENT
                     Center(
                       child: Container(
                         width: 40,
