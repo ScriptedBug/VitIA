@@ -12,6 +12,10 @@ from .routes import ml_routes
 
 app = FastAPI(title="VitIA Backend")
 
+@app.get("/")
+def read_root():
+    return {"status": "online"}
+
 # ----------------------------------------------------
 # 🌍 CONFIGURACIÓN DE CORS PARA PERMITIR CONEXIONES
 # ----------------------------------------------------
