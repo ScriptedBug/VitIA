@@ -1,4 +1,0 @@
-# file: C:\Users\Usuario\VitIA\backend\app\routes\routes_publicacion.py
-# hypothesis_version: 6.148.7
-
-[100, '/', '/me', '/publicaciones', '/{id_publicacion}', 'Publicaciones (Foro)']

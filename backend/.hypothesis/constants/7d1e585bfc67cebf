@@ -1,4 +1,0 @@
-# file: C:\Users\joans\OneDrive\Escritorio\PIN\VitIA\backend\app\routes\routes_auth.py
-# hypothesis_version: 6.148.7
-
-['/auth', '/logout', '/register', '/token', 'Autenticación', 'Bearer', 'WWW-Authenticate', 'access_token', 'bearer', 'msg', 'sub', 'token_type']
