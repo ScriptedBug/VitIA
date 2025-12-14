@@ -51,3 +51,4 @@ web/.dart_tool/
 *.env
 alembic.ini
 
+.hypothesis/

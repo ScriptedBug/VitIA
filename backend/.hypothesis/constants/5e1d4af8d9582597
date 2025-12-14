@@ -1,4 +1,0 @@
-# file: C:\Users\joans\OneDrive\Escritorio\PIN\VitIA\backend\app\models.py
-# hypothesis_version: 6.148.7
-
-[100, 150, 255, 512, 'CASCADE', 'Coleccion', 'Comentario', 'Comentarios', 'Publicacion', 'Publicaciones', 'Usuario', 'Usuarios', 'Usuarios.id_usuario', 'Variedad', 'Variedades', 'all, delete-orphan', 'autor', 'coleccion', 'comentarios', 'id_publicacion', 'id_variedad', 'items_coleccion', 'padre', 'propietario', 'publicacion', 'publicacion_variedad', 'publicaciones', 'variedad']

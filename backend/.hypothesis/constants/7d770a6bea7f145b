@@ -1,4 +1,0 @@
-# file: C:\Users\joans\OneDrive\Escritorio\PIN\VitIA\backend\app\main.py
-# hypothesis_version: 6.148.7
-
-['*', '/health', 'Authorization', 'Content-Type', 'VitIA Backend', 'health', 'http://10.0.2.2:8000', 'http://127.0.0.1', 'http://localhost']
