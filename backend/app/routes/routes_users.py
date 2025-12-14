@@ -7,6 +7,7 @@ import base64
 from imagekitio import ImageKit
 
 # Importaciones relativas
+from typing import List
 from .. import crud, models, schemas
 from ..database import get_db
 from ..auth import get_current_user  # Importamos nuestra dependencia de autenticación
@@ -90,6 +91,15 @@ def delete_users_me(
     deleted_user = crud.delete_user(db, id_usuario=current_user.id_usuario)
     return deleted_user
 
+@router.get("/me/favoritos", response_model=List[schemas.Variedad], summary="Ver mis favoritos")
+def get_mis_favoritos(
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    """
+    Obtiene la lista de variedades marcadas como favoritas por el usuario.
+    """
+    return crud.get_user_favoritos(db, current_user.id_usuario)
 
 @router.post("/me/avatar", response_model=schemas.Usuario, summary="Subir o actualizar foto de perfil")
 def upload_avatar_me(

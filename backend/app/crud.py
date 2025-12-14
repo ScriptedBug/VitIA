@@ -316,10 +316,25 @@ def toggle_favorito(db: Session, id_usuario: int, id_variedad: int):
         
     if variedad in user.favoritos:
         user.favoritos.remove(variedad)
+        db.commit()
         return "eliminado de"
     else:
         user.favoritos.append(variedad)
+        db.commit()
         return "añadido a" # Pequeña corrección en el return string
+
+def get_user_favoritos(db: Session, id_usuario: int, skip: int = 0, limit: int = 100):
+    """Obtiene una lista paginada de las variedades favoritas de un usuario."""
+    user = get_user(db, id_usuario)
+    if not user:
+        return []
+
+    return db.query(models.Variedad)\
+             .join(models.favoritos_assoc)\
+             .filter(models.favoritos_assoc.c.id_usuario == id_usuario)\
+             .offset(skip)\
+             .limit(limit)\
+             .all()
 
 def _actualizar_contador_likes(db: Session, modelo_voto, modelo_padre, id_campo_fk, id_valor_fk, columna_likes_padre):
     """
