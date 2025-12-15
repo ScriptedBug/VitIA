@@ -76,13 +76,15 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _authMainColor, // Fondo color Vino VitIA
-      // Botón flotante discreto para configuración
+      // Botón flotante discreto para configuración (DESHABILITADO: Comenta si necesitas cambiar IP manual)
+      /*
       floatingActionButton: FloatingActionButton.small(
         backgroundColor: Colors.white.withOpacity(0.2),
         elevation: 0,
         onPressed: () => _showServerConfigDialog(context),
         child: const Icon(Icons.settings, color: Colors.white),
       ),
+      */
       body: Center(
         child: SingleChildScrollView(
           child: Padding(

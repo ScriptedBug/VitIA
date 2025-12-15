@@ -33,7 +33,7 @@ class _TutorialPageState extends State<TutorialPage> {
   // --- COLORES AJUSTADOS A FIGMA ---
   final Color _mainColor =
       const Color(0xFF8B9E3A); // Verde Musgo (Usado en el botón de la P0)
-  final Color _activeProgressColor = const Color(0xFF9C27B0); // Magenta/Vino
+
   // El color oscuro de la barra ya no es necesario aquí.
 
   @override
@@ -175,8 +175,8 @@ class _TutorialPageState extends State<TutorialPage> {
                 // 🖼️ Ilustración del móvil/mano (ilustracion_movil.png)
                 child: Image.asset(
                   'assets/tutorial/ilustracion_movil.png',
-                  width: 250,
-                  height: 350,
+                  width: 300, // Aumentado de 250
+                  height: 400, // Aumentado de 350
                   fit: BoxFit.contain,
                 ),
               ),
@@ -292,8 +292,8 @@ class _TutorialPageState extends State<TutorialPage> {
                       right: 20,
                       bottom: 25,
                       child: SizedBox(
-                        width: 110,
-                        height: 50,
+                        width: 120, // Ajustado a un tamaño intermedio
+                        height: 45,
                         child: ElevatedButton(
                           onPressed: _completeTutorial,
                           style: ElevatedButton.styleFrom(
@@ -342,140 +342,126 @@ class _TutorialPageState extends State<TutorialPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 1. Control Superior (Cerrar / Progreso / Navegación)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Flecha de retroceso
-                  if (isGuidePage)
+              // 1. HEADER REFACTORIZADO
+
+              // Fila Superior: Solo el botón de Cerrar (Alienado a la derecha)
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  icon: const Icon(Icons.close, size: 30),
+                  onPressed:
+                      isFirstPage ? widget.onFinished : _completeTutorial,
+                ),
+              ),
+
+              if (isGuidePage) ...[
+                // Fila del Título: "Guía de uso" ----- "X/5"
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Guía de uso',
+                        style: TextStyle(
+                            fontFamily: 'Lora',
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold)),
+                    Text('$index/5',
+                        style: const TextStyle(
+                            fontFamily: 'Lora',
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                // Fila de Navegación: Flecha < -- Uvas -- Flecha >
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Flecha Atrás
                     IconButton(
-                      // La flecha es transparente en P1, visible de P2 a P5
-                      icon: index > 1
-                          ? Icon(Icons.arrow_back, color: _activeProgressColor)
-                          : const Icon(Icons.arrow_back,
-                              color: Colors.transparent),
+                      icon: Icon(Icons.arrow_back,
+                          size: 30,
+                          color: index > 1
+                              ? const Color(
+                                  0xFFC48B9F) // Un rosa más suave según diseño
+                              : Colors.transparent),
                       onPressed: index > 1
                           ? () => _pageController.previousPage(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.ease)
                           : null,
-                    )
-                  else
-                    const SizedBox(
-                        width: 48), // Placeholder si no es una página de guía
+                    ),
 
-                  // Título + Indicadores (Solo en páginas de guía)
-                  if (isGuidePage)
-                    Column(
-                      children: [
-                        // Título Guía de uso X/5
-                        Text('Guía de uso $index/5',
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 5),
-                        // 🍇 Indicadores de Progreso (Uvas)
-                        Image.asset(
-                          indicatorAsset,
-                          height: 15,
-                          fit: BoxFit.contain,
-                        ),
-                      ],
-                    )
-                  else
-                    const SizedBox.shrink(),
+                    // Indicadores (Uvas)
+                    Image.asset(
+                      indicatorAsset,
+                      height: 25, // Un poco más grandes
+                      fit: BoxFit.contain,
+                    ),
 
-                  // Flecha Adelante y Botón Cerrar
-                  if (isGuidePage)
-                    Row(
-                      children: [
-                        // Flecha Adelante (solo si no es la última)
-                        if (!isLastPage)
-                          IconButton(
-                            icon: Icon(Icons.arrow_forward,
-                                color: _activeProgressColor),
-                            onPressed: () => _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.ease),
-                          )
-                        else
-                          const SizedBox(
-                              width: 48), // Placeholder para la flecha
-                        // Botón Cerrar (X)
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: _completeTutorial,
-                        ),
-                      ],
-                    )
-                  else if (isFirstPage)
-                    // Botón Cerrar en P0 (alineado a la derecha)
+                    // Flecha Adelante
                     IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: widget.onFinished,
-                    )
-                ],
-              ),
+                      icon: Icon(Icons.arrow_forward,
+                          size: 30,
+                          color: !isLastPage
+                              ? const Color(0xFFC48B9F)
+                              : Colors.transparent),
+                      onPressed: !isLastPage
+                          ? () => _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.ease)
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
 
               // 2. CONTENIDO
               Expanded(child: _buildPageContent(index)),
 
               // 3. Botones Inferiores (Solo en P0)
-              Column(
-                children: [
-                  if (isFirstPage)
-                    // Pantalla de Introducción: Botones "Ver tutorial" y "Saltar"
-                    Column(
-                      children: [
-                        // Botón Relleno "Ver tutorial"
-                        ElevatedButton(
-                          onPressed: () => _pageController.nextPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.ease),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            backgroundColor: _mainColor,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
-                          ),
-                          child: const Text('Ver tutorial',
-                              style: TextStyle(color: Colors.white)),
-                        ),
-                        const SizedBox(height: 10),
-                        // Botón Contorno "Saltar"
-                        OutlinedButton(
-                          onPressed: widget.onFinished,
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            side: BorderSide(color: _mainColor, width: 1.5),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
-                          ),
-                          child: Text('Saltar',
-                              style: TextStyle(color: _mainColor)),
-                        ),
-                      ],
-                    )
-                  else
-                    // Pantallas de Guía: No tienen botón de navegación inferior.
-                    const SizedBox.shrink(),
-
-                  // Barra de navegación inferior (simulada)
-                  const SizedBox(
-                      height:
-                          20), // Este espacio es necesario para el relleno inferior de P0
-                ],
-              ),
+              if (isFirstPage)
+                Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.ease),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                        backgroundColor: _mainColor,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25)),
+                      ),
+                      child: const Text('Ver tutorial',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: widget.onFinished,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                        side: BorderSide(color: _mainColor, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25)),
+                      ),
+                      child:
+                          Text('Saltar', style: TextStyle(color: _mainColor)),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: isGuidePage ? _buildStaticNavBar() : null,
+      bottomNavigationBar: isGuidePage ? _buildStaticNavBar(index) : null,
     );
   }
 
-  Widget _buildStaticNavBar() {
+  Widget _buildStaticNavBar(int pageIndex) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF142018), // Mismo color que HomePage
@@ -494,9 +480,11 @@ class _TutorialPageState extends State<TutorialPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavIcon('assets/navbar/icon_nav_home.png', false),
-            _buildNavIcon('assets/navbar/icon_nav_camera.png', false),
+            // Activar Cámara en P1
+            _buildNavIcon('assets/navbar/icon_nav_camera.png', pageIndex == 1),
+            // Activar Catálogo en P4 y P5
             _buildNavIcon('assets/navbar/icon_nav_catalogo.png',
-                false), // Todos inactivos
+                pageIndex == 4 || pageIndex == 5),
             _buildNavIcon('assets/navbar/icon_nav_foro.png', false),
           ],
         ),

@@ -144,12 +144,15 @@ class _InicioScreenState extends State<InicioScreen> {
                           const Icon(Icons.location_on_outlined,
                               color: Colors.black87),
                           const SizedBox(width: 8),
-                          Text(
-                            widget.location.isNotEmpty
-                                ? "${widget.location}."
-                                : "Sin ubicación definida.",
-                            style: const TextStyle(
-                                fontSize: 16, color: Colors.black87),
+                          Flexible(
+                            child: Text(
+                              widget.location.isNotEmpty
+                                  ? "${widget.location}."
+                                  : "Sin ubicación definida.",
+                              style: const TextStyle(
+                                  fontSize: 16, color: Colors.black87),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           const SizedBox(width: 8),
                         ],

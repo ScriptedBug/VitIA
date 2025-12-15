@@ -432,32 +432,29 @@ class _PopularCardState extends State<_PopularCard> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Colors.grey.shade300,
-                      child: const Icon(Icons.person,
-                          color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(widget.post['user'],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 13)),
-                        Text(widget.post['time'],
-                            style: TextStyle(
-                                fontSize: 10, color: Colors.grey.shade500)),
-                      ],
-                    )
-                  ],
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Colors.grey.shade300,
+                  child:
+                      const Icon(Icons.person, color: Colors.white, size: 20),
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.post['user'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text(widget.post['time'],
+                          style: TextStyle(
+                              fontSize: 10, color: Colors.grey.shade500)),
+                    ],
+                  ),
+                )
               ],
             ),
             const SizedBox(height: 8),
