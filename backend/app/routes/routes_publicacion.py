@@ -81,15 +81,30 @@ async def create_publicacion_endpoint(
 def read_publicaciones_endpoint(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
 ):
     """
     Obtiene una lista paginada de todas las publicaciones de todos los usuarios,
     ordenadas por fecha (la más reciente primero).
     
-    Este es el endpoint principal para visualizar el "feed" del foro.
+    Incluye el estado 'is_liked' para el usuario actual.
     """
     publicaciones = crud.get_publicaciones(db, skip=skip, limit=limit)
+    
+    # Enriquecer con is_liked
+    for pub in publicaciones:
+        # Verificar si existe un voto del usuario actual para esta publicación
+        voto = db.query(models.VotoPublicacion).filter(
+            models.VotoPublicacion.id_publicacion == pub.id_publicacion,
+            models.VotoPublicacion.id_usuario == current_user.id_usuario,
+            models.VotoPublicacion.es_like == True
+        ).first()
+        
+        # Asignamos el atributo dinámicamente. 
+        # Pydantic (from_attributes=True) lo leerá.
+        pub.is_liked = (voto is not None)
+
     return publicaciones
 
 @router.get("/me",
@@ -105,15 +120,24 @@ def read_user_publicaciones_endpoint(
     """
     Obtiene una lista paginada de todas las publicaciones
     creadas por el usuario actualmente autenticado.
-    
-    Ordenadas por fecha (la más reciente primero).
     """
-    return crud.get_user_publicaciones(
+    publicaciones = crud.get_user_publicaciones(
         db=db, 
         id_usuario=current_user.id_usuario, 
         skip=skip, 
         limit=limit
     )
+    
+    # Enriquecer con is_liked (el usuario puede dar like a sus propios posts)
+    for pub in publicaciones:
+        voto = db.query(models.VotoPublicacion).filter(
+            models.VotoPublicacion.id_publicacion == pub.id_publicacion,
+            models.VotoPublicacion.id_usuario == current_user.id_usuario,
+            models.VotoPublicacion.es_like == True
+        ).first()
+        pub.is_liked = (voto is not None)
+
+    return publicaciones
 
 @router.delete("/{id_publicacion}",
     response_model=schemas.Publicacion,

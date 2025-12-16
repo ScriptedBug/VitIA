@@ -103,12 +103,12 @@ class _ForoPageState extends State<ForoPage>
             'likes': item['likes'] ?? 0,
             'comments': (item['comentarios'] as List?)?.length ?? 0,
             'isMine': authorId != null && authorId == UserSession.userId,
+            'isLiked': item['is_liked'] ?? false,
           };
         })
         .toList()
         .cast<Map<String, dynamic>>();
   }
-
   String _formatearFecha(String? fechaIso) {
     if (fechaIso == null) return "Reciente";
     try {
@@ -132,7 +132,7 @@ class _ForoPageState extends State<ForoPage>
     setState(() => _isCreatingPost = true);
   }
 
-  @override
+
   Widget build(BuildContext context) {
     // Si estamos creando un post, interceptamos el "Back" para solo cerrar el modo de creación
     return PopScope(
@@ -379,6 +379,7 @@ class _PopularCardState extends State<_PopularCard> {
   void initState() {
     super.initState();
     _likes = widget.post['likes'];
+    _isLiked = widget.post['isLiked'] ?? false;
     _apiClient = ApiClient(getBaseUrl());
     if (UserSession.token != null) _apiClient.setToken(UserSession.token!);
   }
@@ -464,10 +465,19 @@ class _PopularCardState extends State<_PopularCard> {
               ],
             ),
             const SizedBox(height: 8),
+            if (widget.post['titulo'] != null && widget.post['titulo'] != '') ...[
+              Text(
+                widget.post['titulo'],
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+            ],
             Expanded(
               child: Text(
                 widget.post['text'],
-                maxLines: 4,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     color: Colors.grey.shade800, fontSize: 13, height: 1.4),
@@ -525,6 +535,7 @@ class _RecentCardState extends State<_RecentCard> {
   void initState() {
     super.initState();
     _likes = widget.post['likes'];
+    _isLiked = widget.post['isLiked'] ?? false;
     _apiClient = ApiClient(getBaseUrl());
     if (UserSession.token != null) _apiClient.setToken(UserSession.token!);
   }

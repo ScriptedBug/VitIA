@@ -148,6 +148,7 @@ class Publicacion(PublicacionBase, BaseConfig):
     # Mostramos la información del autor usando el esquema reducido
     autor: AutorPublicacion
     likes: int
+    is_liked: Optional[bool] = None # <-- Indicar si el usuario actual le dio like
     variedades: List[Variedad] = []
     comentarios: List['Comentario'] = []
 # -----------------------------------------------------
