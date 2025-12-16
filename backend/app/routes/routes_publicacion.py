@@ -38,13 +38,25 @@ async def create_publicacion_endpoint(
     links_fotos = []
     
     # 1. Si hay archivo, lo subimos
+    with open("debug_log.txt", "a") as f:
+        f.write(f"Request received. Title: {titulo}, File present: {file is not None}\n")
+
     if file:
         try:
             file_bytes = await file.read()
+            with open("debug_log.txt", "a") as f:
+                f.write(f"File bytes read: {len(file_bytes)}\n")
+            
             # Guardamos en la carpeta específica del Foro
             image_url = upload_image_to_imagekit(file_bytes, file.filename, folder="/vitia/Foro")
+            
+            with open("debug_log.txt", "a") as f:
+                f.write(f"ImageKit URL: {image_url}\n")
+                
             links_fotos.append(image_url)
         except Exception as e:
+            with open("debug_log.txt", "a") as f:
+                f.write(f"Error subiendo a ImageKit: {e}\n")
             print(f"Error subiendo a ImageKit: {e}")
             # Opcional: Fallar o continuar sin imagen. Aquí continuamos pero logueamos.
 

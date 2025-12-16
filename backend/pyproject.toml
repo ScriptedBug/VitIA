@@ -11,6 +11,9 @@ fastapi = "^0.115.0"
 uvicorn = {extras = ["standard"], version = "^0.30.0"}
 supabase = "^2.5.0"
 python-dotenv = "^1.0.1"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+imagekitio = "^3.0.0"
 
 
 [build-system]

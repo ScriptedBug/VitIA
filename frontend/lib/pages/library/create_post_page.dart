@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'custom_camera_page.dart'; // Import custom camera
 import '../../core/api_client.dart';
 import '../../core/services/api_config.dart';
 import '../../core/services/user_sesion.dart';
@@ -19,6 +21,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   late ApiClient _apiClient;
   bool _isPublishing = false;
   XFile? _selectedImage;
+  Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -32,10 +35,27 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(source: source);
+      XFile? image;
+      
+      if (source == ImageSource.camera) {
+        // Use custom camera
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CustomCameraPage()),
+        );
+        if (result is XFile) {
+          image = result;
+        }
+      } else {
+        // Use system gallery
+        image = await _picker.pickImage(source: source);
+      }
+
       if (image != null) {
+        final bytes = await image.readAsBytes();
         setState(() {
           _selectedImage = image;
+          _imageBytes = bytes;
         });
       }
     } catch (e) {
@@ -177,10 +197,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     const SizedBox(height: 20),
 
                     // PREVISUALIZACIÓN DE IMAGEN / PICKER
-                    if (_selectedImage != null)
+                    if (_imageBytes != null)
                       GestureDetector(
                         onTap: () {
-                          // Mostrar imagen en pantalla completa
                           showDialog(
                             context: context,
                             builder: (ctx) => Dialog(
@@ -192,8 +211,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                   InteractiveViewer(
                                     minScale: 0.5,
                                     maxScale: 4.0,
-                                    child: Image.file(
-                                      File(_selectedImage!.path),
+                                    child: Image.memory(
+                                      _imageBytes!,
                                       fit: BoxFit.contain,
                                       height: double.infinity,
                                       width: double.infinity,
@@ -215,32 +234,48 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           );
                         },
                         child: Container(
-                          width: 120, // Hacemos que sea pequeña (thumbnail)
-                          height: 120,
+                          width: double.infinity,
+                          height: 300,
                           margin: const EdgeInsets.only(top: 10),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.grey.shade300),
-                            image: DecorationImage(
-                              image: FileImage(File(_selectedImage!.path)),
-                              fit: BoxFit.cover,
-                            ),
                           ),
                           child: Stack(
                             children: [
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.memory(
+                                    _imageBytes!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) {
+                                      return Center(
+                                        child: Text(
+                                            'Error visualizando imagen: $error',
+                                            style: const TextStyle(
+                                                color: Colors.red)),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
                               Positioned(
-                                top: 5,
-                                right: 5,
+                                top: 10,
+                                right: 10,
                                 child: InkWell(
-                                  onTap: () =>
-                                      setState(() => _selectedImage = null),
+                                  onTap: () => setState(() {
+                                    _selectedImage = null;
+                                    _imageBytes = null;
+                                  }),
                                   child: Container(
-                                    padding: const EdgeInsets.all(4),
+                                    padding: const EdgeInsets.all(8),
                                     decoration: const BoxDecoration(
                                         color: Colors.black54,
                                         shape: BoxShape.circle),
                                     child: const Icon(Icons.close,
-                                        size: 16, color: Colors.white),
+                                        size: 20, color: Colors.white),
                                   ),
                                 ),
                               )
