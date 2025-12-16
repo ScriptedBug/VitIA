@@ -8,7 +8,10 @@ import '../../core/services/api_config.dart';
 import '../../core/services/user_sesion.dart';
 
 class CreatePostPage extends StatefulWidget {
-  const CreatePostPage({super.key});
+  final VoidCallback? onPostCreated;
+  final VoidCallback? onCancel;
+
+  const CreatePostPage({super.key, this.onPostCreated, this.onCancel});
 
   @override
   State<CreatePostPage> createState() => _CreatePostPageState();
@@ -82,7 +85,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
           imageFile: _selectedImage);
 
       if (mounted) {
-        Navigator.pop(context, true); // Retorna true para refrescar la lista
+        if (widget.onPostCreated != null) {
+          widget.onPostCreated!();
+        } else {
+          Navigator.pop(context, true); // Retorna true para refrescar la lista
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -91,6 +98,14 @@ class _CreatePostPageState extends State<CreatePostPage> {
         );
         setState(() => _isPublishing = false);
       }
+    }
+  }
+
+  void _handleCancel() {
+    if (widget.onCancel != null) {
+      widget.onCancel!();
+    } else {
+      Navigator.pop(context);
     }
   }
 
@@ -109,7 +124,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _handleCancel,
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.black87,
                       textStyle: const TextStyle(fontSize: 16),

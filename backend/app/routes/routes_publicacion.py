@@ -150,7 +150,7 @@ def delete_publicacion_endpoint(
     return crud.delete_publicacion(db=db, db_publicacion=db_publicacion)
 
 # --- VOTOS ---
-@router.post("/publicaciones/{id_publicacion}/voto", summary="Votar Publicación")
+@router.post("/{id_publicacion}/voto", summary="Votar Publicación")
 def votar_publicacion_endpoint(
     id_publicacion: int,
     voto: schemas.VotoCreate, # Recibe { "es_like": true/false/null }
@@ -164,3 +164,22 @@ def votar_publicacion_endpoint(
     """
     estado = crud.votar_publicacion(db, current_user.id_usuario, id_publicacion, voto.es_like)
     return {"msg": estado}
+
+@router.post("/{id_publicacion}/like", summary="Dar Like (Legacy)")
+def like_publicacion_endpoint(
+    id_publicacion: int,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    """Endpoint simplificado para dar like (compatible con frontend anterior)"""
+    return crud.votar_publicacion(db, current_user.id_usuario, id_publicacion, True)
+
+@router.post("/{id_publicacion}/unlike", summary="Quitar Like (Legacy)")
+def unlike_publicacion_endpoint(
+    id_publicacion: int,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    """Endpoint simplificado para quitar like (compatible con frontend anterior)"""
+    # Unlike suele significar 'quitar el like', es decir, volver a neutro (None)
+    return crud.votar_publicacion(db, current_user.id_usuario, id_publicacion, None)
