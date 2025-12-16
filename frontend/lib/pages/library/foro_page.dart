@@ -24,6 +24,9 @@ class _ForoPageState extends State<ForoPage>
   List<Map<String, dynamic>> _publicacionesTodas = [];
   List<Map<String, dynamic>> _publicacionesMias = [];
   int _selectedTab = 0;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -109,6 +112,16 @@ class _ForoPageState extends State<ForoPage>
         .toList()
         .cast<Map<String, dynamic>>();
   }
+
+  List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list) {
+    if (_searchQuery.isEmpty) return list;
+    return list.where((post) {
+      final title = post['titulo'].toString().toLowerCase();
+      final content = post['text'].toString().toLowerCase();
+      final query = _searchQuery.toLowerCase();
+      return title.contains(query) || content.contains(query);
+    }).toList();
+  }
   String _formatearFecha(String? fechaIso) {
     if (fechaIso == null) return "Reciente";
     try {
@@ -151,13 +164,59 @@ class _ForoPageState extends State<ForoPage>
               child: Column(
                 children: [
                   // 1. HEADER GRANDE (FIJO)
+                  // 1. HEADER GRANDE (FIJO)
                   VitiaHeader(
                     title: "Comunidad",
                     actionIcon: IconButton(
-                      icon: const Icon(Icons.search, size: 28),
-                      onPressed: () {},
+                      icon: Icon(_isSearching ? Icons.close : Icons.search, size: 28),
+                      onPressed: () {
+                        setState(() {
+                          if (_isSearching) {
+                            _isSearching = false;
+                            _searchQuery = "";
+                            _searchController.clear();
+                          } else {
+                            _isSearching = true;
+                          }
+                        });
+                      },
                     ),
                   ),
+
+                  // BARRA DE BÚSQUEDA (Visible si _isSearching es true)
+                  if (_isSearching)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10),
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: "Buscar por título...",
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = "");
+                            },
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade200,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 20),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                      ),
+                    ),
 
                   Expanded(
                     child: CustomScrollView(
@@ -201,10 +260,11 @@ class _ForoPageState extends State<ForoPage>
                                   : ListView.builder(
                                       scrollDirection: Axis.horizontal,
                                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                                      itemCount: _publicacionesTodas.take(5).length,
+                                      itemCount: _getFilteredList(_publicacionesTodas).take(5).length,
                                       itemBuilder: (context, index) {
+                                        final filtered = _getFilteredList(_publicacionesTodas);
                                         return _PopularCard(
-                                          post: _publicacionesTodas[index],
+                                          post: filtered[index],
                                           onTap: () async {
                                             final result = await Navigator.push(
                                               context,
@@ -249,14 +309,15 @@ class _ForoPageState extends State<ForoPage>
                                     final activeList = _selectedTab == 0
                                         ? _publicacionesTodas
                                         : _publicacionesMias;
+                                    final filteredList = _getFilteredList(activeList);
                                     return _RecentCard(
-                                      post: activeList[index],
+                                      post: filteredList[index],
                                       onTap: () async {
                                         final result = await Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) => PostDetailPage(
-                                                  post: activeList[index])),
+                                                  post: filteredList[index])),
                                         );
                                         if (result == true && mounted) {
                                           _cargarDatos();
@@ -264,9 +325,10 @@ class _ForoPageState extends State<ForoPage>
                                       },
                                     );
                                   },
-                                  childCount: _selectedTab == 0
-                                      ? _publicacionesTodas.length
-                                      : _publicacionesMias.length,
+                                  childCount: _getFilteredList(_selectedTab == 0
+                                          ? _publicacionesTodas
+                                          : _publicacionesMias)
+                                      .length,
                                 ),
                               ),
 
