@@ -23,17 +23,10 @@ class _ForoPageState extends State<ForoPage>
   bool _isLoading = true;
   List<Map<String, dynamic>> _publicacionesTodas = [];
   List<Map<String, dynamic>> _publicacionesMias = [];
-<<<<<<< HEAD
   late TabController _tabController;
   bool _isSearching = false; // RESTAURADO
-=======
-  List<Map<String, dynamic>>? _publicacionesPopulares; // Nullable para evitar error "undefined" en hot reload
-  int _selectedTab = 0;
-  bool _isSearching = false;
->>>>>>> 6bd32f9dcd5e377a3354a775d50d2c4e0c3975dd
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
-  String _selectedTimeFilter = "Última semana"; // Filtro de tiempo por defecto
 
   // NUEVO: Estado de ordenación
   String _currentSort =
@@ -74,25 +67,6 @@ class _ForoPageState extends State<ForoPage>
         setState(() {
           _publicacionesTodas = _mapearPublicaciones(listaTodas);
           _publicacionesMias = _mapearPublicaciones(listaMias);
-          
-          // Crear lista de populares ordenada por Likes DESC, luego Comentarios DESC
-          _publicacionesPopulares = List<Map<String, dynamic>>.from(_publicacionesTodas);
-          _publicacionesPopulares!.sort((a, b) {
-            final likesA = (a['likes'] as num?)?.toInt() ?? 0;
-            final likesB = (b['likes'] as num?)?.toInt() ?? 0;
-            final compareLikes = likesB.compareTo(likesA); // Descendente
-            
-            if (compareLikes != 0) {
-              return compareLikes;
-            } else {
-              // Si empata en likes, ordenar por comentarios
-              final commentsA = (a['comments'] as num?)?.toInt() ?? 0;
-              final commentsB = (b['comments'] as num?)?.toInt() ?? 0;
-              return commentsB.compareTo(commentsA); // Descendente
-            }
-          });
-
-          debugPrint("Foro loaded. All: ${_publicacionesTodas.length}, Popular: ${_publicacionesPopulares?.length}");
           _isLoading = false;
         });
       }
@@ -133,7 +107,6 @@ class _ForoPageState extends State<ForoPage>
             'user': nombreUsuario,
             'time': _formatearFecha(
                 item['fecha_publicacion'] ?? item['fecha_creacion']),
-            'rawDate': item['fecha_publicacion'] ?? item['fecha_creacion'], // Guardar fecha cruda para filtrar
             'image': imagenUrl,
             'likes': item['likes'] ?? 0,
             'comments': (item['comentarios'] as List?)?.length ?? 0,
@@ -145,7 +118,6 @@ class _ForoPageState extends State<ForoPage>
         .cast<Map<String, dynamic>>();
   }
 
-<<<<<<< HEAD
   List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list) {
     // 1. Filtrar por texto
     List<Map<String, dynamic>> temp = list;
@@ -191,47 +163,6 @@ class _ForoPageState extends State<ForoPage>
     }
 
     return temp;
-=======
-  List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list, {bool applyTimeFilter = false}) {
-    // 1. Filtro de búsqueda (siempre aplica)
-    List<Map<String, dynamic>> result = list;
-    if (_searchQuery.isNotEmpty) {
-      result = result.where((post) {
-        final title = post['titulo'].toString().toLowerCase();
-        final content = post['text'].toString().toLowerCase();
-        final query = _searchQuery.toLowerCase();
-        return title.contains(query) || content.contains(query);
-      }).toList();
-    }
-
-    // 2. Filtro de tiempo (opcional, solo para Recientes por ahora)
-    if (applyTimeFilter && _selectedTimeFilter != "Todos") {
-      final now = DateTime.now();
-      result = result.where((post) {
-        if (post['rawDate'] == null) return false; // Si hay filtro activo y no tiene fecha, ocultar (o true según prefieras, asumo ocultar para estricto)
-        try {
-          final date = DateTime.parse(post['rawDate']);
-          // Usamos difference en Duration y convertimos a días
-          final diff = now.difference(date).inDays;
-          
-          switch (_selectedTimeFilter) {
-            case "Última semana":
-              return diff >= 0 && diff <= 7;
-            case "Último mes":
-              return diff >= 0 && diff <= 31;
-            case "Último año":
-              return diff >= 0 && diff <= 365;
-            default:
-              return true;
-          }
-        } catch (e) {
-          return false;
-        }
-      }).toList();
-    }
-    
-    return result;
->>>>>>> 6bd32f9dcd5e377a3354a775d50d2c4e0c3975dd
   }
 
   String _formatearFecha(String? fechaIso) {
@@ -505,7 +436,6 @@ class _ForoPageState extends State<ForoPage>
                                         color: const Color(0xFF2A2A2A))),
                               ),
                             ),
-<<<<<<< HEAD
                             SliverToBoxAdapter(
                               child: SizedBox(
                                 height: 180,
@@ -574,35 +504,14 @@ class _ForoPageState extends State<ForoPage>
                                             _publicacionesTodas);
                                         return _RecentCard(
                                           post: filteredList[index],
-=======
-                          ),
-                          SliverToBoxAdapter(
-                            child: SizedBox(
-                              height: 180,
-                              child: _isLoading
-                                  ? const Center(child: CircularProgressIndicator())
-                                  : ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                                      itemCount: _getFilteredList(_publicacionesPopulares ?? []).take(5).length,
-                                      itemBuilder: (context, index) {
-                                        final filtered = _getFilteredList(_publicacionesPopulares ?? []);
-                                        return _PopularCard(
-                                          post: filtered[index],
->>>>>>> 6bd32f9dcd5e377a3354a775d50d2c4e0c3975dd
                                           onTap: () async {
                                             final result = await Navigator.push(
                                               context,
                                               MaterialPageRoute(
-<<<<<<< HEAD
                                                   builder: (context) =>
                                                       PostDetailPage(
                                                           post: filteredList[
                                                               index])),
-=======
-                                                  builder: (context) => PostDetailPage(
-                                                      post: filtered[index])),
->>>>>>> 6bd32f9dcd5e377a3354a775d50d2c4e0c3975dd
                                             );
                                             if (result == true && mounted) {
                                               _cargarDatos();
@@ -614,7 +523,6 @@ class _ForoPageState extends State<ForoPage>
                                           _getFilteredList(_publicacionesTodas)
                                               .length,
                                     ),
-<<<<<<< HEAD
                                   ),
                             const SliverToBoxAdapter(
                                 child: SizedBox(height: 160)),
@@ -633,93 +541,6 @@ class _ForoPageState extends State<ForoPage>
                                         fontSize: 24,
                                         fontWeight: FontWeight.w600,
                                         color: const Color(0xFF2A2A2A))),
-=======
-                            ),
-                          ),
-                        ],
-
-                        // 4. RECIENTES (Encabezado con Dropdown)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text("Recientes",
-                                    style: GoogleFonts.lora(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF2A2A2A))),
-                                
-                                // Dropdown Filtro
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: Colors.grey.shade300),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _selectedTimeFilter,
-                                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF7A7A30)),
-                                      style: GoogleFonts.inter(fontSize: 13, color: Colors.black87),
-                                      items: ["Todos", "Última semana", "Último mes", "Último año"]
-                                          .map((String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      }).toList(),
-                                      onChanged: (newValue) {
-                                        if (newValue != null) {
-                                          setState(() => _selectedTimeFilter = newValue);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-                        // 6. LISTA VERTICAL
-                        _isLoading
-                            ? const SliverToBoxAdapter(
-                                child: SizedBox(
-                                    height: 200,
-                                    child: Center(child: CircularProgressIndicator())))
-                            : SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final activeList = _selectedTab == 0
-                                        ? _publicacionesTodas
-                                        : _publicacionesMias;
-                                    final filteredList = _getFilteredList(activeList, applyTimeFilter: true);
-                                    return _RecentCard(
-                                      post: filteredList[index],
-                                      onTap: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) => PostDetailPage(
-                                                  post: filteredList[index])),
-                                        );
-                                        if (result == true && mounted) {
-                                          _cargarDatos();
-                                        }
-                                      },
-                                    );
-                                  },
-                                  childCount: _getFilteredList(_selectedTab == 0
-                                          ? _publicacionesTodas
-                                          : _publicacionesMias, applyTimeFilter: true)
-                                      .length,
-                                ),
->>>>>>> 6bd32f9dcd5e377a3354a775d50d2c4e0c3975dd
                               ),
                             ),
                             _isLoading
