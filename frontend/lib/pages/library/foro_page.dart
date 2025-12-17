@@ -18,19 +18,24 @@ class _ForoPageState extends State<ForoPage>
     with SingleTickerProviderStateMixin {
   late ApiClient _apiClient;
   bool _isCreatingPost = false; // Estado para controlar la vista de crear post
-  
+
   // Variables de estado restauradas
   bool _isLoading = true;
   List<Map<String, dynamic>> _publicacionesTodas = [];
   List<Map<String, dynamic>> _publicacionesMias = [];
-  int _selectedTab = 0;
-  bool _isSearching = false;
+  late TabController _tabController;
+  bool _isSearching = false; // RESTAURADO
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
+
+  // NUEVO: Estado de ordenación
+  String _currentSort =
+      'newest'; // 'newest', 'oldest', 'likes', 'comments', 'author'
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _apiClient = ApiClient(getBaseUrl());
     if (UserSession.token != null) {
       _apiClient.setToken(UserSession.token!);
@@ -114,14 +119,52 @@ class _ForoPageState extends State<ForoPage>
   }
 
   List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list) {
-    if (_searchQuery.isEmpty) return list;
-    return list.where((post) {
-      final title = post['titulo'].toString().toLowerCase();
-      final content = post['text'].toString().toLowerCase();
+    // 1. Filtrar por texto
+    List<Map<String, dynamic>> temp = list;
+    if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      return title.contains(query) || content.contains(query);
-    }).toList();
+      temp = list.where((post) {
+        final title = post['titulo'].toString().toLowerCase();
+        final content = post['text'].toString().toLowerCase();
+        final user =
+            post['user'].toString().toLowerCase(); // Búsqueda también por autor
+        return title.contains(query) ||
+            content.contains(query) ||
+            user.contains(query);
+      }).toList();
+    }
+
+    // 2. Ordenar
+    switch (_currentSort) {
+      case 'oldest':
+        // Asumimos que la lista original viene 'newest' por defecto del backend.
+        // Si no, necesitaríamos parsear la fecha real.
+        // Como 'time' es un string formateado ("Hace 2h"), no es ideal para ordenar.
+        // PERO _publicacionesTodas viene del backend, si el backend las da ordenadas,
+        // podemos hacer reverse. Si no, necesitaríamos el campo 'fecha_creacion' original.
+        // Asumimos reverse del orden actual para 'oldest'.
+        temp = List.from(temp.reversed);
+        break;
+      case 'likes':
+        temp.sort((a, b) => (b['likes'] as int).compareTo(a['likes'] as int));
+        break;
+      case 'comments':
+        temp.sort(
+            (a, b) => (b['comments'] as int).compareTo(a['comments'] as int));
+        break;
+      case 'author':
+        temp.sort(
+            (a, b) => a['user'].toString().compareTo(b['user'].toString()));
+        break;
+      case 'newest':
+      default:
+        // Default order (usually newest from backend)
+        break;
+    }
+
+    return temp;
   }
+
   String _formatearFecha(String? fechaIso) {
     if (fechaIso == null) return "Reciente";
     try {
@@ -145,6 +188,108 @@ class _ForoPageState extends State<ForoPage>
     setState(() => _isCreatingPost = true);
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _mostrarMenuFiltros(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        builder: (ctx) {
+          return StatefulBuilder(builder: (ctx, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Ordenar por",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Listo",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // SECCIÓN: TIEMPO
+                  const Text("Fecha",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    children: [
+                      _buildFilterChip("Más Nuevos", 'newest', setModalState),
+                      _buildFilterChip("Más Antiguos", 'oldest', setModalState),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // SECCIÓN: INTERACCIÓN
+                  const Text("Interacción",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    children: [
+                      _buildFilterChip("Más Gustados", 'likes', setModalState),
+                      _buildFilterChip(
+                          "Más Comentados", 'comments', setModalState),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // SECCIÓN: OTROS
+                  const Text("Otros",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    children: [
+                      _buildFilterChip("Autor (A-Z)", 'author', setModalState),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          });
+        });
+  }
+
+  Widget _buildFilterChip(
+      String label, String value, StateSetter setModalState) {
+    final isSelected = _currentSort == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      selectedColor: Colors.black,
+      backgroundColor: Colors.grey.shade100,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+      onSelected: (bool selected) {
+        if (selected) {
+          setModalState(() => _currentSort = value);
+          setState(() {});
+        }
+      },
+    );
+  }
 
   Widget build(BuildContext context) {
     // Si estamos creando un post, interceptamos el "Back" para solo cerrar el modo de creación
@@ -165,10 +310,12 @@ class _ForoPageState extends State<ForoPage>
                 children: [
                   // 1. HEADER GRANDE (FIJO)
                   // 1. HEADER GRANDE (FIJO)
+                  // 1. HEADER GRANDE
                   VitiaHeader(
                     title: "Comunidad",
                     actionIcon: IconButton(
-                      icon: Icon(_isSearching ? Icons.close : Icons.search, size: 28),
+                      icon: Icon(_isSearching ? Icons.close : Icons.search,
+                          size: 28),
                       onPressed: () {
                         setState(() {
                           if (_isSearching) {
@@ -183,94 +330,188 @@ class _ForoPageState extends State<ForoPage>
                     ),
                   ),
 
-                  // BARRA DE BÚSQUEDA (Visible si _isSearching es true)
+                  // BARRA DE BÚSQUEDA Y FILTROS (Visible SOLO si _isSearching es true)
                   if (_isSearching)
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20.0, vertical: 10),
-                      child: TextField(
-                        controller: _searchController,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: "Buscar por título...",
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = "");
-                            },
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              autofocus:
+                                  true, // Auto-foco al abrir como en biblioteca? En biblioteca no tiene autofocus explícito pero UX es mejor.
+                              decoration: InputDecoration(
+                                hintText: "Buscar...",
+                                prefixIcon: const Icon(Icons.search,
+                                    color: Colors.grey),
+                                // SIN BOTÓN DE CERRAR INTERNO
+                                filled: true,
+                                fillColor: Colors.grey.shade200,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                              },
+                            ),
                           ),
-                          filled: true,
-                          fillColor: Colors.grey.shade200,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              shape: BoxShape.circle, // Forma circular
+                            ),
+                            child: InkWell(
+                              onTap: () => _mostrarMenuFiltros(context),
+                              customBorder: const CircleBorder(),
+                              child:
+                                  const Icon(Icons.sort, color: Colors.black54),
+                            ),
                           ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 20),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
+                        ],
                       ),
                     ),
 
-                  Expanded(
-                    child: CustomScrollView(
-                      slivers: [
-                        // 2. TABS
-                        SliverToBoxAdapter(
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Row(
-                              children: [
-                                _buildTabButton("Todos", 0),
-                                _buildTabButton("Tus hilos", 1),
-                              ],
-                            ),
-                          ),
-                        ),
+                  // TABS PERSONALIZADOS (Estilo Biblioteca)
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2F2F2),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      indicator: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2))
+                        ],
+                      ),
+                      labelColor: Colors.black87,
+                      unselectedLabelColor: Colors.grey.shade500,
+                      labelStyle: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 15),
+                      splashBorderRadius: BorderRadius.circular(30),
+                      padding: const EdgeInsets.all(5),
+                      tabs: const [
+                        Tab(text: "Todos"),
+                        Tab(text: "Tus hilos"),
+                      ],
+                    ),
+                  ),
 
-                        // 3. POPULARES
-                        if (_selectedTab == 0) ...[
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                              child: Text("Populares",
-                                  style: GoogleFonts.lora(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF2A2A2A))),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // --- TAB 1: TODOS (Populares + Recientes) ---
+                        CustomScrollView(
+                          slivers: [
+                            // POPULARES
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                child: Text("Populares",
+                                    style: GoogleFonts.lora(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF2A2A2A))),
+                              ),
                             ),
-                          ),
-                          SliverToBoxAdapter(
-                            child: SizedBox(
-                              height: 180,
-                              child: _isLoading
-                                  ? const Center(child: CircularProgressIndicator())
-                                  : ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                                      itemCount: _getFilteredList(_publicacionesTodas).take(5).length,
-                                      itemBuilder: (context, index) {
-                                        final filtered = _getFilteredList(_publicacionesTodas);
-                                        return _PopularCard(
-                                          post: filtered[index],
+                            SliverToBoxAdapter(
+                              child: SizedBox(
+                                height: 180,
+                                child: _isLoading
+                                    ? const Center(
+                                        child: CircularProgressIndicator())
+                                    : ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        itemCount: _getFilteredList(
+                                                _publicacionesTodas)
+                                            .take(5)
+                                            .length,
+                                        itemBuilder: (context, index) {
+                                          final filtered = _getFilteredList(
+                                              _publicacionesTodas);
+                                          return _PopularCard(
+                                            post: filtered[index],
+                                            onTap: () async {
+                                              final result =
+                                                  await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        PostDetailPage(
+                                                            post:
+                                                                _publicacionesTodas[
+                                                                    index])),
+                                              );
+                                              if (result == true && mounted) {
+                                                _cargarDatos();
+                                              }
+                                            },
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ),
+
+                            // RECIENTES (Encabezado)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                                child: Text("Recientes",
+                                    style: GoogleFonts.lora(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF2A2A2A))),
+                              ),
+                            ),
+
+                            // LISTA VERTICAL (TODOS)
+                            _isLoading
+                                ? const SliverToBoxAdapter(
+                                    child: SizedBox(
+                                        height: 200,
+                                        child: Center(
+                                            child:
+                                                CircularProgressIndicator())))
+                                : SliverList(
+                                    delegate: SliverChildBuilderDelegate(
+                                      (context, index) {
+                                        final filteredList = _getFilteredList(
+                                            _publicacionesTodas);
+                                        return _RecentCard(
+                                          post: filteredList[index],
                                           onTap: () async {
                                             final result = await Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                  builder: (context) => PostDetailPage(
-                                                      post: _publicacionesTodas[index])),
+                                                  builder: (context) =>
+                                                      PostDetailPage(
+                                                          post: filteredList[
+                                                              index])),
                                             );
                                             if (result == true && mounted) {
                                               _cargarDatos();
@@ -278,61 +519,68 @@ class _ForoPageState extends State<ForoPage>
                                           },
                                         );
                                       },
+                                      childCount:
+                                          _getFilteredList(_publicacionesTodas)
+                                              .length,
                                     ),
-                            ),
-                          ),
-                        ],
-
-                        // 4. RECIENTES (Encabezado)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
-                            child: Text("Recientes",
-                                style: GoogleFonts.lora(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF2A2A2A))),
-                          ),
+                                  ),
+                            const SliverToBoxAdapter(
+                                child: SizedBox(height: 160)),
+                          ],
                         ),
 
-                        const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-                        // 6. LISTA VERTICAL
-                        _isLoading
-                            ? const SliverToBoxAdapter(
-                                child: SizedBox(
-                                    height: 200,
-                                    child: Center(child: CircularProgressIndicator())))
-                            : SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final activeList = _selectedTab == 0
-                                        ? _publicacionesTodas
-                                        : _publicacionesMias;
-                                    final filteredList = _getFilteredList(activeList);
-                                    return _RecentCard(
-                                      post: filteredList[index],
-                                      onTap: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) => PostDetailPage(
-                                                  post: filteredList[index])),
-                                        );
-                                        if (result == true && mounted) {
-                                          _cargarDatos();
-                                        }
-                                      },
-                                    );
-                                  },
-                                  childCount: _getFilteredList(_selectedTab == 0
-                                          ? _publicacionesTodas
-                                          : _publicacionesMias)
-                                      .length,
-                                ),
+                        // --- TAB 2: TUS HILOS (Solo Recientes Míos) ---
+                        CustomScrollView(
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                                child: Text("Tus publicaciones",
+                                    style: GoogleFonts.lora(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF2A2A2A))),
                               ),
-
-                        const SliverToBoxAdapter(child: SizedBox(height: 160)),
+                            ),
+                            _isLoading
+                                ? const SliverToBoxAdapter(
+                                    child: SizedBox(
+                                        height: 200,
+                                        child: Center(
+                                            child:
+                                                CircularProgressIndicator())))
+                                : SliverList(
+                                    delegate: SliverChildBuilderDelegate(
+                                      (context, index) {
+                                        final filteredList = _getFilteredList(
+                                            _publicacionesMias);
+                                        return _RecentCard(
+                                          post: filteredList[index],
+                                          onTap: () async {
+                                            final result = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      PostDetailPage(
+                                                          post: filteredList[
+                                                              index])),
+                                            );
+                                            if (result == true && mounted) {
+                                              _cargarDatos();
+                                            }
+                                          },
+                                        );
+                                      },
+                                      childCount:
+                                          _getFilteredList(_publicacionesMias)
+                                              .length,
+                                    ),
+                                  ),
+                            const SliverToBoxAdapter(
+                                child: SizedBox(height: 160)),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -358,27 +606,30 @@ class _ForoPageState extends State<ForoPage>
                     shadowColor: const Color(0xFF7A7A30).withOpacity(0.4),
                   ),
                   child: const Text("Crear hilo",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
 
-             // VISTA DE CREACIÓN DE POST (SUPERPUESTA)
+            // VISTA DE CREACIÓN DE POST (SUPERPUESTA)
             if (_isCreatingPost)
               Positioned.fill(
                 child: Container(
-                   color: Colors.white, // Cubre toda la pantalla (dentro del Scaffold)
-                   child: CreatePostPage(
-                     onPostCreated: () {
-                       setState(() => _isCreatingPost = false);
-                       _cargarDatos();
-                       ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(content: Text("¡Publicación creada exitosamente!")));
-                     },
-                     onCancel: () {
+                    color: Colors
+                        .white, // Cubre toda la pantalla (dentro del Scaffold)
+                    child: CreatePostPage(
+                      onPostCreated: () {
                         setState(() => _isCreatingPost = false);
-                     },
-                   )
-                ),
+                        _cargarDatos();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text("¡Publicación creada exitosamente!")));
+                      },
+                      onCancel: () {
+                        setState(() => _isCreatingPost = false);
+                      },
+                    )),
               ),
           ],
         ),
@@ -386,39 +637,7 @@ class _ForoPageState extends State<ForoPage>
     );
   }
 
-  Widget _buildTabButton(String text, int index) {
-    final isSelected = _selectedTab == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedTab = index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2))
-                  ]
-                : [],
-          ),
-          child: Center(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.black : Colors.grey.shade600,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // WIDGET ELIMINADO: _buildTabButton ya no es necesario
 }
 
 // TARJETA POPULARES (Diseño Horizontal)
@@ -527,12 +746,14 @@ class _PopularCardState extends State<_PopularCard> {
               ],
             ),
             const SizedBox(height: 8),
-            if (widget.post['titulo'] != null && widget.post['titulo'] != '') ...[
+            if (widget.post['titulo'] != null &&
+                widget.post['titulo'] != '') ...[
               Text(
                 widget.post['titulo'],
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 4),
             ],
