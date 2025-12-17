@@ -39,10 +39,11 @@ class _CatalogoPageState extends State<CatalogoPage>
   // 1. AÑADE ESTAS VARIABLES
   List<Map<String, dynamic>> _variedades = [];
   List<Map<String, dynamic>> _coleccionUsuario = [];
-  
+
   // --- FAVORITOS ---
   Set<int> _favoritosIds = {}; // Para búsqueda rápida O(1)
-  List<Map<String, dynamic>> _listaFavoritos = []; // Objetos completos para el carrusel
+  List<Map<String, dynamic>> _listaFavoritos =
+      []; // Objetos completos para el carrusel
 
   List<Map<String, dynamic>> _filtradas = [];
 
@@ -275,9 +276,9 @@ class _CatalogoPageState extends State<CatalogoPage>
             orElse: () => {});
         if (variedad.isNotEmpty) {
           _listaFavoritos.add({
-             'id': variedad['id'],
-             'nombre': variedad['nombre'],
-             'imagen': variedad['imagen']
+            'id': variedad['id'],
+            'nombre': variedad['nombre'],
+            'imagen': variedad['imagen']
           });
         }
       }
@@ -292,7 +293,7 @@ class _CatalogoPageState extends State<CatalogoPage>
       debugPrint("Error al dar like: $e");
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Error al actualizar favoritos")));
-       _cargarFavoritosBackend(); // Revertir al estado real
+      _cargarFavoritosBackend(); // Revertir al estado real
     }
   }
 
@@ -744,8 +745,8 @@ class _CatalogoPageState extends State<CatalogoPage>
                     captures: _mapaVariedadesUsuario[variedad['nombre']] ?? [],
                     isFavoritoInicial: esFav,
                     onBack: () {
-                       _cargarFavoritosBackend(); // Refresh favs if changed
-                       Navigator.pop(context);
+                      _cargarFavoritosBackend(); // Refresh favs if changed
+                      Navigator.pop(context);
                     },
                   ),
                 ),
@@ -757,18 +758,17 @@ class _CatalogoPageState extends State<CatalogoPage>
               // DETALLE GLOBALES ("Todas")
               final idVar = variedad['id'];
               final bool esFav = idVar != null && _favoritosIds.contains(idVar);
-              
+
               await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => DetalleVariedadPage(
-                    variedad: variedad, 
-                    isFavoritoInicial: esFav,
-                    onBack: () {
-                       _cargarFavoritosBackend(); 
-                       Navigator.pop(context);
-                    }
-                  ),
+                      variedad: variedad,
+                      isFavoritoInicial: esFav,
+                      onBack: () {
+                        _cargarFavoritosBackend();
+                        Navigator.pop(context);
+                      }),
                 ),
               );
               // Al volver, refrescamos favoritos por si cambiaron dentro
@@ -964,7 +964,7 @@ class _CatalogoPageState extends State<CatalogoPage>
             height: 180, // Altura fija para el scroll horizontal
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: _listaFavoritos.length, 
+              itemCount: _listaFavoritos.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 return _buildFavoritoCard(_listaFavoritos[index]);
@@ -980,13 +980,13 @@ class _CatalogoPageState extends State<CatalogoPage>
     return GestureDetector(
       onTap: () {
         // Al tocar la carta entera, vamos al detalle
-        // Necesitamos el objeto completo de la variedad. 
+        // Necesitamos el objeto completo de la variedad.
         // Como item ya tiene lo básico (id, nombre, imagen...),
         // intentamos buscar el objeto completo en _variedades para tener descripción, etc.
         final variedadCompleta = _variedades.firstWhere(
             (v) => v['id'] == item['id'],
             orElse: () => item); // Si no está, usamos lo que tenemos
-        
+
         setState(() {
           _variedadSeleccionada = variedadCompleta;
         });
@@ -1001,28 +1001,28 @@ class _CatalogoPageState extends State<CatalogoPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-             Align(
+            Align(
               alignment: Alignment.topRight,
               child: InkWell(
                   onTap: () {
-                      if(item['id'] != null) _toggleFavorito(item['id']);
+                    if (item['id'] != null) _toggleFavorito(item['id']);
                   },
-                  child: const Icon(Icons.favorite, color: Colors.redAccent, size: 18)
-              ),
+                  child: const Icon(Icons.favorite,
+                      color: Colors.redAccent, size: 18)),
             ),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: item['imagen'] != null
-                ? Image.network(
-                    item['imagen'],
-                    height: 80,
-                    width: 80,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
-                  )
-                : const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
+                  ? Image.network(
+                      item['imagen'],
+                      height: 80,
+                      width: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.wine_bar,
+                          size: 50, color: Colors.grey),
+                    )
+                  : const Icon(Icons.wine_bar, size: 50, color: Colors.grey),
             ),
-            
             Text(
               item['nombre'] ?? 'Sin nombre',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -1069,7 +1069,7 @@ class _CatalogoPageState extends State<CatalogoPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header con Corazón (Visual)
-                       Row(
+                      Row(
                         children: [
                           const Spacer(),
                           // Usamos lógica real tmb aquí si tenemos el ID de variedad
@@ -1077,24 +1077,31 @@ class _CatalogoPageState extends State<CatalogoPage>
                           // Revisemos _cargarColeccionBackend:
                           // 'variedad_original': variedadData (que tiene id_variedad)
                           // item['variedad_original']['id_variedad']
-                           InkWell(
+                          InkWell(
                             onTap: () {
-                               // Necesitamos el ID de la variedad REAL, no de la colección
-                               // En _cargarColeccionBackend guardamos 'variedad_original'
-                               final mapVariedad = item['variedad_original'];
-                               if (mapVariedad != null && mapVariedad['id_variedad'] != null) {
-                                  _toggleFavorito(mapVariedad['id_variedad']);
-                               }
+                              // Necesitamos el ID de la variedad REAL, no de la colección
+                              // En _cargarColeccionBackend guardamos 'variedad_original'
+                              final mapVariedad = item['variedad_original'];
+                              if (mapVariedad != null &&
+                                  mapVariedad['id_variedad'] != null) {
+                                _toggleFavorito(mapVariedad['id_variedad']);
+                              }
                             },
-                             child: Icon(
-                                 (item['variedad_original'] != null && _favoritosIds.contains(item['variedad_original']['id_variedad']))
-                                     ? Icons.favorite
-                                     : Icons.favorite_border,
-                                 size: 24, 
-                                 color: (item['variedad_original'] != null && _favoritosIds.contains(item['variedad_original']['id_variedad']))
+                            child: Icon(
+                                (item['variedad_original'] != null &&
+                                        _favoritosIds.contains(
+                                            item['variedad_original']
+                                                ['id_variedad']))
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 24,
+                                color: (item['variedad_original'] != null &&
+                                        _favoritosIds.contains(
+                                            item['variedad_original']
+                                                ['id_variedad']))
                                     ? Colors.redAccent
                                     : Colors.black54),
-                           ),
+                          ),
                         ],
                       ),
                       Text(
@@ -1247,7 +1254,7 @@ class _CatalogoPageState extends State<CatalogoPage>
     if (_grupoColeccionSeleccionado != null) {
       final nombre = _grupoColeccionSeleccionado!['nombre'];
       final listaCapturas = _mapaVariedadesUsuario[nombre] ?? [];
-      
+
       final idVar = _grupoColeccionSeleccionado!['variedad_original'] != null
           ? _grupoColeccionSeleccionado!['variedad_original']['id_variedad']
           : null;
