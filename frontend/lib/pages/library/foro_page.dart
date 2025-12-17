@@ -23,6 +23,7 @@ class _ForoPageState extends State<ForoPage>
   bool _isLoading = true;
   List<Map<String, dynamic>> _publicacionesTodas = [];
   List<Map<String, dynamic>> _publicacionesMias = [];
+  List<Map<String, dynamic>>? _publicacionesPopulares; // Nullable para evitar error "undefined" en hot reload
   int _selectedTab = 0;
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -62,6 +63,25 @@ class _ForoPageState extends State<ForoPage>
         setState(() {
           _publicacionesTodas = _mapearPublicaciones(listaTodas);
           _publicacionesMias = _mapearPublicaciones(listaMias);
+          
+          // Crear lista de populares ordenada por Likes DESC, luego Comentarios DESC
+          _publicacionesPopulares = List<Map<String, dynamic>>.from(_publicacionesTodas);
+          _publicacionesPopulares!.sort((a, b) {
+            final likesA = (a['likes'] as num?)?.toInt() ?? 0;
+            final likesB = (b['likes'] as num?)?.toInt() ?? 0;
+            final compareLikes = likesB.compareTo(likesA); // Descendente
+            
+            if (compareLikes != 0) {
+              return compareLikes;
+            } else {
+              // Si empata en likes, ordenar por comentarios
+              final commentsA = (a['comments'] as num?)?.toInt() ?? 0;
+              final commentsB = (b['comments'] as num?)?.toInt() ?? 0;
+              return commentsB.compareTo(commentsA); // Descendente
+            }
+          });
+
+          debugPrint("Foro loaded. All: ${_publicacionesTodas.length}, Popular: ${_publicacionesPopulares?.length}");
           _isLoading = false;
         });
       }
@@ -260,9 +280,9 @@ class _ForoPageState extends State<ForoPage>
                                   : ListView.builder(
                                       scrollDirection: Axis.horizontal,
                                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                                      itemCount: _getFilteredList(_publicacionesTodas).take(5).length,
+                                      itemCount: _getFilteredList(_publicacionesPopulares ?? []).take(5).length,
                                       itemBuilder: (context, index) {
-                                        final filtered = _getFilteredList(_publicacionesTodas);
+                                        final filtered = _getFilteredList(_publicacionesPopulares ?? []);
                                         return _PopularCard(
                                           post: filtered[index],
                                           onTap: () async {
@@ -270,7 +290,7 @@ class _ForoPageState extends State<ForoPage>
                                               context,
                                               MaterialPageRoute(
                                                   builder: (context) => PostDetailPage(
-                                                      post: _publicacionesTodas[index])),
+                                                      post: filtered[index])),
                                             );
                                             if (result == true && mounted) {
                                               _cargarDatos();
