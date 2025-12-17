@@ -28,6 +28,7 @@ class _ForoPageState extends State<ForoPage>
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
+  String _selectedTimeFilter = "Última semana"; // Filtro de tiempo por defecto
 
   @override
   void initState() {
@@ -122,6 +123,7 @@ class _ForoPageState extends State<ForoPage>
             'user': nombreUsuario,
             'time': _formatearFecha(
                 item['fecha_publicacion'] ?? item['fecha_creacion']),
+            'rawDate': item['fecha_publicacion'] ?? item['fecha_creacion'], // Guardar fecha cruda para filtrar
             'image': imagenUrl,
             'likes': item['likes'] ?? 0,
             'comments': (item['comentarios'] as List?)?.length ?? 0,
@@ -133,14 +135,45 @@ class _ForoPageState extends State<ForoPage>
         .cast<Map<String, dynamic>>();
   }
 
-  List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list) {
-    if (_searchQuery.isEmpty) return list;
-    return list.where((post) {
-      final title = post['titulo'].toString().toLowerCase();
-      final content = post['text'].toString().toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      return title.contains(query) || content.contains(query);
-    }).toList();
+  List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list, {bool applyTimeFilter = false}) {
+    // 1. Filtro de búsqueda (siempre aplica)
+    List<Map<String, dynamic>> result = list;
+    if (_searchQuery.isNotEmpty) {
+      result = result.where((post) {
+        final title = post['titulo'].toString().toLowerCase();
+        final content = post['text'].toString().toLowerCase();
+        final query = _searchQuery.toLowerCase();
+        return title.contains(query) || content.contains(query);
+      }).toList();
+    }
+
+    // 2. Filtro de tiempo (opcional, solo para Recientes por ahora)
+    if (applyTimeFilter && _selectedTimeFilter != "Todos") {
+      final now = DateTime.now();
+      result = result.where((post) {
+        if (post['rawDate'] == null) return false; // Si hay filtro activo y no tiene fecha, ocultar (o true según prefieras, asumo ocultar para estricto)
+        try {
+          final date = DateTime.parse(post['rawDate']);
+          // Usamos difference en Duration y convertimos a días
+          final diff = now.difference(date).inDays;
+          
+          switch (_selectedTimeFilter) {
+            case "Última semana":
+              return diff >= 0 && diff <= 7;
+            case "Último mes":
+              return diff >= 0 && diff <= 31;
+            case "Último año":
+              return diff >= 0 && diff <= 365;
+            default:
+              return true;
+          }
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+    }
+    
+    return result;
   }
   String _formatearFecha(String? fechaIso) {
     if (fechaIso == null) return "Reciente";
@@ -303,15 +336,49 @@ class _ForoPageState extends State<ForoPage>
                           ),
                         ],
 
-                        // 4. RECIENTES (Encabezado)
+                        // 4. RECIENTES (Encabezado con Dropdown)
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
-                            child: Text("Recientes",
-                                style: GoogleFonts.lora(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF2A2A2A))),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text("Recientes",
+                                    style: GoogleFonts.lora(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF2A2A2A))),
+                                
+                                // Dropdown Filtro
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.grey.shade300),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _selectedTimeFilter,
+                                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF7A7A30)),
+                                      style: GoogleFonts.inter(fontSize: 13, color: Colors.black87),
+                                      items: ["Todos", "Última semana", "Último mes", "Último año"]
+                                          .map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (newValue) {
+                                        if (newValue != null) {
+                                          setState(() => _selectedTimeFilter = newValue);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
 
@@ -329,7 +396,7 @@ class _ForoPageState extends State<ForoPage>
                                     final activeList = _selectedTab == 0
                                         ? _publicacionesTodas
                                         : _publicacionesMias;
-                                    final filteredList = _getFilteredList(activeList);
+                                    final filteredList = _getFilteredList(activeList, applyTimeFilter: true);
                                     return _RecentCard(
                                       post: filteredList[index],
                                       onTap: () async {
@@ -347,7 +414,7 @@ class _ForoPageState extends State<ForoPage>
                                   },
                                   childCount: _getFilteredList(_selectedTab == 0
                                           ? _publicacionesTodas
-                                          : _publicacionesMias)
+                                          : _publicacionesMias, applyTimeFilter: true)
                                       .length,
                                 ),
                               ),
