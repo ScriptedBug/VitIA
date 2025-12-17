@@ -31,40 +31,65 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Configuración de Servidor"),
+          title: const Text("Selecciona Servidor"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                  "Introduce la URL completa del backend de desarrollo:"),
+              // OPCIÓN 1: RENDER
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade600,
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.cloud_done),
+                label: const Text("Usar Render (Online)"),
+                onPressed: () async {
+                  await UserSession.setBaseUrl(""); // Borra custom URL
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Conectado a Servidor Online")));
+                  setState(() {});
+                },
+              ),
+
+              const Divider(height: 30, thickness: 1),
+
+              // OPCIÓN 2: LOCAL
+              const Text("O usa tu Servidor Local:",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               TextField(
                 controller: urlCtrl,
                 decoration: const InputDecoration(
-                  hintText: "Ej: http://192.168.1.5:8000",
+                  labelText: "IP Local",
+                  hintText: "http://192.168.x.x:8000",
                   border: OutlineInputBorder(),
+                  isDense: true,
                 ),
               ),
+              const SizedBox(height: 10),
+              OutlinedButton(
+                child: const Text("Guardar IP Local"),
+                onPressed: () async {
+                  final newUrl = urlCtrl.text.trim();
+                  if (newUrl.isNotEmpty) {
+                    await UserSession.setBaseUrl(newUrl);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Conectado a IP Local")));
+                  }
+                  Navigator.pop(context);
+                  setState(() {});
+                },
+              )
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancelar"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final newUrl = urlCtrl.text.trim();
-                if (newUrl.isNotEmpty) {
-                  await UserSession.setBaseUrl(newUrl);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text("IP actualizada correctamente")),
-                  );
-                }
-                Navigator.pop(context);
-              },
-              child: const Text("Guardar"),
             ),
           ],
         );
@@ -77,14 +102,12 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: _authMainColor, // Fondo color Vino VitIA
       // Botón flotante discreto para configuración (DESHABILITADO: Comenta si necesitas cambiar IP manual)
-      /*
       floatingActionButton: FloatingActionButton.small(
         backgroundColor: Colors.white.withOpacity(0.2),
         elevation: 0,
         onPressed: () => _showServerConfigDialog(context),
         child: const Icon(Icons.settings, color: Colors.white),
       ),
-      */
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -164,7 +187,16 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
+
+                // Indicador de estado
+                Text(
+                  "Conectado a: ${UserSession.baseUrl?.isNotEmpty == true ? UserSession.baseUrl : 'Render (Online)'}",
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 30),
               ],
             ),
           ),

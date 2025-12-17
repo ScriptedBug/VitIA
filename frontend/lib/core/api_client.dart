@@ -327,8 +327,6 @@ class ApiClient {
 
   Future<void> toggleFavorite(int idVariedad) async {
     try {
-      // POST /variedades/variedades/{id_variedad}/favorito
-      // EL ROUTER YA TIENE PREFIX /variedades Y EL ENDPOINT TIENE /variedades/...
       await _dio.post('/variedades/$idVariedad/favorito');
     } catch (e) {
       print("Error al cambiar favorito: $e");
