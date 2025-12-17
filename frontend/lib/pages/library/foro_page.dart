@@ -23,6 +23,8 @@ class _ForoPageState extends State<ForoPage>
   bool _isLoading = true;
   List<Map<String, dynamic>> _publicacionesTodas = [];
   List<Map<String, dynamic>> _publicacionesMias = [];
+  List<Map<String, dynamic>>?
+      _publicacionesPopulares; // Nullable para evitar error "undefined" en hot reload
   late TabController _tabController;
   bool _isSearching = false; // RESTAURADO
   final TextEditingController _searchController = TextEditingController();
@@ -67,6 +69,25 @@ class _ForoPageState extends State<ForoPage>
         setState(() {
           _publicacionesTodas = _mapearPublicaciones(listaTodas);
           _publicacionesMias = _mapearPublicaciones(listaMias);
+
+          // Crear lista de populares ordenada por Likes DESC, luego Comentarios DESC
+          _publicacionesPopulares =
+              List<Map<String, dynamic>>.from(_publicacionesTodas);
+          _publicacionesPopulares!.sort((a, b) {
+            final likesA = (a['likes'] as num?)?.toInt() ?? 0;
+            final likesB = (b['likes'] as num?)?.toInt() ?? 0;
+            final compareLikes = likesB.compareTo(likesA); // Descendente
+
+            if (compareLikes != 0) {
+              return compareLikes;
+            } else {
+              // Si empata en likes, ordenar por comentarios
+              final commentsA = (a['comments'] as num?)?.toInt() ?? 0;
+              final commentsB = (b['comments'] as num?)?.toInt() ?? 0;
+              return commentsB.compareTo(commentsA); // Descendente
+            }
+          });
+
           _isLoading = false;
         });
       }
@@ -118,31 +139,28 @@ class _ForoPageState extends State<ForoPage>
         .cast<Map<String, dynamic>>();
   }
 
-  List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list) {
-    // 1. Filtrar por texto
-    List<Map<String, dynamic>> temp = list;
-    if (_searchQuery.isNotEmpty) {
-      final query = _searchQuery.toLowerCase();
-      temp = list.where((post) {
-        final title = post['titulo'].toString().toLowerCase();
-        final content = post['text'].toString().toLowerCase();
-        final user =
-            post['user'].toString().toLowerCase(); // Búsqueda también por autor
-        return title.contains(query) ||
-            content.contains(query) ||
-            user.contains(query);
-      }).toList();
-    }
+  // Método solo para filtrar por texto (sin reordenar)
+  List<Map<String, dynamic>> _filterByText(List<Map<String, dynamic>> list) {
+    if (_searchQuery.isEmpty) return list;
+    final query = _searchQuery.toLowerCase();
+    return list.where((post) {
+      final title = post['titulo'].toString().toLowerCase();
+      final content = post['text'].toString().toLowerCase();
+      final user = post['user'].toString().toLowerCase();
+      return title.contains(query) ||
+          content.contains(query) ||
+          user.contains(query);
+    }).toList();
+  }
 
-    // 2. Ordenar
+  List<Map<String, dynamic>> _getFilteredList(List<Map<String, dynamic>> list) {
+    // 1. Filtrar por texto (usando helper)
+    List<Map<String, dynamic>> temp = _filterByText(list);
+
+    // 2. Ordenar (Solo aplica a las listas principales, no a Populares si lo llamamos con _filterByText)
     switch (_currentSort) {
       case 'oldest':
         // Asumimos que la lista original viene 'newest' por defecto del backend.
-        // Si no, necesitaríamos parsear la fecha real.
-        // Como 'time' es un string formateado ("Hace 2h"), no es ideal para ordenar.
-        // PERO _publicacionesTodas viene del backend, si el backend las da ordenadas,
-        // podemos hacer reverse. Si no, necesitaríamos el campo 'fecha_creacion' original.
-        // Asumimos reverse del orden actual para 'oldest'.
         temp = List.from(temp.reversed);
         break;
       case 'likes':
@@ -158,7 +176,7 @@ class _ForoPageState extends State<ForoPage>
         break;
       case 'newest':
       default:
-        // Default order (usually newest from backend)
+        // Default order
         break;
     }
 
@@ -446,13 +464,13 @@ class _ForoPageState extends State<ForoPage>
                                         scrollDirection: Axis.horizontal,
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 16),
-                                        itemCount: _getFilteredList(
-                                                _publicacionesTodas)
+                                        itemCount: _filterByText(
+                                                _publicacionesPopulares ?? [])
                                             .take(5)
                                             .length,
                                         itemBuilder: (context, index) {
-                                          final filtered = _getFilteredList(
-                                              _publicacionesTodas);
+                                          final filtered = _filterByText(
+                                              _publicacionesPopulares ?? []);
                                           return _PopularCard(
                                             post: filtered[index],
                                             onTap: () async {
