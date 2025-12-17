@@ -327,7 +327,6 @@ class ApiClient {
 
   Future<void> toggleFavorite(int idVariedad) async {
     try {
-      // POST /variedades/{id_variedad}/favorito
       await _dio.post('/variedades/$idVariedad/favorito');
     } catch (e) {
       print("Error al cambiar favorito: $e");

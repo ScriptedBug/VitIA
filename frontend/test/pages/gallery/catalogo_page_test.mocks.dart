@@ -152,11 +152,11 @@ class MockApiClient extends _i1.Mock implements _i2.ApiClient {
         returnValue: _i3.Future<List<dynamic>>.value(<dynamic>[]),
       ) as _i3.Future<List<dynamic>>);
 
-  @override
+  /*@override
   _i3.Future<void> createPublicacion(
-    String? titulo,
-    String? texto,
-  ) =>
+      String? titulo,
+      String? texto,
+    ) =>
       (super.noSuchMethod(
         Invocation.method(
           #createPublicacion,
@@ -167,7 +167,7 @@ class MockApiClient extends _i1.Mock implements _i2.ApiClient {
         ),
         returnValue: _i3.Future<void>.value(),
         returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+      ) as _i3.Future<void>);*/
 
   @override
   _i3.Future<void> deletePublicacion(int? idPublicacion) => (super.noSuchMethod(

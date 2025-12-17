@@ -14,8 +14,8 @@ class DetalleVariedadPage extends StatefulWidget {
   final bool isFavoritoInicial; // Para saber si ya es favorito al entrar
 
   const DetalleVariedadPage({
-    super.key, 
-    required this.variedad, 
+    super.key,
+    required this.variedad,
     this.onBack,
     this.isFavoritoInicial = false,
   });
@@ -190,8 +190,11 @@ class _DetalleVariedadPageState extends State<DetalleVariedadPage> {
                           IconButton(
                             onPressed: _toggleFavorito,
                             icon: Icon(
-                              _isFavorito ? Icons.favorite : Icons.favorite_border,
-                              color: _isFavorito ? Colors.redAccent : Colors.grey,
+                              _isFavorito
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color:
+                                  _isFavorito ? Colors.redAccent : Colors.grey,
                               size: 30,
                             ),
                           )
@@ -210,7 +213,8 @@ class _DetalleVariedadPageState extends State<DetalleVariedadPage> {
                               border: Border.all(color: colorTema),
                             ),
                             child: Text(
-                              (widget.variedad['tipo'] ?? 'Desconocido').toUpperCase(),
+                              (widget.variedad['tipo'] ?? 'Desconocido')
+                                  .toUpperCase(),
                               style: TextStyle(
                                   color: colorTema,
                                   fontWeight: FontWeight.bold,
@@ -226,7 +230,8 @@ class _DetalleVariedadPageState extends State<DetalleVariedadPage> {
                       // Descripción General
                       _buildSectionTitle("Descripción"),
                       Text(
-                        widget.variedad['descripcion'] ?? "Sin descripción detallada.",
+                        widget.variedad['descripcion'] ??
+                            "Sin descripción detallada.",
                         style: textoGeneralStyle,
                       ),
                       const SizedBox(height: 30),

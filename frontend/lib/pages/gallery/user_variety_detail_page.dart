@@ -82,9 +82,9 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
 
     try {
       final idData = widget.varietyInfo['variedad_original'];
-      if(idData != null && idData['id_variedad'] != null) {
-          final id = idData['id_variedad'];
-          await _apiClient.toggleFavorite(id);
+      if (idData != null && idData['id_variedad'] != null) {
+        final id = idData['id_variedad'];
+        await _apiClient.toggleFavorite(id);
       } else {
         // Fallback si no tenemos ID directo (ej: creado localmente sin sincro)
         debugPrint("No se encontró id_variedad para dar favorito");
@@ -257,7 +257,8 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    widget.varietyInfo['nombre'] ?? 'Sin Nombre',
+                                    widget.varietyInfo['nombre'] ??
+                                        'Sin Nombre',
                                     style: GoogleFonts.lora(
                                       fontSize: 28, // Reducido de 32 a 28
                                       fontWeight: FontWeight.bold,
@@ -268,8 +269,12 @@ class _UserVarietyDetailPageState extends State<UserVarietyDetailPage> {
                                 IconButton(
                                   onPressed: _toggleFavorito,
                                   icon: Icon(
-                                    _isFavorito ? Icons.favorite : Icons.favorite_border,
-                                    color: _isFavorito ? Colors.redAccent : Colors.grey,
+                                    _isFavorito
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: _isFavorito
+                                        ? Colors.redAccent
+                                        : Colors.grey,
                                     size: 30,
                                   ),
                                 )
